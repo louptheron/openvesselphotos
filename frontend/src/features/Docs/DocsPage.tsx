@@ -151,6 +151,17 @@ export function DocsPage() {
   ${origin}/v1/cfr/FRA000123456/photos`}</CodeBlock>
       </Section>
 
+      <Section id="rate-limits">
+        <SectionTitle>Rate limits</SectionTitle>
+        <p>
+          Up to 600 <code>GET</code> per minute per IP, and 1,000 <code>POST</code> per hour per API key. Every response
+          tells where you stand in <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code> and{' '}
+          <code>X-RateLimit-Reset</code> (seconds). Above the limit, requests return a <code>429</code> with a{' '}
+          <code>Retry-After</code> header. Need more? Download the whole dataset from <code>/v1/export.json</code>, or
+          ask for a higher limit.
+        </p>
+      </Section>
+
       <Chips>
         <Chip>CORS enabled</Chip>
         <Chip>Reading needs no API key</Chip>
