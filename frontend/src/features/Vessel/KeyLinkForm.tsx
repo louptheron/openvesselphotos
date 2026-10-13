@@ -65,7 +65,6 @@ export function KeyLinkForm({ vessel, vesselKey }: { vessel: Vessel; vesselKey: 
 const OpenButton = styled(TextButton)`
   align-self: flex-start;
   padding: 0;
-  min-height: 0;
   font-size: 14px;
 `
 
