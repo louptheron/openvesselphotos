@@ -16,7 +16,7 @@ import {
   SectionTitle
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
-import { COLORS, FONTS, SKIES } from '../../theme'
+import { COLORS, FONTS, SKIES, getSkyAndSea } from '../../theme'
 import { getPhotoUrl, normalizeKey } from '../../utils/vesselKey'
 import { KeyLinkForm } from './KeyLinkForm'
 import { ReportForm } from './ReportForm'
@@ -326,7 +326,7 @@ const Figure = styled.figure`
 const EmptyFigure = styled.div`
   height: 360px;
   border-radius: 16px;
-  background: ${SKIES[0]};
+  background: ${getSkyAndSea(SKIES[0] ?? COLORS.info, 82)};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -347,7 +347,7 @@ const Thumbnail = styled.button<{ $active: boolean }>`
   padding: 0;
   border-radius: 10px;
   border: 3px solid ${p => (p.$active ? COLORS.accent : 'transparent')};
-  background: ${SKIES[0]};
+  background: ${getSkyAndSea(SKIES[0] ?? COLORS.info, 82)};
   overflow: hidden;
   cursor: pointer;
 

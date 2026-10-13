@@ -21,6 +21,22 @@ export const COLORS = {
   white: '#FFFFFF'
 }
 
+/** Colors of the nautical chart illustrations. */
+export const CHART_COLORS = {
+  cardBorder: '#CFDDE5',
+  cardMuted: '#4A5E6E',
+  photoCount: '#B5501C',
+  sea: '#8FB4C9',
+  text: '#22384A',
+  textMuted: '#3F5466',
+  waveLine: '#9DBFD3'
+}
+
+/** A photo placeholder: sky with a band of sea at the bottom. */
+export function getSkyAndSea(sky: string, seaFrom = 76): string {
+  return `linear-gradient(to bottom, ${sky} 0 ${seaFrom}%, ${CHART_COLORS.sea} ${seaFrom}% 100%)`
+}
+
 export const FONTS = {
   display: "'Bricolage Grotesque Variable', sans-serif",
   mono: "'IBM Plex Mono', monospace",

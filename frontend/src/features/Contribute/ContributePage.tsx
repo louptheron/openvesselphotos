@@ -18,7 +18,8 @@ import {
   Title
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
-import { COLORS, FONTS } from '../../theme'
+import { ChartCard, ChartSection } from '../../components/Chart'
+import { CHART_COLORS, COLORS, FONTS } from '../../theme'
 import { getVesselPath, isValidKey, normalizeKey } from '../../utils/vesselKey'
 
 const KEY_TYPES: Record<KeyType, { hint: string; label: string; placeholder: string }> = {
@@ -127,13 +128,17 @@ export function ContributePage() {
 
   return (
     <>
-      <Intro>
-        <Title>Contribute a photo</Title>
-        <Lead>
-          Your own picture, an open licence, and the vessel's CFR or MMSI. It goes live once a volunteer has reviewed
-          it.
-        </Lead>
-      </Intro>
+      <ChartSection>
+        <ChartIntro>
+          <IntroCard>
+            <Title>Contribute a photo</Title>
+            <Lead>
+              Your own picture, an open licence, and the vessel's CFR or MMSI. It goes live once a volunteer has
+              reviewed it.
+            </Lead>
+          </IntroCard>
+        </ChartIntro>
+      </ChartSection>
 
       <Columns>
         <Form onSubmit={submit}>
@@ -360,6 +365,27 @@ export function ContributePage() {
   )
 }
 
+const ChartIntro = styled(Container).attrs({ as: 'section' })`
+  padding-top: 36px;
+  padding-bottom: 40px;
+
+  @media (max-width: 600px) {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+`
+
+const IntroCard = styled(ChartCard)`
+  max-width: 700px;
+  padding: 26px 28px;
+  gap: 10px;
+  border-radius: 16px;
+
+  p {
+    color: ${CHART_COLORS.text};
+  }
+`
+
 const Intro = styled(Container).attrs({ as: 'section' })`
   padding-top: 32px;
   padding-bottom: 16px;
@@ -369,7 +395,7 @@ const Intro = styled(Container).attrs({ as: 'section' })`
 `
 
 const Columns = styled(Container).attrs({ as: 'section' })`
-  padding-top: 16px;
+  padding-top: 36px;
   padding-bottom: 56px;
   display: flex;
   flex-wrap: wrap;

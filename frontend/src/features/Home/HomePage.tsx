@@ -3,11 +3,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { useGetRecentVesselsQuery, useSearchVesselsQuery } from '../../api/api'
+import { ChartCard, ChartSection, WaveDivider } from '../../components/Chart'
 import { VesselCard } from '../../components/VesselCard'
 import { Chip, Container, Muted, PrimaryButton, SectionTitle } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
-import { COLORS, FONTS } from '../../theme'
+import { CHART_COLORS, COLORS, FONTS } from '../../theme'
 import { detectKey } from '../../utils/vesselKey'
+import { ChartCredits } from './ChartCredits'
+import { ChartVessels } from './ChartVessels'
 
 export function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -17,7 +20,8 @@ export function HomePage() {
 
   const isSearching = query.trim().length >= 2
   const searchResult = useSearchVesselsQuery(query, { skip: !isSearching })
-  const recentResult = useGetRecentVesselsQuery(undefined, { skip: isSearching })
+  // Always loaded: the latest vessels are also drawn on the chart
+  const recentResult = useGetRecentVesselsQuery()
   const { data: vessels, isError, isFetching } = isSearching ? searchResult : recentResult
 
   const search = (event: FormEvent) => {
@@ -34,6 +38,12 @@ export function HomePage() {
 
   const showExample = (example: string) => {
     setInput(example)
+    const key = detectKey(example)
+    if (key) {
+      navigate(`/vessels/${key.keyType}/${key.key}`)
+
+      return
+    }
     setSearchParams({ q: example })
   }
 
@@ -42,41 +52,50 @@ export function HomePage() {
 
   return (
     <>
-      <Hero>
-        <Chips>
-          <Chip>Free for everyone</Chip>
-          <Chip>Open-source code</Chip>
-          <Chip>Openly licensed photos</Chip>
-        </Chips>
-        <h1>Find a photo of any vessel, by its CFR or MMSI.</h1>
-        <p>
-          A simple, community-built library of vessel photos. Search it here or call the free API — every photo comes
-          with its credit and licence.
-        </p>
-        <SearchForm aria-label="Search vessels" onSubmit={search}>
-          <label className="visually-hidden" htmlFor="q">
-            Search by name, CFR or MMSI
-          </label>
-          <input
-            id="q"
-            onChange={event => setInput(event.target.value)}
-            placeholder="Name, CFR (FRA000123456) or MMSI (227000101)"
-            type="search"
-            value={input}
-          />
-          <PrimaryButton type="submit">Search</PrimaryButton>
-        </SearchForm>
-        <Muted>
-          Try{' '}
-          <ExampleButton onClick={() => showExample('FRA')} type="button">
-            FRA
-          </ExampleButton>{' '}
-          ·{' '}
-          <ExampleButton onClick={() => showExample('227')} type="button">
-            227
-          </ExampleButton>
-        </Muted>
-      </Hero>
+      <ChartSection overlay={!recentResult.isLoading && <ChartVessels vessels={recentResult.data ?? []} />}>
+        <Hero>
+          <HeroCard>
+            <Chips>
+              <Chip>Free for everyone</Chip>
+              <Chip>Open-source code</Chip>
+              <Chip>Openly licensed photos</Chip>
+            </Chips>
+            <h1>Find a photo of any vessel, by its CFR or MMSI.</h1>
+            <p>
+              A simple, community-built library of vessel photos. Search it here or call the free API — every photo
+              comes with its credit and licence.
+            </p>
+            <SearchForm aria-label="Search vessels" onSubmit={search}>
+              <label className="visually-hidden" htmlFor="q">
+                Search by name, CFR or MMSI
+              </label>
+              <input
+                id="q"
+                onChange={event => setInput(event.target.value)}
+                placeholder="Name, CFR (FRA000123456) or MMSI (227000101)"
+                type="search"
+                value={input}
+              />
+              <PrimaryButton type="submit">Search</PrimaryButton>
+            </SearchForm>
+            <Muted>
+              Try{' '}
+              <ExampleButton onClick={() => showExample('FRA000123456')} type="button">
+                FRA000123456
+              </ExampleButton>{' '}
+              ·{' '}
+              <ExampleButton onClick={() => showExample('227000101')} type="button">
+                227000101
+              </ExampleButton>{' '}
+              ·{' '}
+              <ExampleButton onClick={() => showExample('Ker Avel')} type="button">
+                Ker Avel
+              </ExampleButton>
+            </Muted>
+          </HeroCard>
+        </Hero>
+        {!recentResult.isLoading && <ChartCredits libraryVesselCount={recentResult.data?.length ?? 0} />}
+      </ChartSection>
 
       <Results aria-label="Results" aria-live="polite">
         <ResultsHeader>
@@ -116,6 +135,7 @@ export function HomePage() {
         )}
       </Results>
 
+      <WaveDivider />
       <ApiBand>
         <ApiBandInner>
           <div>
@@ -153,11 +173,26 @@ export function HomePage() {
 }
 
 const Hero = styled(Container).attrs({ as: 'section' })`
-  padding-top: 48px;
-  padding-bottom: 40px;
-  display: flex;
-  flex-direction: column;
+  padding-top: 56px;
+  padding-bottom: 64px;
+  /* Lets the clicks through to the vessels drawn on the chart */
+  pointer-events: none;
+
+  @media (max-width: 600px) {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+`
+
+const HeroCard = styled(ChartCard)`
+  max-width: 780px;
+  padding: 32px;
   gap: 20px;
+  pointer-events: auto;
+
+  @media (max-width: 600px) {
+    padding: 20px;
+  }
 
   h1 {
     margin: 0;
@@ -172,8 +207,12 @@ const Hero = styled(Container).attrs({ as: 'section' })`
     margin: 0;
     font-size: 18px;
     line-height: 1.5;
-    color: ${COLORS.text};
+    color: ${CHART_COLORS.text};
     max-width: 640px;
+  }
+
+  > span {
+    color: ${CHART_COLORS.textMuted};
   }
 `
 
@@ -220,6 +259,7 @@ const ExampleButton = styled.button`
 `
 
 const Results = styled(Container).attrs({ as: 'section' })`
+  padding-top: 48px;
   padding-bottom: 48px;
   display: flex;
   flex-direction: column;
