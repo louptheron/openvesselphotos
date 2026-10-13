@@ -111,7 +111,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
               <img
                 alt={`${name}, by ${photo.credit}`}
                 src={getPhotoUrl(photo.urls, '800')}
-                srcSet={`${getPhotoUrl(photo.urls, '800')} 800w, ${getPhotoUrl(photo.urls, 'full')} 2400w`}
+                srcSet={`${getPhotoUrl(photo.urls, '800')} 800w, ${getPhotoUrl(photo.urls, 'full')} 1600w`}
                 sizes="(max-width: 900px) 100vw, 760px"
               />
               <figcaption>

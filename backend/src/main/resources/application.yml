@@ -1,6 +1,11 @@
 server:
     # PORT is set by Scalingo
     port: ${PORT:${OPENVESSELPHOTOS_SERVER_PORT:8880}}
+    tomcat:
+        threads:
+            # Few threads: an S container (256 MB) allows 128 processes and threads in all
+            max: ${OPENVESSELPHOTOS_SERVER_MAX_THREADS:20}
+            min-spare: 2
     forward-headers-strategy: framework
     compression:
         enabled: true
@@ -16,7 +21,7 @@ openvesselphotos:
         # Scalingo sets SCALINGO_POSTGRESQL_URL and its alias DATABASE_URL (postgresql://user:password@host:port/db?sslmode=prefer).
         # A jdbc: URL is accepted too.
         url: ${SCALINGO_POSTGRESQL_URL:${DATABASE_URL:${OPENVESSELPHOTOS_DATABASE_URL}}}
-        hikari-max-pool-size: ${OPENVESSELPHOTOS_DATABASE_HIKARI_MAX_POOL_SIZE:5}
+        hikari-max-pool-size: ${OPENVESSELPHOTOS_DATABASE_HIKARI_MAX_POOL_SIZE:3}
 
 spring:
     application:

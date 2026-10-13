@@ -39,4 +39,7 @@ COPY --from=build-back /home/gradle/app/backend/build/libs/openvesselphotos.jar 
 ENV OPENVESSELPHOTOS_SERVER_PORT=8880
 EXPOSE 8880
 
-CMD ["sh", "-c", "exec java $JAVA_OPTS -jar openvesselphotos.jar"]
+# JVM options sized for 256 MB, as on Scalingo (see the Procfile). JAVA_OPTS comes last and overrides them.
+ENV DEFAULT_JAVA_OPTS="-XX:+UseSerialGC -Xmx96m -XX:MaxMetaspaceSize=110m -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=32m -XX:MaxDirectMemorySize=16m -Xss512k -XX:+ExitOnOutOfMemoryError"
+
+CMD ["sh", "-c", "exec java $DEFAULT_JAVA_OPTS $JAVA_OPTS -jar openvesselphotos.jar"]

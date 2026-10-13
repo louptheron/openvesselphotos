@@ -10,7 +10,7 @@ enum class ImageSize(
 ) {
     SMALL("320", 320),
     MEDIUM("800", 800),
-    FULL("full", 2400),
+    FULL("full", 1600),
     ;
 
     companion object {

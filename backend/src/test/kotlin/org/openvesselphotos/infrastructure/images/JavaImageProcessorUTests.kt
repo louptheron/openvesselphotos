@@ -18,10 +18,17 @@ class JavaImageProcessorUTests {
     fun `process Should produce every size`() {
         val result = processor.process(TestImages.create(3000, 2000))
 
-        assertThat(result.width to result.height).isEqualTo(2400 to 1600)
-        assertThat(dimensions(result.files.getValue(ImageSize.FULL))).isEqualTo(2400 to 1600)
-        assertThat(dimensions(result.files.getValue(ImageSize.MEDIUM))).isEqualTo(800 to 533)
+        assertThat(result.width to result.height).isEqualTo(1600 to 1067)
+        assertThat(dimensions(result.files.getValue(ImageSize.FULL))).isEqualTo(1600 to 1067)
+        assertThat(dimensions(result.files.getValue(ImageSize.MEDIUM))).isEqualTo(800 to 534)
         assertThat(dimensions(result.files.getValue(ImageSize.SMALL))).isEqualTo(320 to 213)
+    }
+
+    @Test
+    fun `process Should handle a 24-megapixel photo`() {
+        val result = processor.process(TestImages.create(6000, 4000))
+
+        assertThat(dimensions(result.files.getValue(ImageSize.FULL))).isEqualTo(1600 to 1067)
     }
 
     @Test
