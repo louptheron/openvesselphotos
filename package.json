@@ -1,0 +1,13 @@
+{
+  "name": "openvesselphotos",
+  "private": true,
+  "description": "Scalingo build entry point: builds the frontend before the Gradle buildpack packages the backend.",
+  "engines": {
+    "node": "24",
+    "npm": "11"
+  },
+  "scripts": {
+    "scalingo-postbuild": "npm --prefix frontend ci --include=dev && npm --prefix frontend run build",
+    "scalingo-cleanup": "rm -rf frontend/node_modules"
+  }
+}

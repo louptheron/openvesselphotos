@@ -1,0 +1,35 @@
+# Local stack. `make dev-db` starts the database only, `make docker-up` the whole app.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ovp
+      POSTGRES_PASSWORD: ovp
+      POSTGRES_DB: ovp
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ovp -d ovp"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: infra/docker/app/Dockerfile
+    environment:
+      DATABASE_URL: postgres://ovp:ovp@db:5432/ovp
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+    ports:
+      - "8880:8880"
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - app
+
+volumes:
+  db-data:
