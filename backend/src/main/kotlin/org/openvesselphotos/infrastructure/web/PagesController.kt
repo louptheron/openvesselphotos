@@ -60,7 +60,7 @@ class PagesController(
                         ),
                     ),
                 body =
-                    """<main><h1>A photo of every vessel, by CFR or MMSI.</h1>""" +
+                    """<main><h1>The open library of vessel photos, by CFR or MMSI.</h1>""" +
                         """<p>${escapeHtml(HOME_DESCRIPTION)}</p>""" +
                         """<h2>Recently added</h2><ul>$links</ul>""" +
                         """<p><a href="/contribute">Contribute a photo</a> · <a href="/docs">API documentation</a></p></main>""",
