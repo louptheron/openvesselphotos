@@ -37,6 +37,12 @@ export function HomePage() {
 
   const showExample = (example: string) => {
     setInput(example)
+    const key = detectKey(example)
+    if (key) {
+      navigate(`/vessels/${key.keyType}/${key.key}`)
+
+      return
+    }
     setSearchParams({ q: example })
   }
 
@@ -45,7 +51,7 @@ export function HomePage() {
 
   return (
     <>
-      <ChartSection overlay={recentResult.data && <ChartVessels vessels={recentResult.data} />}>
+      <ChartSection overlay={!recentResult.isLoading && <ChartVessels vessels={recentResult.data ?? []} />}>
         <Hero>
           <HeroCard>
             <Chips>
@@ -73,12 +79,16 @@ export function HomePage() {
             </SearchForm>
             <Muted>
               Try{' '}
-              <ExampleButton onClick={() => showExample('FRA')} type="button">
-                FRA
+              <ExampleButton onClick={() => showExample('FRA000123456')} type="button">
+                FRA000123456
               </ExampleButton>{' '}
               ·{' '}
-              <ExampleButton onClick={() => showExample('227')} type="button">
-                227
+              <ExampleButton onClick={() => showExample('227000101')} type="button">
+                227000101
+              </ExampleButton>{' '}
+              ·{' '}
+              <ExampleButton onClick={() => showExample('Ker Avel')} type="button">
+                Ker Avel
               </ExampleButton>
             </Muted>
           </HeroCard>

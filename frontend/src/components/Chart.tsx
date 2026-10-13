@@ -69,13 +69,6 @@ const Wrapper = styled.div`
     pointer-events: none;
   }
 
-  /* On narrow screens, the cropped chart would cut the vessels' cards */
-  @media (max-width: 960px) {
-    > svg {
-      display: none;
-    }
-  }
-
   > section {
     position: relative;
   }
