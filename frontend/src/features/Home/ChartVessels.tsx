@@ -16,7 +16,7 @@ const SPOTS = [
     boat: CHART_COLORS.photoCount,
     card: [900, 40],
     heading: 305,
-    line: [950, 192],
+    line: [950, 174],
     position: [952, 232],
     sky: '#E6D9C6'
   },
@@ -24,7 +24,7 @@ const SPOTS = [
 ] as const
 
 /** Cards are drawn at 156×124 and scaled up, to give their photos more room. */
-const CARD_SCALE = 1.22
+const CARD_SCALE = 1.08
 
 type Card = {
   /** Shown in the bottom right corner */
