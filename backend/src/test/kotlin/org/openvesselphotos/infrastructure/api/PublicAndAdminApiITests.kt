@@ -1,6 +1,7 @@
 package org.openvesselphotos.infrastructure.api
 
 import jakarta.servlet.http.Cookie
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.openvesselphotos.TestImages
 import org.openvesselphotos.config.AdminAuthentication
@@ -178,7 +179,73 @@ class PublicAndAdminApiITests {
     }
 
     @Test
-    fun `The React app Should be served on its routes`() {
-        mockMvc.perform(get("/vessels/cfr/FRA000123456")).andExpect(status().isOk)
+    fun `Pages Should be rendered for search engines`() {
+        // A vessel whose name tries to inject HTML and a script
+        submitPhoto("cfr", "FRA000999888", "</script><b>Evil</b>")
+        val cookie = adminCookie()
+        val queue =
+            mockMvc
+                .perform(get("/v1/admin/queue").cookie(cookie))
+                .andReturn()
+                .response.contentAsString
+        val photoId =
+            Regex(
+                """"id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000999888"""",
+            ).find(queue)!!.groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+
+        val html =
+            mockMvc
+                .perform(get("/vessels/cfr/FRA000999888"))
+                .andExpect(status().isOk)
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andReturn()
+                .response.contentAsString
+        assertThat(html)
+            .contains(
+                "<title>&lt;/script&gt;&lt;b&gt;Evil&lt;/b&gt; (CFR FRA000999888) — vessel photos | Open Vessel Photos</title>",
+            ).contains("""<link rel="canonical" href="http://localhost/vessels/cfr/FRA000999888" />""")
+            .contains(""""@type":"ImageObject"""")
+            .contains(""""license":"https://creativecommons.org/licenses/by/4.0/"""")
+            .contains("\\u003c/script>\\u003cb>Evil")
+            .contains("<h1>&lt;/script&gt;&lt;b&gt;Evil&lt;/b&gt;</h1>")
+            .doesNotContain("<b>Evil</b>")
+            .doesNotContain("noindex")
+
+        mockMvc.perform(get("/vessels/cfr/FRA000000001")).andExpect(status().isNotFound)
+        mockMvc.perform(get("/vessels/mmsi/nope")).andExpect(status().isNotFound)
+        mockMvc.perform(get("/unknown-page")).andExpect(status().isNotFound)
+        assertThat(
+            mockMvc
+                .perform(get("/").param("q", "ker"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("noindex")
+        assertThat(
+            mockMvc
+                .perform(get("/"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("""<a href="/vessels/cfr/FRA000999888">""")
+            .doesNotContain("noindex")
+        mockMvc.perform(get("/docs")).andExpect(status().isOk)
+
+        mockMvc
+            .perform(get("/sitemap.xml"))
+            .andExpect(status().isOk)
+            .andExpect(
+                content().string(
+                    org.hamcrest.Matchers.containsString("<loc>http://localhost/vessels/cfr/FRA000999888</loc>"),
+                ),
+            ).andExpect(
+                content().string(
+                    org.hamcrest.Matchers.containsString(
+                        "<image:loc>http://localhost/v1/cfr/FRA000999888/photos/1.jpg?size=full</image:loc>",
+                    ),
+                ),
+            )
+        mockMvc
+            .perform(get("/robots.txt"))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Sitemap: http://localhost/sitemap.xml")))
     }
 }

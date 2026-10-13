@@ -8,10 +8,11 @@ enum class Licence(
     val spdx: String,
     val label: String,
     val requiresCredit: Boolean,
+    val url: String,
 ) {
-    CC0("CC0-1.0", "CC0", false),
-    CC_BY_4_0("CC-BY-4.0", "CC BY 4.0", true),
-    CC_BY_SA_4_0("CC-BY-SA-4.0", "CC BY-SA 4.0", true),
+    CC0("CC0-1.0", "CC0", false, "https://creativecommons.org/publicdomain/zero/1.0/"),
+    CC_BY_4_0("CC-BY-4.0", "CC BY 4.0", true, "https://creativecommons.org/licenses/by/4.0/"),
+    CC_BY_SA_4_0("CC-BY-SA-4.0", "CC BY-SA 4.0", true, "https://creativecommons.org/licenses/by-sa/4.0/"),
     ;
 
     companion object {

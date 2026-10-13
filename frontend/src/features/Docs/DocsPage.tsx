@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { Card, Chip, CodeBlock, Container, Lead, SectionTitle, Title } from '../../components/ui'
+import { usePageMeta } from '../../hooks/usePageMeta'
 import { COLORS, FONTS } from '../../theme'
 
 const ENDPOINTS = [
@@ -57,6 +58,7 @@ const ENDPOINTS = [
 export function DocsPage() {
   const { hash } = useLocation()
   const origin = window.location.origin
+  usePageMeta('Free vessel photo API, by CFR or MMSI')
 
   useEffect(() => {
     if (hash) {

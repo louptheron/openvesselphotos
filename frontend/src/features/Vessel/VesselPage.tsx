@@ -15,6 +15,7 @@ import {
   SecondaryButton,
   SectionTitle
 } from '../../components/ui'
+import { usePageMeta } from '../../hooks/usePageMeta'
 import { COLORS, FONTS, SKIES } from '../../theme'
 import { getPhotoUrl, normalizeKey } from '../../utils/vesselKey'
 import { KeyLinkForm } from './KeyLinkForm'
@@ -33,6 +34,16 @@ export function VesselPage() {
   const keyType: KeyType = params.keyType === 'mmsi' ? 'mmsi' : 'cfr'
   const key = normalizeKey(params.key ?? '')
   const { data: vessel, error, isLoading } = useGetVesselQuery({ key, keyType })
+  const keys = vessel
+    ? [vessel.cfr && `CFR ${vessel.cfr}`, vessel.mmsi && `MMSI ${vessel.mmsi}`].filter(Boolean).join(', ')
+    : ''
+  usePageMeta(
+    vessel
+      ? `${vessel.name ?? keys} (${keys}) — vessel photos`
+      : isLoading
+        ? undefined
+        : `No vessel with ${keyType.toUpperCase()} ${key}`
+  )
 
   if (isLoading) {
     return <Container>Loading…</Container>

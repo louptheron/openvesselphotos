@@ -6,6 +6,7 @@ import { AdminPage } from './features/Admin/AdminPage'
 import { ContributePage } from './features/Contribute/ContributePage'
 import { DocsPage } from './features/Docs/DocsPage'
 import { HomePage } from './features/Home/HomePage'
+import { NotFoundPage } from './features/NotFound/NotFoundPage'
 import { VesselPage } from './features/Vessel/VesselPage'
 
 export function App() {
@@ -22,7 +23,7 @@ export function App() {
         <Route element={<ContributePage />} path="contribute" />
         <Route element={<DocsPage />} path="docs" />
         <Route element={<AdminPage />} path="admin" />
-        <Route element={<HomePage />} path="*" />
+        <Route element={<NotFoundPage />} path="*" />
       </Route>
     </Routes>
   )

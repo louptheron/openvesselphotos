@@ -5,6 +5,7 @@ import styled from 'styled-components'
 import { useGetRecentVesselsQuery, useSearchVesselsQuery } from '../../api/api'
 import { VesselCard } from '../../components/VesselCard'
 import { Chip, Container, Muted, PrimaryButton, SectionTitle } from '../../components/ui'
+import { usePageMeta } from '../../hooks/usePageMeta'
 import { COLORS, FONTS } from '../../theme'
 import { detectKey } from '../../utils/vesselKey'
 
@@ -37,6 +38,7 @@ export function HomePage() {
   }
 
   const detectedKey = isSearching ? detectKey(query) : undefined
+  usePageMeta(isSearching ? `Search: ${query}` : 'Open Vessel Photos — free photos of any vessel, by CFR or MMSI')
 
   return (
     <>

@@ -8,6 +8,8 @@ server:
         min-response-size: 2048
 
 openvesselphotos:
+    # Canonical base URL (e.g. https://openvesselphotos.org) in canonical links and the sitemap. Empty = requested host.
+    public-url: ${OPENVESSELPHOTOS_PUBLIC_URL:}
     # Unique admin password. Empty = admin disabled.
     admin-password: ${OPENVESSELPHOTOS_ADMIN_PASSWORD:}
     database:

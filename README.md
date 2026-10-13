@@ -65,6 +65,7 @@ Variables are listed in `backend/.env.example`.
 | `SCALINGO_POSTGRESQL_URL`, `DATABASE_URL`         | _(set by Scalingo)_        | Database URL, take precedence over the next one     |
 | `OPENVESSELPHOTOS_DATABASE_URL`                   | _(required otherwise)_     | `postgresql://user:password@host:port/db` or `jdbc:` |
 | `OPENVESSELPHOTOS_DATABASE_HIKARI_MAX_POOL_SIZE`  | `5`                        | Database connections per container                  |
+| `OPENVESSELPHOTOS_PUBLIC_URL`                     | _(requested host)_         | Canonical base URL, e.g. `https://example.org`      |
 | `OPENVESSELPHOTOS_ADMIN_PASSWORD`                 | _(empty: admin disabled)_  | Unique password of `/admin`                         |
 | `PORT`                                            | _(set by Scalingo)_        | HTTP port, takes precedence over the next one       |
 | `OPENVESSELPHOTOS_SERVER_PORT`                    | `8880`                     | HTTP port                                           |
@@ -72,6 +73,16 @@ Variables are listed in `backend/.env.example`.
 
 The admin session is a signed, HttpOnly cookie valid 12 hours. Its key derives from the password: changing
 `OPENVESSELPHOTOS_ADMIN_PASSWORD` signs everybody out. After 10 wrong passwords, an IP is locked out for 15 minutes.
+
+### Search engines
+
+The backend serves the React app's `index.html` with, for each page, its title, description, canonical URL, Open Graph
+tags, schema.org data (`ImageObject` with licence and credit for each photo) and a server-rendered copy of its content,
+which React replaces once loaded (`PagesController`). Unknown vessels and pages return a real 404, search results are
+`noindex`. `/sitemap.xml` lists every vessel page and its images, `/robots.txt` points to it.
+
+With a custom domain, set `OPENVESSELPHOTOS_PUBLIC_URL` so that canonical links never point to `*.scalingo.io`, and
+submit `https://<domain>/sitemap.xml` in Google Search Console.
 
 ### Differences with MonitorFish
 

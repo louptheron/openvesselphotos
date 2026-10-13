@@ -17,6 +17,7 @@ import {
   PrimaryButton,
   Title
 } from '../../components/ui'
+import { usePageMeta } from '../../hooks/usePageMeta'
 import { COLORS, FONTS } from '../../theme'
 import { getVesselPath, isValidKey, normalizeKey } from '../../utils/vesselKey'
 
@@ -53,6 +54,7 @@ export function ContributePage() {
   const [submitPhoto, { error, isLoading, isSuccess, reset }] = useSubmitPhotoMutation()
   const [today] = useState(() => new Date().toISOString().slice(0, 10))
 
+  usePageMeta('Contribute a vessel photo')
   const normalizedKey = normalizeKey(key)
   const isKeyValid = isValidKey(keyType, key)
   const { data: vessel, isFetching: isLookingUp } = useGetVesselQuery(

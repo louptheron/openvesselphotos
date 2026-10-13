@@ -19,11 +19,13 @@ import {
   TextButton,
   Title
 } from '../../components/ui'
+import { usePageMeta } from '../../hooks/usePageMeta'
 import { ReviewQueuePanel } from './ReviewQueuePanel'
 
 export function AdminPage() {
   const { data: queue, error, isLoading } = useGetReviewQueueQuery()
   const [logout] = useLogoutMutation()
+  usePageMeta('Review')
 
   if (isLoading) {
     return <Container>Loading…</Container>

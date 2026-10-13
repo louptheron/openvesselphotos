@@ -1,10 +1,11 @@
 package org.openvesselphotos.config
 
 import org.springframework.context.annotation.Configuration
-import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.http.CacheControl
 import org.springframework.web.servlet.config.annotation.CorsRegistry
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+import java.time.Duration
 
 @Configuration
 class WebConfig : WebMvcConfigurer {
@@ -17,11 +18,12 @@ class WebConfig : WebMvcConfigurer {
             .allowCredentials(false)
             .maxAge(86400)
     }
-}
 
-/** Serves the React app for its client-side routes. */
-@Controller
-class SpaController {
-    @GetMapping("/", "/vessels/**", "/contribute", "/docs", "/admin")
-    fun index() = "forward:/index.html"
+    /** Vite fingerprints the file names of its assets: they never change and can be cached forever. */
+    override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
+        registry
+            .addResourceHandler("/assets/**")
+            .addResourceLocations("classpath:/static/assets/")
+            .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable())
+    }
 }

@@ -3,12 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Free, open-source library of vessel photos, searchable by CFR or MMSI." />
+    <meta name="theme-color" content="#0B2233" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>Open Vessel Photos — vessel photos by CFR or MMSI</title>
+    <!-- seo:head -->
+    <title>Open Vessel Photos — free photos of any vessel, by CFR or MMSI</title>
+    <meta name="description" content="Free, community-built library of vessel photos, searchable by CFR or MMSI." />
+    <!-- /seo:head -->
   </head>
   <body>
-    <div id="root"></div>
+    <!-- The server renders each page's content in #root for search engines; React replaces it -->
+    <div id="root"><!-- seo:body --></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>
