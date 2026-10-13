@@ -10,41 +10,6 @@
     <path d="M1170.0 482.0 L1170.8 481.2 L1172.2 479.8 L1174.5 477.5 L1177.5 474.5 L1180.8 472.5 L1184.2 471.5 L1188.0 471.5 L1192.0 472.5 L1195.5 474.1 L1198.5 476.4 L1201.0 479.2 L1203.0 482.8 L1203.9 486.2 L1203.6 489.8 L1202.2 493.2 L1199.8 496.8 L1196.8 499.5 L1193.2 501.5 L1189.2 502.8 L1184.8 503.2 L1180.8 503.0 L1177.2 502.0 L1174.2 500.2 L1171.8 497.8 L1169.9 495.9 L1168.6 494.6 L1168.0 494.0 L1170.0 482.0 Z" fill="#EFE4BF" stroke="#7E745A" stroke-width="0.8"></path>
     <path d="M420 -10 L930 640" stroke="#C04F98" stroke-width="0.8" stroke-dasharray="14 5 2 5" fill="none"></path>
     <text x="560" y="182" transform="rotate(52 560 182)" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#B0408A">R13A1</text>
-    <path d="M760 82 H1520 M-80 82 H420" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M940 -30 V650" stroke="#C04F98" stroke-width="0.5"></path>
-    <path d="M936 0 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 20 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 40 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 60 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 80 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 100 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 120 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 140 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 160 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 180 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 200 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 220 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 240 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 260 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 280 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 300 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 320 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 340 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 360 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 380 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 400 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 420 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 440 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 460 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 480 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 500 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 520 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 540 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 560 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 580 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 600 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <path d="M936 620 H944" stroke="#7F8F99" stroke-width="0.5"></path>
-    <text x="1012" y="78" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#B0408A">47°40′</text>
     <path d="M1222 132 C1240 118 1270 126 1284 146 C1292 170 1278 198 1254 206 C1232 212 1220 196 1218 174 Z" fill="#DCCDAE"></path>
     <path d="M1268 18 C1292 8 1314 16 1320 34 C1318 52 1290 58 1270 46 Z" fill="#DCCDAE"></path>
     <path d="M1040 96 C1052 88 1074 92 1080 104 C1078 118 1058 122 1044 114 Z" fill="#DCCDAE"></path>
