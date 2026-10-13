@@ -5,7 +5,7 @@
 ###########################
 # Build frontend with npm #
 ###########################
-FROM node:24-alpine AS build-front
+FROM node:26-alpine AS build-front
 
 WORKDIR /tmp/frontend
 COPY frontend/package.json frontend/package-lock.json ./
