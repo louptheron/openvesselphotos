@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.openvesselphotos.domain.use_cases.public_api.AuthenticateApiKey
 import org.openvesselphotos.infrastructure.web.PublicUrl
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
@@ -16,6 +17,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
  * origin and pass without a key: a key cannot be hidden in the frontend code.
  */
 @Component
+@Order(1)
 class ApiKeyCheckFilter(
     private val authenticateApiKey: AuthenticateApiKey,
     private val publicUrl: PublicUrl,

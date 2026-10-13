@@ -16,6 +16,7 @@ import org.openvesselphotos.domain.use_cases.admin.RevokeApiKey
 import org.openvesselphotos.infrastructure.api.inputs.ApprovePhotoDataInput
 import org.openvesselphotos.infrastructure.api.inputs.LoginDataInput
 import org.openvesselphotos.infrastructure.api.inputs.RejectPhotoDataInput
+import org.openvesselphotos.infrastructure.api.security.ClientIp
 import org.springframework.http.CacheControl
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/v1/admin")
 class AdminController(
     private val adminAuthentication: AdminAuthentication,
+    private val clientIp: ClientIp,
     private val getReviewQueue: GetReviewQueue,
     private val getPendingPhotoImage: GetPendingPhotoImage,
     private val approvePhoto: ApprovePhoto,
@@ -51,7 +53,7 @@ class AdminController(
         @RequestBody input: LoginDataInput,
         request: HttpServletRequest,
     ): ResponseEntity<Unit> {
-        val cookie = adminAuthentication.login(input.password, request.remoteAddr, request.isSecure)
+        val cookie = adminAuthentication.login(input.password, clientIp.of(request), request.isSecure)
 
         return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, cookie.toString()).build()
     }

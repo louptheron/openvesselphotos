@@ -1,5 +1,7 @@
 # Open Vessel Photos
 
+[![CI](https://github.com/louptheron/openvesselphotos/actions/workflows/ci.yml/badge.svg)](https://github.com/louptheron/openvesselphotos/actions/workflows/ci.yml)
+
 A free, open-source library of vessel photos, searchable by **CFR** (EU fleet register) or **MMSI** (radio identity).
 
 - a public site: search, vessel pages, photo contribution;
@@ -56,6 +58,16 @@ make lint-front      # fix and format frontend code
 make run-app-docker  # production image + database, on http://localhost:8880
 ```
 
+## CI
+
+GitHub Actions, on every pull request and on `main`:
+
+- `ci.yml`: backend lint and tests (`make test-back`), frontend lint and tests (`make test-front`), the build as on
+  Scalingo (`npm run scalingo-postbuild` then `./gradlew stage`) and the Docker image, in parallel.
+- `security.yml`: Trivy scans the Docker image (OS packages and Java dependencies) on `main` and every week; results
+  are in the repository's Security tab.
+- Dependabot opens monthly grouped updates for GitHub Actions, Gradle, npm and the Docker base images.
+
 ## Configuration
 
 Variables are listed in `backend/.env.example`.
@@ -83,6 +95,22 @@ The admin session is a signed, HttpOnly cookie valid 12 hours. Its key derives f
 Anyone can request a key at `/api-key`. Requests appear in the "API keys" tab of `/admin`: approving one creates the key
 and shows it once, with a ready-made email to send it (there is no email sending in the app). Only its SHA-256 hash is
 stored. Keys can be revoked there, and photos sent with a key show its name in the review queue.
+
+### Rate limits
+
+In-memory counters per container (`RateLimitFilter`), adjustable with environment variables:
+
+| Requests                                   | Default limit          | Variable                                               |
+| ------------------------------------------ | ---------------------- | ------------------------------------------------------ |
+| `GET /v1/**`                               | 600 per minute per IP  | `OPENVESSELPHOTOS_RATE_LIMIT_READS_PER_MINUTE`          |
+| `POST /v1/**` without key (website forms)  | 20 per hour per IP     | `OPENVESSELPHOTOS_RATE_LIMIT_WRITES_PER_HOUR`           |
+| `POST /v1/**` with an API key              | 1,000 per hour per key | `OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_WRITES_PER_HOUR`   |
+| `POST /v1/api-key-requests`                | 5 per hour per IP      | `OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_REQUESTS_PER_HOUR` |
+
+Above a limit, the API returns a `429` with `Retry-After`. With several containers, each counts separately.
+
+The client IP is the TCP address, unless `OPENVESSELPHOTOS_CLIENT_IP_HEADER` names a header set by the proxy in front of
+the app: on Scalingo, `X-Real-IP`. Never set it without such a proxy, or clients could choose their IP.
 
 ### Search engines
 
@@ -112,11 +140,11 @@ scalingo create openvesselphotos --region osc-fr1
 scalingo --app openvesselphotos scale web:1:S
 scalingo --app openvesselphotos addons-add postgresql postgresql-starter-512
 scalingo --app openvesselphotos env-set OPENVESSELPHOTOS_ADMIN_PASSWORD="$(openssl rand -base64 24)"
+scalingo --app openvesselphotos env-set OPENVESSELPHOTOS_CLIENT_IP_HEADER=X-Real-IP
 git push scalingo main
 ```
 
 Flyway migrates the database at startup. The Docker image (`infra/docker/app/Dockerfile`) is for local use and self-hosting.
-
 
 ## Costs
 
