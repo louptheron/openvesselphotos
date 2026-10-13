@@ -158,9 +158,9 @@ export function HomePage() {
           <Link to="/contribute">{t.home.contributeLink}</Link>
         </div>
         <div>
-          <h3>{t.home.selfHostTitle}</h3>
-          <p>{t.home.selfHostText}</p>
-          <Link to="/docs#self-host">{t.home.selfHostLink}</Link>
+          <h3>{t.home.openTitle}</h3>
+          <p>{t.home.openText}</p>
+          <Link to="/docs#licences">{t.home.openLink}</Link>
         </div>
         <div>
           <h3>{t.home.datasetTitle}</h3>

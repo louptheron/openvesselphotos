@@ -74,10 +74,9 @@ export const fr: Messages = {
     contributeTitle: 'Envoyer une photo',
     contributeText: 'Envoyez votre propre photo, choisissez une licence libre, et elle est publiée après vérification.',
     contributeLink: 'Envoyer une photo →',
-    selfHostTitle: 'L’héberger soi-même',
-    selfHostText:
-      'Tout le service est open source. Faites tourner votre propre instance avec un conteneur et une base PostgreSQL.',
-    selfHostLink: 'Comment l’installer →',
+    openTitle: 'Libre pour de bon',
+    openText: `Code open source et export complet des données${_}: n’importe qui peut faire vivre la photothèque.`,
+    openLink: 'Voir les licences →',
     datasetTitle: 'Tout télécharger',
     datasetText: 'Export complet des navires, des URL des photos, des crédits et des licences, toujours à jour.',
     datasetLink: 'Données ouvertes (JSON) →'

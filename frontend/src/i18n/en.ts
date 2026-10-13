@@ -72,10 +72,9 @@ export const en = {
     contributeTitle: 'Contribute a photo',
     contributeText: 'Upload your own picture, pick an open licence, and it goes live once reviewed.',
     contributeLink: 'Upload a photo →',
-    selfHostTitle: 'Self-host it',
-    selfHostText:
-      'The whole service is open source. Run your own instance with one container and a PostgreSQL database.',
-    selfHostLink: 'How to run it →',
+    openTitle: 'Open for good',
+    openText: 'Open-source code and a full export of the data: anyone can keep the library going.',
+    openLink: 'See the licences →',
     datasetTitle: 'Download everything',
     datasetText: 'Full dataset export of vessels, photo URLs, credits and licences, always up to date.',
     datasetLink: 'Open data (JSON) →'
