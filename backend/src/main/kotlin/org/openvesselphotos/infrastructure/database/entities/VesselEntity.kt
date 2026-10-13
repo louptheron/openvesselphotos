@@ -18,10 +18,21 @@ class VesselEntity(
     val cfr: String?,
     val mmsi: String?,
     val name: String?,
+    val registration: String?,
+    val port: String?,
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: ZonedDateTime? = null,
 ) {
-    fun toVessel() = Vessel(id = id, cfr = cfr, mmsi = mmsi, name = name, createdAt = createdAt)
+    fun toVessel() =
+        Vessel(
+            id = id,
+            cfr = cfr,
+            mmsi = mmsi,
+            name = name,
+            registration = registration,
+            port = port,
+            createdAt = createdAt,
+        )
 
     companion object {
         fun fromVessel(vessel: Vessel) =
@@ -30,6 +41,8 @@ class VesselEntity(
                 cfr = vessel.cfr,
                 mmsi = vessel.mmsi,
                 name = vessel.name,
+                registration = vessel.registration,
+                port = vessel.port,
                 createdAt = vessel.createdAt,
             )
     }

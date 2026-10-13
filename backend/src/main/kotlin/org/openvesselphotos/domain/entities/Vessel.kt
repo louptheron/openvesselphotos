@@ -7,6 +7,10 @@ data class Vessel(
     val cfr: String?,
     val mmsi: String?,
     val name: String?,
+    /** Marking painted on the hull, e.g. "LO 752221" */
+    val registration: String? = null,
+    /** Port of registration */
+    val port: String? = null,
     val createdAt: ZonedDateTime? = null,
 ) {
     /** ISO 3166-1 alpha-3 code, the first three letters of the CFR. */

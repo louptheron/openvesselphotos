@@ -7,6 +7,7 @@ import type {
   KeyType,
   ReportReason,
   ReviewQueue,
+  VesselImportResult,
   Submission,
   Vessel,
   VesselSummary
@@ -71,6 +72,10 @@ export const api = createApi({
       providesTags: ['ApiKeys'],
       query: () => '/admin/api-keys'
     }),
+    importVessels: builder.mutation<VesselImportResult, FormData>({
+      invalidatesTags: ['Vessels'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/vessels/import' })
+    }),
     getReviewQueue: builder.query<ReviewQueue, void>({
       providesTags: ['Queue'],
       query: () => '/admin/queue'
@@ -95,6 +100,7 @@ export const {
   useGetRecentVesselsQuery,
   useGetReviewQueueQuery,
   useGetVesselQuery,
+  useImportVesselsMutation,
   useLazyGetVesselQuery,
   useLoginMutation,
   useLogoutMutation,

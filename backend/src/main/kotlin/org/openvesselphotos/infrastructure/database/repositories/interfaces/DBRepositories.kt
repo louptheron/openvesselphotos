@@ -24,6 +24,8 @@ interface DBVesselRepository : JpaRepository<VesselEntity, Int> {
         value = """
             SELECT * FROM vessels
             WHERE name ILIKE '%' || :query || '%' OR cfr LIKE :keyPrefix || '%' OR mmsi LIKE :keyPrefix || '%'
+               OR replace(registration, ' ', '') ILIKE :keyPrefix || '%'
+               OR port ILIKE :query || '%'
             ORDER BY name NULLS LAST
             LIMIT :limit
         """,
@@ -56,6 +58,12 @@ interface DBVesselRepository : JpaRepository<VesselEntity, Int> {
         nativeQuery = true,
     )
     fun findAllWithApprovedPhotos(): List<VesselEntity>
+
+    @Query(value = "SELECT * FROM vessels ORDER BY id OFFSET :offset LIMIT :limit", nativeQuery = true)
+    fun findPage(
+        offset: Int,
+        limit: Int,
+    ): List<VesselEntity>
 }
 
 interface DBPhotoRepository : JpaRepository<PhotoEntity, Int> {

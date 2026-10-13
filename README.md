@@ -83,6 +83,19 @@ Variables are listed in `backend/.env.example`.
 The admin session is a signed, HttpOnly cookie valid 12 hours. Its key derives from the password: changing
 `OPENVESSELPHOTOS_ADMIN_PASSWORD` signs everybody out. After 10 wrong passwords, an IP is locked out for 15 minutes.
 
+### Vessels without photos
+
+Vessels can exist before their first photo: their page then invites visitors to add one, and search engines index it
+(`/sitemap.xml` is an index of `sitemap-vessels-N.xml` files of 10,000 vessels). Import them from the "Import vessels"
+section of `/admin`:
+
+- an export of the [EU fleet register](https://webgate.ec.europa.eu/fleet-europa/search_en) (CSV, current fleet of a
+  country; columns `CFR`, `Vessel Name`, `Ext. Marking`, `Port Name`), or
+- a CSV with the columns `cfr`, `mmsi`, `name`, `registration` (hull marking, e.g. `LO 752221`), `port`.
+
+Existing vessels are never overwritten: only their missing name, registration and port are filled in, so an import can
+be run again. Rows without a valid CFR or MMSI are skipped and reported.
+
 ### API keys
 
 `GET` requests are open. `POST` requests to the public API need an API key in the `x-api-key` header

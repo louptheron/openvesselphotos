@@ -25,6 +25,9 @@ export type VesselSummary = {
   mmsi: string | null
   name: string | null
   photoCount: number
+  port: string | null
+  /** Marking painted on the hull, e.g. "LO 752221" */
+  registration: string | null
 }
 
 export type HistoryEvent = {
@@ -40,6 +43,8 @@ export type Vessel = {
   mmsi: string | null
   name: string | null
   photos: Photo[]
+  port: string | null
+  registration: string | null
 }
 
 export type Submission = {
@@ -100,6 +105,15 @@ export type ApiKeyRequest = {
   intendedUse: string
   name: string
   organisation: string
+}
+
+export type VesselImportResult = {
+  created: number
+  errors: string[]
+  read: number
+  skipped: number
+  unchanged: number
+  updated: number
 }
 
 export type ReviewQueue = {
