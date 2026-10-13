@@ -180,13 +180,13 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
         </Gallery>
 
         <Aside>
-          <div>
+          <Heading>
             {vessel.flag && <FlagChip>Flag · {vessel.flag} (from CFR)</FlagChip>}
             <h1>{name}</h1>
             {(vessel.registration || vessel.port) && (
               <Registration>{[vessel.registration, vessel.port].filter(Boolean).join(' · ')}</Registration>
             )}
-          </div>
+          </Heading>
 
           <Keys>
             <Card as="div">
@@ -282,9 +282,13 @@ const NotFound = styled(Container)`
 `
 
 const Breadcrumb = styled(Container).attrs({ as: 'nav' })`
-  padding-top: 8px;
   font-size: 14px;
   color: ${COLORS.muted};
+
+  a {
+    display: inline-block;
+    padding: 12px 0;
+  }
 `
 
 const Main = styled(Container).attrs({ as: 'section' })`
@@ -294,6 +298,14 @@ const Main = styled(Container).attrs({ as: 'section' })`
   flex-wrap: wrap;
   gap: 32px;
   align-items: flex-start;
+
+  /* Phones and tablets: one column, with the vessel's name before its photos */
+  @media (max-width: 959px) {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 18px;
+  }
 `
 
 const Gallery = styled.div`
@@ -302,6 +314,11 @@ const Gallery = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  /* In the one-column layout, the flex-basis would become a minimum height */
+  @media (max-width: 959px) {
+    flex: none;
+  }
 `
 
 const Figure = styled.figure`
@@ -388,9 +405,10 @@ const AddPhoto = styled(Link)`
 
 const ReportButton = styled.button`
   align-self: flex-start;
+  min-height: 44px;
   border: none;
   background: none;
-  padding: 8px 0;
+  padding: 0;
   font: inherit;
   font-size: 13px;
   color: ${COLORS.muted};
@@ -405,12 +423,24 @@ const Aside = styled.aside`
   flex-direction: column;
   gap: 18px;
 
+  /* Its blocks join the page's column, so that the heading can move above the photos */
+  @media (max-width: 959px) {
+    display: contents;
+  }
+`
+
+const Heading = styled.div`
   h1 {
     margin: 6px 0 0;
     font-family: ${FONTS.display};
     font-weight: 700;
-    font-size: 48px;
+    font-size: clamp(34px, 9vw, 48px);
     line-height: 1.02;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 959px) {
+    order: -1;
   }
 `
 

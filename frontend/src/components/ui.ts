@@ -128,7 +128,8 @@ const inputBase = css`
   border: 1px solid ${COLORS.inputBorder};
   border-radius: 10px;
   font: inherit;
-  font-size: 15px;
+  /* 16 px at least: iOS Safari zooms into smaller fields when they get the focus */
+  font-size: 16px;
   background: ${COLORS.white};
   color: ${COLORS.ink};
   width: 100%;
