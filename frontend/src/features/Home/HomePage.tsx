@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -17,6 +17,7 @@ export function HomePage() {
   const query = searchParams.get('q') ?? ''
   const [input, setInput] = useState(query)
   const navigate = useNavigate()
+  const isNarrow = useIsNarrow()
 
   const isSearching = query.trim().length >= 2
   const searchResult = useSearchVesselsQuery(query, { skip: !isSearching })
@@ -72,7 +73,7 @@ export function HomePage() {
               <input
                 id="q"
                 onChange={event => setInput(event.target.value)}
-                placeholder="Name, CFR (FRA000123456) or MMSI (227000101)"
+                placeholder={isNarrow ? 'Name, CFR or MMSI' : 'Name, CFR (FRA000123456) or MMSI (227000101)'}
                 type="search"
                 value={input}
               />
@@ -171,6 +172,22 @@ export function HomePage() {
     </>
   )
 }
+
+/** True on phone-width screens, where the full search placeholder would be cut. */
+function useIsNarrow(): boolean {
+  const [isNarrow, setIsNarrow] = useState(() => window.matchMedia(NARROW_QUERY).matches)
+  useEffect(() => {
+    const query = window.matchMedia(NARROW_QUERY)
+    const update = () => setIsNarrow(query.matches)
+    query.addEventListener('change', update)
+
+    return () => query.removeEventListener('change', update)
+  }, [])
+
+  return isNarrow
+}
+
+const NARROW_QUERY = '(max-width: 600px)'
 
 const Hero = styled(Container).attrs({ as: 'section' })`
   padding-top: 56px;
@@ -368,6 +385,8 @@ const Features = styled(Container).attrs({ as: 'section' })`
   }
 
   a {
+    align-self: flex-start;
+    padding: 12px 0;
     font-weight: 500;
   }
 `

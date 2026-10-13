@@ -19,7 +19,10 @@ export function Layout() {
           </NavItem>
           <NavItem to="/docs">API</NavItem>
           <NavItem to="/contribute">Contribute</NavItem>
-          <NavItem to="/docs#licences">Licences</NavItem>
+          {/* A plain link: as a NavLink, it would be highlighted together with "API" on /docs */}
+          <NavItem as={Link} to="/docs#licences">
+            Licences
+          </NavItem>
         </Nav>
       </Header>
       <main>
@@ -51,6 +54,7 @@ const Header = styled(Container).attrs({ as: 'header' })`
 const Brand = styled(Link)`
   display: flex;
   align-items: center;
+  min-height: 44px;
   gap: 10px;
   text-decoration: none;
   color: ${COLORS.ink};
