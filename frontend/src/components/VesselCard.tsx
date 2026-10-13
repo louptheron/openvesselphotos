@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { VesselSummary } from '../api/types'
-import { COLORS, FONTS, SKIES } from '../theme'
+import { COLORS, FONTS, SKIES, getSkyAndSea } from '../theme'
 import { getPhotoUrl, getVesselPath } from '../utils/vesselKey'
 import { BoatPlaceholder } from './Logo'
 
@@ -11,7 +11,7 @@ export function VesselCard({ index, vessel }: { index: number; vessel: VesselSum
 
   return (
     <Article>
-      <Picture $sky={SKIES[index % SKIES.length] ?? COLORS.info}>
+      <Picture $sky={getSkyAndSea(SKIES[index % SKIES.length] ?? COLORS.info)}>
         {photo ? (
           <img
             alt={`${vessel.name ?? 'Vessel'}, by ${photo.credit}`}
