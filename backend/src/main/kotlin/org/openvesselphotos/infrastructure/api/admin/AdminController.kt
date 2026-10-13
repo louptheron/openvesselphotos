@@ -3,12 +3,16 @@ package org.openvesselphotos.infrastructure.api.admin
 import jakarta.servlet.http.HttpServletRequest
 import org.openvesselphotos.config.AdminAuthentication
 import org.openvesselphotos.domain.entities.ImageSize
+import org.openvesselphotos.domain.use_cases.admin.ApproveApiKeyRequest
 import org.openvesselphotos.domain.use_cases.admin.ApprovePhoto
+import org.openvesselphotos.domain.use_cases.admin.GetActiveApiKeys
 import org.openvesselphotos.domain.use_cases.admin.GetPendingPhotoImage
 import org.openvesselphotos.domain.use_cases.admin.GetReviewQueue
+import org.openvesselphotos.domain.use_cases.admin.RejectApiKeyRequest
 import org.openvesselphotos.domain.use_cases.admin.RejectPhoto
 import org.openvesselphotos.domain.use_cases.admin.ResolveReport
 import org.openvesselphotos.domain.use_cases.admin.ReviewKeyLink
+import org.openvesselphotos.domain.use_cases.admin.RevokeApiKey
 import org.openvesselphotos.infrastructure.api.inputs.ApprovePhotoDataInput
 import org.openvesselphotos.infrastructure.api.inputs.LoginDataInput
 import org.openvesselphotos.infrastructure.api.inputs.RejectPhotoDataInput
@@ -37,6 +41,10 @@ class AdminController(
     private val rejectPhoto: RejectPhoto,
     private val reviewKeyLink: ReviewKeyLink,
     private val resolveReport: ResolveReport,
+    private val getActiveApiKeys: GetActiveApiKeys,
+    private val approveApiKeyRequest: ApproveApiKeyRequest,
+    private val rejectApiKeyRequest: RejectApiKeyRequest,
+    private val revokeApiKey: RevokeApiKey,
 ) {
     @PostMapping("/login")
     fun login(
@@ -117,5 +125,34 @@ class AdminController(
         @PathVariable id: Int,
     ) {
         resolveReport.execute(id, removePhoto = true)
+    }
+
+    @GetMapping("/api-keys")
+    fun activeApiKeys(): List<ApiKeyDataOutput> = getActiveApiKeys.execute().map(ApiKeyDataOutput::from)
+
+    /** The only time the key is shown: it is stored as a hash. */
+    @PostMapping("/api-keys/{id}/approve")
+    fun approveApiKey(
+        @PathVariable id: Int,
+    ): ApprovedApiKeyDataOutput {
+        val approved = approveApiKeyRequest.execute(id)
+
+        return ApprovedApiKeyDataOutput(key = approved.key, apiKey = ApiKeyDataOutput.from(approved.apiKey))
+    }
+
+    @PostMapping("/api-keys/{id}/reject")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun rejectApiKey(
+        @PathVariable id: Int,
+    ) {
+        rejectApiKeyRequest.execute(id)
+    }
+
+    @PostMapping("/api-keys/{id}/revoke")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun revokeApiKeyById(
+        @PathVariable id: Int,
+    ) {
+        revokeApiKey.execute(id)
     }
 }

@@ -65,6 +65,7 @@ class PublicAndAdminApiITests {
     ) {
         val request =
             multipart("/v1/$keyType/$key/photos")
+                .header("Sec-Fetch-Site", "same-origin")
                 .file(MockMultipartFile("file", "boat.jpg", "image/jpeg", TestImages.create(1200, 800)))
                 .param("credit", "J. Le Bihan")
                 .param("licence", "CC-BY-4.0")
@@ -88,11 +89,16 @@ class PublicAndAdminApiITests {
             mockMvc
                 .perform(get("/v1/admin/queue").cookie(cookie))
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.photos[0].photo.submittedKey").value("FRA000123456"))
-                .andExpect(jsonPath("$.photos[0].vessel").doesNotExist())
-                .andReturn()
+                .andExpect(
+                    jsonPath(
+                        "$.photos[?(@.photo.submittedKey == 'FRA000123456')].vessel",
+                    ).value(org.hamcrest.Matchers.contains(null as Any?)),
+                ).andReturn()
                 .response.contentAsString
-        val photoId = Regex(""""id":(\d+)""").find(queue)!!.groupValues[1]
+        val photoId =
+            Regex(
+                """"id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000123456"""",
+            ).find(queue)!!.groupValues[1]
         mockMvc.perform(get("/v1/admin/photos/$photoId.jpg").cookie(cookie)).andExpect(status().isOk)
         mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
 
@@ -115,6 +121,7 @@ class PublicAndAdminApiITests {
         mockMvc
             .perform(
                 post("/v1/cfr/FRA000123456/link")
+                    .header("Sec-Fetch-Site", "same-origin")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"keyType":"mmsi","key":"227000101","contributor":"A. Morvan"}"""),
             ).andExpect(status().isCreated)
@@ -140,6 +147,7 @@ class PublicAndAdminApiITests {
         mockMvc
             .perform(
                 post("/v1/mmsi/227000101/photos/1/reports")
+                    .header("Sec-Fetch-Site", "same-origin")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"reason":"WRONG_VESSEL"}"""),
             ).andExpect(status().isCreated)
@@ -167,6 +175,7 @@ class PublicAndAdminApiITests {
         mockMvc
             .perform(
                 multipart("/v1/mmsi/227000555/photos")
+                    .header("Sec-Fetch-Site", "same-origin")
                     .file(MockMultipartFile("file", "x.jpg", "image/jpeg", "nope".toByteArray()))
                     .param("credit", "Me")
                     .param("licence", "CC0-1.0"),
@@ -247,5 +256,72 @@ class PublicAndAdminApiITests {
         mockMvc
             .perform(get("/robots.txt"))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("Sitemap: http://localhost/sitemap.xml")))
+    }
+
+    @Test
+    fun `POST requests from outside the website Should need an active API key`() {
+        fun upload(apiKey: String?) =
+            mockMvc.perform(
+                multipart("/v1/mmsi/227000777/photos")
+                    .file(MockMultipartFile("file", "boat.jpg", "image/jpeg", TestImages.create(800, 600)))
+                    .param("credit", "Script")
+                    .param("licence", "CC0-1.0")
+                    .apply { apiKey?.let { header("x-api-key", it) } },
+            )
+
+        upload(
+            null,
+        ).andExpect(
+            status().isUnauthorized,
+        ).andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("/api-key")))
+        upload("ovp_wrong").andExpect(status().isUnauthorized)
+
+        // Request a key (open to everyone), then the admin approves it
+        mockMvc
+            .perform(
+                post("/v1/api-key-requests")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """{"name":"Fleet app","email":"dev@example.org","intendedUse":"Show vessel photos in our app"}""",
+                    ),
+            ).andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post(
+                    "/v1/api-key-requests",
+                ).contentType(
+                    MediaType.APPLICATION_JSON,
+                ).content("""{"name":"x","email":"nope","intendedUse":"short"}"""),
+            ).andExpect(status().isBadRequest)
+        val cookie = adminCookie()
+        val queue =
+            mockMvc
+                .perform(get("/v1/admin/queue").cookie(cookie))
+                .andReturn()
+                .response.contentAsString
+        val requestId = Regex(""""apiKeyRequests":\[\{"id":(\d+)""").find(queue)!!.groupValues[1]
+        val approval =
+            mockMvc
+                .perform(post("/v1/admin/api-keys/$requestId/approve").cookie(cookie))
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.apiKey.status").value("ACTIVE"))
+                .andReturn()
+                .response.contentAsString
+        val key = Regex(""""key":"(ovp_[A-Za-z0-9_-]+)"""").find(approval)!!.groupValues[1]
+
+        upload(key).andExpect(status().isCreated)
+        mockMvc
+            .perform(get("/v1/admin/queue").cookie(cookie))
+            .andExpect(jsonPath("$.photos[?(@.photo.submittedKey == '227000777')].apiKeyName").value("Fleet app"))
+        mockMvc
+            .perform(get("/v1/admin/api-keys").cookie(cookie))
+            .andExpect(jsonPath("$[0].name").value("Fleet app"))
+            .andExpect(jsonPath("$[0].lastUsedAt").isNotEmpty)
+
+        mockMvc.perform(post("/v1/admin/api-keys/$requestId/revoke").cookie(cookie)).andExpect(status().isNoContent)
+        upload(key).andExpect(status().isUnauthorized)
+
+        // GET requests stay open
+        mockMvc.perform(get("/v1/vessels/recent")).andExpect(status().isOk)
     }
 }

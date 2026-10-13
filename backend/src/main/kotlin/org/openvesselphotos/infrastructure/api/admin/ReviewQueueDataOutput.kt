@@ -1,5 +1,6 @@
 package org.openvesselphotos.infrastructure.api.admin
 
+import org.openvesselphotos.domain.entities.ApiKey
 import org.openvesselphotos.domain.entities.Photo
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.use_cases.admin.ReviewQueue
@@ -53,9 +54,45 @@ data class AdminPhotoDataOutput(
     }
 }
 
+data class ApiKeyDataOutput(
+    val id: Int,
+    val name: String,
+    val email: String,
+    val organisation: String?,
+    val intendedUse: String,
+    val status: String,
+    val keyPrefix: String?,
+    val createdAt: ZonedDateTime?,
+    val reviewedAt: ZonedDateTime?,
+    val lastUsedAt: ZonedDateTime?,
+) {
+    companion object {
+        fun from(apiKey: ApiKey) =
+            ApiKeyDataOutput(
+                id = requireNotNull(apiKey.id),
+                name = apiKey.name,
+                email = apiKey.email,
+                organisation = apiKey.organisation,
+                intendedUse = apiKey.intendedUse,
+                status = apiKey.status.name,
+                keyPrefix = apiKey.keyPrefix,
+                createdAt = apiKey.createdAt,
+                reviewedAt = apiKey.reviewedAt,
+                lastUsedAt = apiKey.lastUsedAt,
+            )
+    }
+}
+
+data class ApprovedApiKeyDataOutput(
+    val key: String,
+    val apiKey: ApiKeyDataOutput,
+)
+
 data class PendingPhotoDataOutput(
     val photo: AdminPhotoDataOutput,
     val vessel: AdminVesselDataOutput?,
+    /** Name of the API key the photo was sent with, if any. */
+    val apiKeyName: String?,
 )
 
 data class PendingKeyLinkDataOutput(
@@ -80,6 +117,7 @@ data class ReviewQueueDataOutput(
     val photos: List<PendingPhotoDataOutput>,
     val keyLinks: List<PendingKeyLinkDataOutput>,
     val reports: List<OpenReportDataOutput>,
+    val apiKeyRequests: List<ApiKeyDataOutput>,
 ) {
     companion object {
         fun from(queue: ReviewQueue) =
@@ -87,8 +125,9 @@ data class ReviewQueueDataOutput(
                 photos =
                     queue.photos.map {
                         PendingPhotoDataOutput(
-                            AdminPhotoDataOutput.from(it.photo),
-                            it.vessel?.let(AdminVesselDataOutput::from),
+                            photo = AdminPhotoDataOutput.from(it.photo),
+                            vessel = it.vessel?.let(AdminVesselDataOutput::from),
+                            apiKeyName = it.apiKey?.name,
                         )
                     },
                 keyLinks =
@@ -113,6 +152,7 @@ data class ReviewQueueDataOutput(
                             vessel = AdminVesselDataOutput.from(it.vessel),
                         )
                     },
+                apiKeyRequests = queue.apiKeyRequests.map(ApiKeyDataOutput::from),
             )
     }
 }

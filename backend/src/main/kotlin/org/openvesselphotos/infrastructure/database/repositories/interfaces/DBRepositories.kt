@@ -1,8 +1,10 @@
 package org.openvesselphotos.infrastructure.database.repositories.interfaces
 
+import org.openvesselphotos.domain.entities.ApiKeyStatus
 import org.openvesselphotos.domain.entities.PhotoStatus
 import org.openvesselphotos.domain.entities.ReportStatus
 import org.openvesselphotos.domain.entities.ReviewStatus
+import org.openvesselphotos.infrastructure.database.entities.ApiKeyEntity
 import org.openvesselphotos.infrastructure.database.entities.KeyLinkRequestEntity
 import org.openvesselphotos.infrastructure.database.entities.PhotoEntity
 import org.openvesselphotos.infrastructure.database.entities.PhotoFileEntity
@@ -102,4 +104,14 @@ interface DBReportRepository : JpaRepository<ReportEntity, Int> {
         photoId: Int,
         status: ReportStatus,
     ): List<ReportEntity>
+}
+
+interface DBApiKeyRepository : JpaRepository<ApiKeyEntity, Int> {
+    fun findByKeyHash(keyHash: String): ApiKeyEntity?
+
+    fun findByStatusOrderByCreatedAt(status: ApiKeyStatus): List<ApiKeyEntity>
+
+    @Modifying
+    @Query("UPDATE ApiKeyEntity k SET k.lastUsedAt = CURRENT_TIMESTAMP WHERE k.id = :id")
+    fun markUsed(id: Int)
 }

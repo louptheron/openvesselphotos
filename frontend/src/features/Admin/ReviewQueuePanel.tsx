@@ -2,18 +2,20 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { getErrorMessage, useAdminActionMutation } from '../../api/api'
-import type { AdminPhoto, AdminVessel, ReviewQueue } from '../../api/types'
+import { getErrorMessage, useAdminActionMutation, useApproveApiKeyMutation } from '../../api/api'
+import type { AdminPhoto, AdminVessel, ApprovedApiKey, ReviewQueue } from '../../api/types'
 import { Card, ErrorMessage, Field, Input, Label, Muted, Pill, Select } from '../../components/ui'
 import { COLORS, FONTS } from '../../theme'
 import { getVesselPath } from '../../utils/vesselKey'
+import { ActiveApiKeys, ApprovedApiKeyBanner } from './ApiKeys'
 
-type Tab = 'keyLinks' | 'photos' | 'reports'
+type Tab = 'apiKeys' | 'keyLinks' | 'photos' | 'reports'
 
 const TABS: Array<{ label: string; value: Tab }> = [
   { label: 'Photos', value: 'photos' },
   { label: 'Key links', value: 'keyLinks' },
-  { label: 'Reports', value: 'reports' }
+  { label: 'Reports', value: 'reports' },
+  { label: 'API keys', value: 'apiKeys' }
 ]
 
 const REJECT_REASONS = [
@@ -43,10 +45,47 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
   const [tab, setTab] = useState<Tab>('photos')
   const [selectedId, setSelectedId] = useState<string>()
   const [runAction, { error, isLoading }] = useAdminActionMutation()
+  const [approveApiKey, { error: approveError, isLoading: isApproving }] = useApproveApiKeyMutation()
+  const [approvedApiKey, setApprovedApiKey] = useState<ApprovedApiKey>()
 
   const act = (path: string, body?: object) => runAction(body ? { body, path } : { path })
 
+  const approve = async (id: number) => {
+    const result = await approveApiKey(id)
+    if (result.data) {
+      setApprovedApiKey(result.data)
+    }
+  }
+
   const items: Record<Tab, Item[]> = {
+    apiKeys: queue.apiKeyRequests.map(request => ({
+      id: `api-key-${request.id}`,
+      render: () => (
+        <Detail>
+          <h2>{request.name}</h2>
+          <Muted>
+            Requested {formatDate(request.createdAt)} · <a href={`mailto:${request.email}`}>{request.email}</a>
+          </Muted>
+          <Facts>
+            <div>
+              <dt>Organisation or project</dt>
+              <dd>{request.organisation ?? '—'}</dd>
+            </div>
+          </Facts>
+          <Message>{request.intendedUse}</Message>
+          <Buttons>
+            <Approve disabled={isApproving} onClick={() => approve(request.id)} type="button">
+              Approve and create the key
+            </Approve>
+            <Reject disabled={isLoading} onClick={() => act(`api-keys/${request.id}/reject`)} type="button">
+              Reject
+            </Reject>
+          </Buttons>
+        </Detail>
+      ),
+      subtitle: `${request.organisation ?? request.email} · API key request`,
+      title: request.name
+    })),
     keyLinks: queue.keyLinks.map(link => ({
       id: `link-${link.id}`,
       render: () => (
@@ -81,10 +120,19 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
       subtitle: `Add ${link.keyType.toUpperCase()} ${link.key}`,
       title: link.vessel.name ?? 'Unnamed vessel'
     })),
-    photos: queue.photos.map(({ photo, vessel }) => ({
+    photos: queue.photos.map(({ apiKeyName, photo, vessel }) => ({
       id: `photo-${photo.id}`,
       photo,
-      render: () => <PhotoReview key={photo.id} isLoading={isLoading} onAction={act} photo={photo} vessel={vessel} />,
+      render: () => (
+        <PhotoReview
+          key={photo.id}
+          apiKeyName={apiKeyName}
+          isLoading={isLoading}
+          onAction={act}
+          photo={photo}
+          vessel={vessel}
+        />
+      ),
       subtitle: `${vessel ? 'New photo' : 'First photo · creates vessel'} · ${photo.licenceName}`,
       title:
         vessel?.name ?? photo.submittedVesselName ?? `${photo.submittedKeyType.toUpperCase()} ${photo.submittedKey}`
@@ -142,6 +190,10 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
         ))}
       </Tabs>
       {error && <ErrorMessage>{getErrorMessage(error)}</ErrorMessage>}
+      {approveError && <ErrorMessage>{getErrorMessage(approveError)}</ErrorMessage>}
+      {approvedApiKey && (
+        <ApprovedApiKeyBanner approved={approvedApiKey} onClose={() => setApprovedApiKey(undefined)} />
+      )}
 
       {list.length === 0 ? (
         <Empty>Nothing to review here.</Empty>
@@ -168,16 +220,19 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
           <Card as="article">{selected?.render()}</Card>
         </Columns>
       )}
+      {tab === 'apiKeys' && <ActiveApiKeys isLoading={isLoading} onRevoke={id => act(`api-keys/${id}/revoke`)} />}
     </>
   )
 }
 
 function PhotoReview({
+  apiKeyName,
   isLoading,
   onAction,
   photo,
   vessel
 }: {
+  apiKeyName: string | null
   isLoading: boolean
   onAction: (path: string, body?: object) => void
   photo: AdminPhoto
@@ -193,6 +248,7 @@ function PhotoReview({
       <Muted>
         Submitted {formatDate(photo.createdAt)} by {photo.credit}
         {photo.contributorEmail && ` (${photo.contributorEmail})`}
+        {apiKeyName && ` · sent with the API key of ${apiKeyName}`}
       </Muted>
       <Facts>
         <div>

@@ -22,6 +22,7 @@ data class PhotoSubmission(
     val place: String?,
     val contributorEmail: String?,
     val vesselName: String?,
+    val apiKeyId: Int? = null,
 )
 
 @UseCase
@@ -72,6 +73,7 @@ class SubmitPhoto(
                     contributorEmail = email,
                     width = image.width,
                     height = image.height,
+                    apiKeyId = submission.apiKeyId,
                 ),
             )
         image.files.forEach { (size, content) -> photoRepository.saveFile(requireNotNull(photo.id), size, content) }

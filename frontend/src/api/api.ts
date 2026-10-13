@@ -1,6 +1,16 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-import type { KeyType, ReportReason, ReviewQueue, Submission, Vessel, VesselSummary } from './types'
+import type {
+  ApiKey,
+  ApiKeyRequest,
+  ApprovedApiKey,
+  KeyType,
+  ReportReason,
+  ReviewQueue,
+  Submission,
+  Vessel,
+  VesselSummary
+} from './types'
 
 type VesselKeyParams = { key: string; keyType: KeyType }
 
@@ -15,6 +25,9 @@ export const api = createApi({
     getVessel: builder.query<Vessel, VesselKeyParams>({
       providesTags: ['Vessels'],
       query: ({ key, keyType }) => `/${keyType}/${encodeURIComponent(key)}`
+    }),
+    requestApiKey: builder.mutation<Submission, ApiKeyRequest>({
+      query: body => ({ body, method: 'POST', url: '/api-key-requests' })
     }),
     reportPhoto: builder.mutation<Submission, VesselKeyParams & { message: string; n: number; reason: ReportReason }>({
       query: ({ key, keyType, message, n, reason }) => ({
@@ -47,8 +60,16 @@ export const api = createApi({
 
     // Admin (the session is an HttpOnly cookie)
     adminAction: builder.mutation<void, { body?: object; path: string }>({
-      invalidatesTags: ['Queue', 'Vessels'],
+      invalidatesTags: ['ApiKeys', 'Queue', 'Vessels'],
       query: ({ body, path }) => ({ body: body ?? {}, method: 'POST', url: `/admin/${path}` })
+    }),
+    approveApiKey: builder.mutation<ApprovedApiKey, number>({
+      invalidatesTags: ['ApiKeys', 'Queue'],
+      query: id => ({ method: 'POST', url: `/admin/api-keys/${id}/approve` })
+    }),
+    getActiveApiKeys: builder.query<ApiKey[], void>({
+      providesTags: ['ApiKeys'],
+      query: () => '/admin/api-keys'
     }),
     getReviewQueue: builder.query<ReviewQueue, void>({
       providesTags: ['Queue'],
@@ -64,11 +85,13 @@ export const api = createApi({
     })
   }),
   reducerPath: 'api',
-  tagTypes: ['Queue', 'Vessels']
+  tagTypes: ['ApiKeys', 'Queue', 'Vessels']
 })
 
 export const {
   useAdminActionMutation,
+  useApproveApiKeyMutation,
+  useGetActiveApiKeysQuery,
   useGetRecentVesselsQuery,
   useGetReviewQueueQuery,
   useGetVesselQuery,
@@ -76,6 +99,7 @@ export const {
   useLoginMutation,
   useLogoutMutation,
   useReportPhotoMutation,
+  useRequestApiKeyMutation,
   useSearchVesselsQuery,
   useSubmitPhotoMutation,
   useSuggestKeyLinkMutation

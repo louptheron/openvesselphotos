@@ -77,7 +77,33 @@ export type AdminPhoto = {
   width: number
 }
 
+export type ApiKey = {
+  createdAt: string | null
+  email: string
+  id: number
+  intendedUse: string
+  keyPrefix: string | null
+  lastUsedAt: string | null
+  name: string
+  organisation: string | null
+  reviewedAt: string | null
+  status: 'ACTIVE' | 'PENDING' | 'REJECTED' | 'REVOKED'
+}
+
+export type ApprovedApiKey = {
+  apiKey: ApiKey
+  key: string
+}
+
+export type ApiKeyRequest = {
+  email: string
+  intendedUse: string
+  name: string
+  organisation: string
+}
+
 export type ReviewQueue = {
+  apiKeyRequests: ApiKey[]
   keyLinks: Array<{
     contributor: string | null
     createdAt: string | null
@@ -87,6 +113,7 @@ export type ReviewQueue = {
     vessel: AdminVessel
   }>
   photos: Array<{
+    apiKeyName: string | null
     photo: AdminPhoto
     vessel: AdminVessel | null
   }>

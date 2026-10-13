@@ -46,7 +46,10 @@ class CrawlersController(
                     vessel,
                 )}</loc>${lastModified?.let { "<lastmod>$it</lastmod>" } ?: ""}$images</url>"
             }
-        val staticUrls = listOf("/", "/docs", "/contribute").joinToString("") { "<url><loc>$baseUrl$it</loc></url>" }
+        val staticUrls =
+            listOf("/", "/docs", "/contribute", "/api-key").joinToString("") {
+                "<url><loc>$baseUrl$it</loc></url>"
+            }
 
         return ResponseEntity
             .ok()

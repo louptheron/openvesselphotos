@@ -74,6 +74,16 @@ Variables are listed in `backend/.env.example`.
 The admin session is a signed, HttpOnly cookie valid 12 hours. Its key derives from the password: changing
 `OPENVESSELPHOTOS_ADMIN_PASSWORD` signs everybody out. After 10 wrong passwords, an IP is locked out for 15 minutes.
 
+### API keys
+
+`GET` requests are open. `POST` requests to the public API need an API key in the `x-api-key` header
+(`ApiKeyCheckFilter`, as in MonitorFish), except those from the website's own forms: browsers mark them as same-origin
+(`Sec-Fetch-Site`), and a key cannot be hidden in frontend code.
+
+Anyone can request a key at `/api-key`. Requests appear in the "API keys" tab of `/admin`: approving one creates the key
+and shows it once, with a ready-made email to send it (there is no email sending in the app). Only its SHA-256 hash is
+stored. Keys can be revoked there, and photos sent with a key show its name in the review queue.
+
 ### Search engines
 
 The backend serves the React app's `index.html` with, for each page, its title, description, canonical URL, Open Graph
@@ -122,6 +132,7 @@ See `/docs` on a running instance. In short:
 | GET    | `/v1/search?q=`                              | Search by name, CFR or MMSI prefix            |
 | GET    | `/v1/vessels/recent`                         | Latest published vessels                      |
 | GET    | `/v1/export.json`                            | Whole dataset                                 |
-| POST   | `/v1/{cfr\|mmsi}/{key}/photos`                | Contribute a photo (multipart)                |
+| POST   | `/v1/{cfr\|mmsi}/{key}/photos`                | Contribute a photo (multipart), API key       |
 | POST   | `/v1/{cfr\|mmsi}/{key}/link`                  | Suggest the missing key                       |
 | POST   | `/v1/{cfr\|mmsi}/{key}/photos/{n}/reports`    | Report a photo                                |
+| POST   | `/v1/api-key-requests`                       | Request an API key (no key needed)            |

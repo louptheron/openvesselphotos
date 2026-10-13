@@ -11,6 +11,13 @@ data class ReportDataInput(
     val message: String? = null,
 )
 
+data class ApiKeyRequestDataInput(
+    val name: String,
+    val email: String,
+    val organisation: String? = null,
+    val intendedUse: String,
+)
+
 data class LoginDataInput(
     val password: String,
 )

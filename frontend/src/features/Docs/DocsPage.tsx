@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { Card, Chip, CodeBlock, Container, Lead, SectionTitle, Title } from '../../components/ui'
@@ -39,19 +39,26 @@ const ENDPOINTS = [
   },
   {
     description:
-      'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, vesselName?), under whichever key you know. Published after review.',
+      'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, vesselName?), under whichever key you know. Published after review. Needs an API key.',
     method: 'POST',
     path: '/v1/{cfr|mmsi}/{key}/photos'
   },
   {
-    description: 'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review.',
+    description:
+      'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review. Needs an API key.',
     method: 'POST',
     path: '/v1/{cfr|mmsi}/{key}/link'
   },
   {
-    description: 'Report a photo: {"reason": "WRONG_VESSEL|COPYRIGHT|PRIVACY|OTHER", "message": "…"}.',
+    description:
+      'Report a photo: {"reason": "WRONG_VESSEL|COPYRIGHT|PRIVACY|OTHER", "message": "…"}. Needs an API key.',
     method: 'POST',
     path: '/v1/{cfr|mmsi}/{key}/photos/{n}/reports'
+  },
+  {
+    description: 'Request an API key: {"name", "email", "organisation"?, "intendedUse"}. Sent by email once approved.',
+    method: 'POST',
+    path: '/v1/api-key-requests'
   }
 ]
 
@@ -132,9 +139,21 @@ export function DocsPage() {
         </p>
       </Section>
 
+      <Section id="api-key">
+        <SectionTitle>API key</SectionTitle>
+        <p>
+          Every <code>GET</code> is open, without key. <code>POST</code> requests need an API key in the{' '}
+          <code>x-api-key</code> header: <Link to="/api-key">request one</Link>, it is free. Without it, they return a{' '}
+          <code>401</code>.
+        </p>
+        <CodeBlock>{`curl -X POST -H "x-api-key: ovp_…" \\
+  -F file=@boat.jpg -F credit="Jane Doe" -F licence=CC-BY-4.0 \\
+  ${origin}/v1/cfr/FRA000123456/photos`}</CodeBlock>
+      </Section>
+
       <Chips>
         <Chip>CORS enabled</Chip>
-        <Chip>No account, no API key</Chip>
+        <Chip>Reading needs no API key</Chip>
         <Chip>Always show the credit</Chip>
       </Chips>
 

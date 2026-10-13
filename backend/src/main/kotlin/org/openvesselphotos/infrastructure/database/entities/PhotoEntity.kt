@@ -50,6 +50,8 @@ class PhotoEntity(
     val reviewedAt: ZonedDateTime?,
     @Column(name = "reject_reason")
     val rejectReason: String?,
+    @Column(name = "api_key_id")
+    val apiKeyId: Int?,
 ) {
     fun toPhoto() =
         Photo(
@@ -69,6 +71,7 @@ class PhotoEntity(
             createdAt = createdAt,
             reviewedAt = reviewedAt,
             rejectReason = rejectReason,
+            apiKeyId = apiKeyId,
         )
 
     companion object {
@@ -91,6 +94,7 @@ class PhotoEntity(
                 createdAt = photo.createdAt,
                 reviewedAt = photo.reviewedAt,
                 rejectReason = photo.rejectReason,
+                apiKeyId = photo.apiKeyId,
             )
     }
 }

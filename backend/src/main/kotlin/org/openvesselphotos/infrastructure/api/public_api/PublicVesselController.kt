@@ -13,9 +13,11 @@ import org.openvesselphotos.domain.use_cases.public_api.GetRecentVessels
 import org.openvesselphotos.domain.use_cases.public_api.GetVessel
 import org.openvesselphotos.domain.use_cases.public_api.PhotoSubmission
 import org.openvesselphotos.domain.use_cases.public_api.ReportPhoto
+import org.openvesselphotos.domain.use_cases.public_api.RequestApiKey
 import org.openvesselphotos.domain.use_cases.public_api.SearchVessels
 import org.openvesselphotos.domain.use_cases.public_api.SubmitPhoto
 import org.openvesselphotos.domain.use_cases.public_api.SuggestKeyLink
+import org.openvesselphotos.infrastructure.api.inputs.ApiKeyRequestDataInput
 import org.openvesselphotos.infrastructure.api.inputs.KeyLinkDataInput
 import org.openvesselphotos.infrastructure.api.inputs.ReportDataInput
 import org.openvesselphotos.infrastructure.api.outputs.ExportedVesselDataOutput
@@ -23,6 +25,7 @@ import org.openvesselphotos.infrastructure.api.outputs.PhotoDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.SubmissionDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.VesselDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.VesselSummaryDataOutput
+import org.openvesselphotos.infrastructure.api.security.ApiKeyCheckFilter
 import org.springframework.http.CacheControl
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -30,6 +33,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -53,6 +57,7 @@ class PublicVesselController(
     private val suggestKeyLink: SuggestKeyLink,
     private val reportPhoto: ReportPhoto,
     private val exportDataset: ExportDataset,
+    private val requestApiKey: RequestApiKey,
 ) {
     @GetMapping("/search")
     fun search(
@@ -112,6 +117,7 @@ class PublicVesselController(
         @RequestParam(required = false) place: String?,
         @RequestParam(required = false) email: String?,
         @RequestParam(required = false) vesselName: String?,
+        @RequestAttribute(name = ApiKeyCheckFilter.API_KEY_ID_ATTRIBUTE, required = false) apiKeyId: Int?,
     ): SubmissionDataOutput {
         val photo =
             submitPhoto.execute(
@@ -124,10 +130,22 @@ class PublicVesselController(
                     place = place,
                     contributorEmail = email,
                     vesselName = vesselName,
+                    apiKeyId = apiKeyId,
                 ),
             )
 
         return SubmissionDataOutput(requireNotNull(photo.id), photo.status.name)
+    }
+
+    /** Open to everyone: it is how one gets an API key. Keys are given by an admin after review. */
+    @PostMapping("/api-key-requests")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun requestApiKey(
+        @RequestBody input: ApiKeyRequestDataInput,
+    ): SubmissionDataOutput {
+        val request = requestApiKey.execute(input.name, input.email, input.organisation, input.intendedUse)
+
+        return SubmissionDataOutput(requireNotNull(request.id), request.status.name)
     }
 
     @PostMapping("/{keyType:cfr|mmsi}/{key:[A-Za-z0-9]+}/link")

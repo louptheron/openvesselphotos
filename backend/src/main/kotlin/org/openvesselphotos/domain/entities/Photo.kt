@@ -28,4 +28,6 @@ data class Photo(
     val createdAt: ZonedDateTime? = null,
     val reviewedAt: ZonedDateTime? = null,
     val rejectReason: String? = null,
+    /** The API key the photo was sent with, if any. */
+    val apiKeyId: Int? = null,
 )

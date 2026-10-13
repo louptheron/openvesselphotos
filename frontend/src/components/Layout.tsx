@@ -30,7 +30,7 @@ export function Layout() {
           <span>Open Vessel Photos · open-source code · photos under their own open licences</span>
           <span>
             <a href="/v1/export.json">Download the dataset</a> · <Link to="/docs">API</Link> ·{' '}
-            <Link to="/admin">Review</Link>
+            <Link to="/api-key">API key</Link> · <Link to="/admin">Review</Link>
           </span>
         </FooterInner>
       </Footer>

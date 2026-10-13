@@ -187,6 +187,21 @@ class PagesController(
             ),
         )
 
+    @GetMapping("/api-key")
+    fun apiKey(): ResponseEntity<String> =
+        htmlPageRenderer.render(
+            HtmlPage(
+                title = "Request an API key | $SITE_NAME",
+                description =
+                    "Request a free API key to contribute vessel photos, suggest CFR or MMSI keys and report photos " +
+                        "with scripts. Reading the API needs no key.",
+                canonicalPath = "/api-key",
+                body =
+                    """<main><h1>Request an API key</h1>""" +
+                        """<p>Reading the API is free and open. An API key is only needed to send data with a script.</p></main>""",
+            ),
+        )
+
     @GetMapping("/admin")
     fun admin(): ResponseEntity<String> =
         htmlPageRenderer.render(
