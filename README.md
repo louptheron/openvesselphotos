@@ -84,6 +84,22 @@ Anyone can request a key at `/api-key`. Requests appear in the "API keys" tab of
 and shows it once, with a ready-made email to send it (there is no email sending in the app). Only its SHA-256 hash is
 stored. Keys can be revoked there, and photos sent with a key show its name in the review queue.
 
+### Rate limits
+
+In-memory counters per container (`RateLimitFilter`), adjustable with environment variables:
+
+| Requests                                   | Default limit          | Variable                                               |
+| ------------------------------------------ | ---------------------- | ------------------------------------------------------ |
+| `GET /v1/**`                               | 600 per minute per IP  | `OPENVESSELPHOTOS_RATE_LIMIT_READS_PER_MINUTE`          |
+| `POST /v1/**` without key (website forms)  | 20 per hour per IP     | `OPENVESSELPHOTOS_RATE_LIMIT_WRITES_PER_HOUR`           |
+| `POST /v1/**` with an API key              | 1,000 per hour per key | `OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_WRITES_PER_HOUR`   |
+| `POST /v1/api-key-requests`                | 5 per hour per IP      | `OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_REQUESTS_PER_HOUR` |
+
+Above a limit, the API returns a `429` with `Retry-After`. With several containers, each counts separately.
+
+The client IP is the TCP address, unless `OPENVESSELPHOTOS_CLIENT_IP_HEADER` names a header set by the proxy in front of
+the app: on Scalingo, `X-Real-IP`. Never set it without such a proxy, or clients could choose their IP.
+
 ### Search engines
 
 The backend serves the React app's `index.html` with, for each page, its title, description, canonical URL, Open Graph
@@ -112,6 +128,7 @@ scalingo create openvesselphotos --region osc-fr1
 scalingo --app openvesselphotos addons-add postgresql postgresql-starter-512
 scalingo --app openvesselphotos env-set OPENVESSELPHOTOS_ADMIN_PASSWORD="$(openssl rand -base64 24)"
 scalingo --app openvesselphotos env-set JAVA_OPTS="-XX:MaxRAMPercentage=75"
+scalingo --app openvesselphotos env-set OPENVESSELPHOTOS_CLIENT_IP_HEADER=X-Real-IP
 git push scalingo main
 ```
 

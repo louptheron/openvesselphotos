@@ -10,6 +10,18 @@ server:
 openvesselphotos:
     # Canonical base URL (e.g. https://openvesselphotos.org) in canonical links and the sitemap. Empty = requested host.
     public-url: ${OPENVESSELPHOTOS_PUBLIC_URL:}
+    # Header holding the client IP, set by the proxy in front of the app (X-Real-IP on Scalingo).
+    # Empty = the TCP address. Never set it without such a proxy: clients could then choose their IP.
+    client-ip-header: ${OPENVESSELPHOTOS_CLIENT_IP_HEADER:}
+    rate-limits:
+        # GET /v1/**, per IP
+        reads-per-minute: ${OPENVESSELPHOTOS_RATE_LIMIT_READS_PER_MINUTE:600}
+        # POST /v1/** without API key (the website's forms), per IP
+        writes-per-hour: ${OPENVESSELPHOTOS_RATE_LIMIT_WRITES_PER_HOUR:20}
+        # POST /v1/** with an API key, per key
+        api-key-writes-per-hour: ${OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_WRITES_PER_HOUR:1000}
+        # POST /v1/api-key-requests, per IP
+        api-key-requests-per-hour: ${OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_REQUESTS_PER_HOUR:5}
     # Unique admin password. Empty = admin disabled.
     admin-password: ${OPENVESSELPHOTOS_ADMIN_PASSWORD:}
     database:
