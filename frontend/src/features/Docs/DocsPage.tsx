@@ -116,6 +116,8 @@ export function DocsPage() {
   "cfr": "FRA000123456",
   "mmsi": "227000101",
   "name": "Ker Avel",
+  "registration": "GV 123456",
+  "port": "Le Guilvinec",
   "flag": "FRA",
   "photos": [{
     "n": 1,

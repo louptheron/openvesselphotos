@@ -85,13 +85,17 @@ class PagesController(
         val name = vesselName(vessel)
         val keys = listOfNotNull(vessel.cfr?.let { "CFR $it" }, vessel.mmsi?.let { "MMSI $it" }).joinToString(", ")
         val licences = photos.map { it.licence.label }.distinct().joinToString(", ")
+        // e.g. "LO 752221, Lorient"
+        val registration = listOfNotNull(vessel.registration, vessel.port).joinToString(", ").ifEmpty { null }
+        val registrationText = registration?.let { ", $it" } ?: ""
         val description =
             when {
-                photos.isEmpty() -> "Vessel $name ($keys)${vessel.flag?.let {
-                    ", flag $it"
-                } ?: ""}. No photo yet: contribute the first one."
+                photos.isEmpty() ->
+                    "Vessel $name ($keys$registrationText)${vessel.flag?.let { ", flag $it" } ?: ""}. " +
+                        "No photo yet: contribute the first one."
                 else ->
-                    "${photos.size} photo${if (photos.size == 1) "" else "s"} of the vessel $name ($keys)" +
+                    "${photos.size} photo${if (photos.size == 1) "" else "s"} " +
+                        "of the vessel $name ($keys$registrationText)" +
                         "${vessel.flag?.let { ", flag $it" } ?: ""}, free to reuse under open licences ($licences)."
             }
         val canonicalPath = vesselPath(vessel)
@@ -148,7 +152,8 @@ class PagesController(
                     ),
                 body =
                     """<main><p><a href="/">Search</a> › ${escapeHtml(name)}</p><h1>${escapeHtml(name)}</h1>""" +
-                        """<p>${escapeHtml(keys)}${vessel.flag?.let { " · Flag ${escapeHtml(it)}" } ?: ""}</p>""" +
+                        """<p>${escapeHtml(keys)}${registration?.let { " · ${escapeHtml(it)}" } ?: ""}""" +
+                        """${vessel.flag?.let { " · Flag ${escapeHtml(it)}" } ?: ""}</p>""" +
                         """<p>${escapeHtml(description)}</p>$figures""" +
                         """<p><a href="/contribute?${if (vessel.cfr != null) "cfr=${vessel.cfr}" else "mmsi=${vessel.mmsi}"}">Add a photo</a></p></main>""",
             ),

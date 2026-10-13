@@ -8,11 +8,13 @@ import org.openvesselphotos.domain.use_cases.admin.ApprovePhoto
 import org.openvesselphotos.domain.use_cases.admin.GetActiveApiKeys
 import org.openvesselphotos.domain.use_cases.admin.GetPendingPhotoImage
 import org.openvesselphotos.domain.use_cases.admin.GetReviewQueue
+import org.openvesselphotos.domain.use_cases.admin.ImportVessels
 import org.openvesselphotos.domain.use_cases.admin.RejectApiKeyRequest
 import org.openvesselphotos.domain.use_cases.admin.RejectPhoto
 import org.openvesselphotos.domain.use_cases.admin.ResolveReport
 import org.openvesselphotos.domain.use_cases.admin.ReviewKeyLink
 import org.openvesselphotos.domain.use_cases.admin.RevokeApiKey
+import org.openvesselphotos.domain.use_cases.admin.VesselImportResult
 import org.openvesselphotos.infrastructure.api.inputs.ApprovePhotoDataInput
 import org.openvesselphotos.infrastructure.api.inputs.LoginDataInput
 import org.openvesselphotos.infrastructure.api.inputs.RejectPhotoDataInput
@@ -28,8 +30,10 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 
 /** Every route but /login is protected by [org.openvesselphotos.config.AdminAuthenticationFilter]. */
 @RestController
@@ -47,6 +51,7 @@ class AdminController(
     private val approveApiKeyRequest: ApproveApiKeyRequest,
     private val rejectApiKeyRequest: RejectApiKeyRequest,
     private val revokeApiKey: RevokeApiKey,
+    private val importVessels: ImportVessels,
 ) {
     @PostMapping("/login")
     fun login(
@@ -157,4 +162,10 @@ class AdminController(
     ) {
         revokeApiKey.execute(id)
     }
+
+    /** Creates vessels without photos from a CSV file, e.g. an export of the EU fleet register. */
+    @PostMapping("/vessels/import", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun importVesselsFromCsv(
+        @RequestPart file: MultipartFile,
+    ): VesselImportResult = importVessels.execute(VesselsCsvParser.parse(String(file.bytes, Charsets.UTF_8)))
 }

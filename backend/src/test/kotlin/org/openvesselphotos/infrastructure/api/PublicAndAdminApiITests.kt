@@ -244,6 +244,14 @@ class PublicAndAdminApiITests {
             .andExpect(status().isOk)
             .andExpect(
                 content().string(
+                    org.hamcrest.Matchers.containsString("<loc>http://localhost/sitemap-vessels-1.xml</loc>"),
+                ),
+            )
+        mockMvc
+            .perform(get("/sitemap-vessels-1.xml"))
+            .andExpect(status().isOk)
+            .andExpect(
+                content().string(
                     org.hamcrest.Matchers.containsString("<loc>http://localhost/vessels/cfr/FRA000999888</loc>"),
                 ),
             ).andExpect(
@@ -323,5 +331,78 @@ class PublicAndAdminApiITests {
 
         // GET requests stay open
         mockMvc.perform(get("/v1/vessels/recent")).andExpect(status().isOk)
+    }
+
+    @Test
+    fun `Imported vessels Should exist without photos, and be completed but never overwritten`() {
+        val cookie = adminCookie()
+
+        fun import(csv: String) =
+            mockMvc
+                .perform(
+                    multipart("/v1/admin/vessels/import")
+                        .file(MockMultipartFile("file", "fleet.csv", "text/csv", csv.toByteArray()))
+                        .cookie(cookie),
+                ).andExpect(status().isOk)
+
+        // An export of the EU fleet register: extra columns, quoted fields, a vessel's events on several lines
+        import(
+            """
+            Country Code;CFR;Event Code;Registration Nbr;Ext. Marking;Vessel Name;Port Code;Port Name
+            FRA;FRA000752221;CST;752221;"LO 752221";;FRLRT;Lorient
+            FRA;FRA000752221;MOD;752221;"LO 752221";LES MENHIRS;FRLRT;Lorient
+            FRA;FRA000425329;CST;425329;LO 425329;MIREN;FRLRT;Lorient
+            FRA;NOT-A-CFR;CST;1;X 1;BAD;;
+            """.trimIndent(),
+        ).andExpect(jsonPath("$.read").value(4))
+            .andExpect(jsonPath("$.created").value(2))
+            .andExpect(jsonPath("$.skipped").value(1))
+            .andExpect(jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("Line 5")))
+
+        mockMvc
+            .perform(get("/v1/cfr/FRA000752221"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.name").value("LES MENHIRS"))
+            .andExpect(jsonPath("$.registration").value("LO 752221"))
+            .andExpect(jsonPath("$.port").value("Lorient"))
+            .andExpect(jsonPath("$.photos").isEmpty)
+        assertThat(
+            mockMvc
+                .perform(get("/vessels/cfr/FRA000752221"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<h1>LES MENHIRS</h1>")
+            .contains("LO 752221, Lorient")
+            .contains("No photo yet")
+        mockMvc.perform(get("/v1/search").param("q", "lo752221")).andExpect(jsonPath("$[0].cfr").value("FRA000752221"))
+        mockMvc.perform(get("/v1/search").param("q", "lorient")).andExpect(jsonPath("$.length()").value(2))
+        assertThat(
+            mockMvc
+                .perform(get("/sitemap-vessels-1.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<loc>http://localhost/vessels/cfr/FRA000752221</loc>")
+
+        // A second import (simple format) fills in missing data only
+        import(
+            """
+            cfr,mmsi,name,registration,port
+            FRA000752221,,Another name,,
+            FRA000425329,,MIREN,LO 425329,Lorient
+            ,227000888,Sans CFR,,Étel
+            """.trimIndent(),
+        ).andExpect(jsonPath("$.created").value(1))
+            .andExpect(jsonPath("$.updated").value(0))
+            .andExpect(jsonPath("$.unchanged").value(2))
+        mockMvc.perform(get("/v1/cfr/FRA000752221")).andExpect(jsonPath("$.name").value("LES MENHIRS"))
+        mockMvc.perform(get("/v1/mmsi/227000888")).andExpect(jsonPath("$.port").value("Étel"))
+
+        // Only the admin can import
+        mockMvc
+            .perform(
+                multipart(
+                    "/v1/admin/vessels/import",
+                ).file(MockMultipartFile("file", "f.csv", "text/csv", "cfr\n".toByteArray())),
+            ).andExpect(status().isUnauthorized)
     }
 }

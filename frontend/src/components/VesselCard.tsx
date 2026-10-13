@@ -38,10 +38,15 @@ export function VesselCard({ index, vessel }: { index: number; vessel: VesselSum
             <dd>{vessel.mmsi ?? '—'}</dd>
           </div>
         </Keys>
-        {photo && (
+        {photo ? (
           <Credit>
             <span>© {photo.credit}</span>
             <LicenceBadge>{photo.licenceName}</LicenceBadge>
+          </Credit>
+        ) : (
+          <Credit>
+            <span>{[vessel.registration, vessel.port].filter(Boolean).join(' · ')}</span>
+            <span>No photo yet</span>
           </Credit>
         )}
       </Body>

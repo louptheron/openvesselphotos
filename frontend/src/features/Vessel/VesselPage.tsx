@@ -128,7 +128,10 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
           ) : (
             <EmptyFigure>
               <BoatPlaceholder width={320} />
-              <p>No photo available.</p>
+              <p>No photo of {name} yet.</p>
+              <PrimaryButton as={Link} to={`/contribute?${contributeQuery}`}>
+                Add the first photo
+              </PrimaryButton>
             </EmptyFigure>
           )}
 
@@ -180,6 +183,9 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
           <div>
             {vessel.flag && <FlagChip>Flag · {vessel.flag} (from CFR)</FlagChip>}
             <h1>{name}</h1>
+            {(vessel.registration || vessel.port) && (
+              <Registration>{[vessel.registration, vessel.port].filter(Boolean).join(' · ')}</Registration>
+            )}
           </div>
 
           <Keys>
@@ -321,6 +327,12 @@ const Figure = styled.figure`
     gap: 8px;
     font-size: 14px;
   }
+`
+
+const Registration = styled.p`
+  margin: 6px 0 0;
+  font-size: 17px;
+  color: ${COLORS.text};
 `
 
 const EmptyFigure = styled.div`

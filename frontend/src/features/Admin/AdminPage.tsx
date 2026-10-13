@@ -21,6 +21,7 @@ import {
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { ReviewQueuePanel } from './ReviewQueuePanel'
+import { VesselImport } from './VesselImport'
 
 export function AdminPage() {
   const { data: queue, error, isLoading } = useGetReviewQueueQuery()
@@ -50,6 +51,7 @@ export function AdminPage() {
         </TextButton>
       </Header>
       <ReviewQueuePanel queue={queue} />
+      <VesselImport />
     </Page>
   )
 }
