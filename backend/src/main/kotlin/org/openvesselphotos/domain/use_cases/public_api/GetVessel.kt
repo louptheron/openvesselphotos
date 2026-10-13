@@ -2,6 +2,7 @@ package org.openvesselphotos.domain.use_cases.public_api
 
 import org.openvesselphotos.config.UseCase
 import org.openvesselphotos.domain.entities.HistoryEvent
+import org.openvesselphotos.domain.entities.HistoryEventType
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.VesselDetails
 import org.openvesselphotos.domain.entities.VesselKey
@@ -31,25 +32,40 @@ class GetVessel(
             photos.mapNotNull { photo ->
                 photo.reviewedAt?.let {
                     HistoryEvent(
-                        it,
-                        "Photo ${photo.number} published (${photo.licence.label})",
-                        photo.credit,
+                        date = it,
+                        type = HistoryEventType.PHOTO_PUBLISHED,
+                        description = "Photo ${photo.number} published (${photo.licence.label})",
+                        by = photo.credit,
+                        photoNumber = photo.number,
+                        licence = photo.licence.label,
                     )
                 }
             }
         val linkEvents =
             keyLinkRequestRepository.findApprovedByVesselId(vesselId).mapNotNull { request ->
                 val otherType = if (request.key.type == KeyType.CFR) KeyType.MMSI else KeyType.CFR
-                val otherKey = vessel.keyValue(otherType)?.let { " to ${otherType.name} $it" } ?: ""
+                val key = "${request.key.type.name} ${request.key.value}"
+                val linkedTo = vessel.keyValue(otherType)?.let { "${otherType.name} $it" }
                 request.reviewedAt?.let {
                     HistoryEvent(
-                        it,
-                        "${request.key.type.name} ${request.key.value} linked$otherKey",
-                        request.contributor,
+                        date = it,
+                        type = HistoryEventType.KEY_LINKED,
+                        description = "$key linked${linkedTo?.let { other -> " to $other" } ?: ""}",
+                        by = request.contributor,
+                        key = key,
+                        linkedTo = linkedTo,
                     )
                 }
             }
-        val creationEvent = vessel.createdAt?.let { HistoryEvent(it, "Vessel added", null) }
+        val creationEvent =
+            vessel.createdAt?.let {
+                HistoryEvent(
+                    it,
+                    HistoryEventType.VESSEL_ADDED,
+                    "Vessel added",
+                    null,
+                )
+            }
 
         return VesselDetails(
             vessel = vessel,

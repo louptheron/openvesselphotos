@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { VesselSummary } from '../../api/types'
+import type { Messages } from '../../i18n/en'
+import { useTranslation } from '../../i18n'
 import { CHART_COLORS, COLORS } from '../../theme'
 import { getPhotoUrl, getVesselPath } from '../../utils/vesselKey'
 import { COMMONS_VESSELS } from './commonsVessels'
@@ -37,13 +39,13 @@ type Card = {
   subtitle: string
 }
 
-function toCard(vessel: VesselSummary | undefined, index: number): Card | undefined {
+function toCard(vessel: VesselSummary | undefined, index: number, t: Messages): Card | undefined {
   if (vessel) {
     return {
-      count: `${vessel.photoCount} photo${vessel.photoCount === 1 ? '' : 's'}`,
+      count: t.common.photos(vessel.photoCount),
       href: getVesselPath(vessel),
       isExternal: false,
-      name: vessel.name ?? 'Unnamed vessel',
+      name: vessel.name ?? t.common.unnamedVessel,
       photo: vessel.mainPhoto ? getPhotoUrl(vessel.mainPhoto.urls, '320') : undefined,
       subtitle: vessel.cfr ? `CFR ${vessel.cfr}` : `MMSI ${vessel.mmsi}`
     }
@@ -52,7 +54,7 @@ function toCard(vessel: VesselSummary | undefined, index: number): Card | undefi
 
   return (
     commonsVessel && {
-      count: 'Commons',
+      count: t.chart.commons,
       href: commonsVessel.fileUrl,
       isExternal: true,
       name: commonsVessel.name,
@@ -70,6 +72,7 @@ function toCard(vessel: VesselSummary | undefined, index: number): Card | undefi
  */
 export function ChartVessels({ vessels }: { vessels: VesselSummary[] }) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   return (
     <svg aria-hidden="true" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1440 620">
@@ -80,7 +83,7 @@ export function ChartVessels({ vessels }: { vessels: VesselSummary[] }) {
       </defs>
       <g transform="translate(60 0)">
         {SPOTS.map((spot, index) => {
-          const card = toCard(vessels[index], index)
+          const card = toCard(vessels[index], index, t)
           if (!card) {
             return null
           }

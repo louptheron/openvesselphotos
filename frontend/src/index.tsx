@@ -11,15 +11,18 @@ import { BrowserRouter } from 'react-router-dom'
 
 import { App } from './App'
 import { GlobalStyle } from './components/GlobalStyle'
+import { I18nProvider } from './i18n'
 import { store } from './store'
 
 createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
-        <GlobalStyle />
-        <App />
-      </BrowserRouter>
+      <I18nProvider>
+        <BrowserRouter>
+          <GlobalStyle />
+          <App />
+        </BrowserRouter>
+      </I18nProvider>
     </Provider>
   </StrictMode>
 )

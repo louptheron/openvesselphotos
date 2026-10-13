@@ -4,11 +4,13 @@ import styled from 'styled-components'
 import { getErrorMessage, useImportVesselsMutation } from '../../api/api'
 import { Card, ErrorMessage, Muted, SecondaryButton, SectionTitle, SuccessMessage } from '../../components/ui'
 import { COLORS } from '../../theme'
+import { useTranslation } from '../../i18n'
 
 /** Creates vessels without photos from a CSV file, e.g. an export of the EU fleet register. */
 export function VesselImport() {
   const [file, setFile] = useState<File>()
   const [importVessels, { data: result, error, isLoading }] = useImportVesselsMutation()
+  const { t } = useTranslation()
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -21,17 +23,16 @@ export function VesselImport() {
 
   return (
     <Section>
-      <SectionTitle as="h2">Import vessels</SectionTitle>
+      <SectionTitle as="h2">{t.admin.importTitle}</SectionTitle>
       <Muted>
-        Creates vessels without photos, so that their pages exist and can be found. Accepts an export of the{' '}
+        {t.admin.importText1}{' '}
         <a href="https://webgate.ec.europa.eu/fleet-europa/search_en" rel="noreferrer" target="_blank">
-          EU fleet register
+          {t.admin.importRegister}
         </a>{' '}
-        (CSV, current fleet of a country), or a CSV with the columns cfr, mmsi, name, registration, port. Existing
-        vessels are never overwritten: only their missing data is filled in. 15 MB max.
+        {t.admin.importText2}
       </Muted>
       <Form as="form" onSubmit={submit}>
-        <label htmlFor="vessels-file">CSV file</label>
+        <label htmlFor="vessels-file">{t.admin.csvFile}</label>
         <input
           accept=".csv,text/csv"
           id="vessels-file"
@@ -39,14 +40,13 @@ export function VesselImport() {
           type="file"
         />
         <SecondaryButton disabled={!file || isLoading} type="submit">
-          {isLoading ? 'Importing…' : 'Import'}
+          {isLoading ? t.admin.importing : t.admin.import}
         </SecondaryButton>
       </Form>
-      {error && <ErrorMessage>{getErrorMessage(error)}</ErrorMessage>}
+      {error && <ErrorMessage>{getErrorMessage(error, t)}</ErrorMessage>}
       {result && (
         <SuccessMessage>
-          {result.read} lines read: {result.created} vessels created, {result.updated} completed, {result.unchanged}{' '}
-          already up to date, {result.skipped} skipped.
+          {t.admin.importResult(result)}
           {result.errors.length > 0 && (
             <Errors>
               {result.errors.map(message => (

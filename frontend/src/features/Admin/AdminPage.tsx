@@ -20,16 +20,18 @@ import {
   Title
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
+import { useTranslation } from '../../i18n'
 import { ReviewQueuePanel } from './ReviewQueuePanel'
 import { VesselImport } from './VesselImport'
 
 export function AdminPage() {
   const { data: queue, error, isLoading } = useGetReviewQueueQuery()
   const [logout] = useLogoutMutation()
-  usePageMeta('Review')
+  const { t } = useTranslation()
+  usePageMeta(t.admin.pageTitle)
 
   if (isLoading) {
-    return <Container>Loading…</Container>
+    return <Container>{t.common.loading}</Container>
   }
   if (getErrorStatus(error) === 401) {
     return <LoginForm />
@@ -37,7 +39,7 @@ export function AdminPage() {
   if (!queue) {
     return (
       <Container>
-        <ErrorMessage>{getErrorMessage(error)}</ErrorMessage>
+        <ErrorMessage>{getErrorMessage(error, t)}</ErrorMessage>
       </Container>
     )
   }
@@ -45,9 +47,9 @@ export function AdminPage() {
   return (
     <Page>
       <Header>
-        <Title as="h1">Review queue</Title>
+        <Title as="h1">{t.admin.queueTitle}</Title>
         <TextButton onClick={() => logout()} type="button">
-          Sign out
+          {t.admin.signOut}
         </TextButton>
       </Header>
       <ReviewQueuePanel queue={queue} />
@@ -59,6 +61,7 @@ export function AdminPage() {
 function LoginForm() {
   const [password, setPassword] = useState('')
   const [login, { error, isLoading }] = useLoginMutation()
+  const { t } = useTranslation()
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -68,10 +71,10 @@ function LoginForm() {
   return (
     <Page>
       <LoginCard as="form" onSubmit={submit}>
-        <Title as="h1">Review</Title>
-        <p>Sign in with the admin password to review contributions.</p>
+        <Title as="h1">{t.admin.loginTitle}</Title>
+        <p>{t.admin.loginText}</p>
         <Field>
-          <Label htmlFor="password">Admin password</Label>
+          <Label htmlFor="password">{t.admin.password}</Label>
           <Input
             autoComplete="current-password"
             id="password"
@@ -80,9 +83,9 @@ function LoginForm() {
             value={password}
           />
         </Field>
-        {error && <ErrorMessage>{getErrorMessage(error)}</ErrorMessage>}
+        {error && <ErrorMessage>{getErrorMessage(error, t)}</ErrorMessage>}
         <PrimaryButton disabled={!password || isLoading} type="submit">
-          Sign in
+          {t.admin.signIn}
         </PrimaryButton>
       </LoginCard>
     </Page>

@@ -4,68 +4,28 @@ import styled from 'styled-components'
 
 import { Card, Chip, CodeBlock, Container, Lead, SectionTitle, Title } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
+import { useTranslation } from '../../i18n'
 import { COLORS, FONTS } from '../../theme'
 
+/** In the order of the descriptions in the texts (docs.endpointDescriptions). */
 const ENDPOINTS = [
-  {
-    description: 'Vessel, both of its keys, and all its published photos with credit and licence.',
-    method: 'GET',
-    path: '/v1/{cfr|mmsi}/{key}'
-  },
-  {
-    description: 'The main photo as an image, ready for an <img> tag. ?size=320|800|full (default 800).',
-    method: 'GET',
-    path: '/v1/{cfr|mmsi}/{key}.jpg'
-  },
-  {
-    description: 'A specific photo; the same n under either key is the same file. Same ?size parameter.',
-    method: 'GET',
-    path: '/v1/{cfr|mmsi}/{key}/photos/{n}.jpg'
-  },
-  {
-    description: 'Search by name, or by the beginning of a CFR or MMSI. Up to 24 results.',
-    method: 'GET',
-    path: '/v1/search?q=ker avel'
-  },
-  {
-    description: 'Vessels with the most recently published photos. ?limit=12 (max 48).',
-    method: 'GET',
-    path: '/v1/vessels/recent'
-  },
-  {
-    description: 'The whole dataset: every vessel with its photo URLs, credits and licences.',
-    method: 'GET',
-    path: '/v1/export.json'
-  },
-  {
-    description:
-      'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, vesselName?), under whichever key you know. Published after review. Needs an API key.',
-    method: 'POST',
-    path: '/v1/{cfr|mmsi}/{key}/photos'
-  },
-  {
-    description:
-      'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review. Needs an API key.',
-    method: 'POST',
-    path: '/v1/{cfr|mmsi}/{key}/link'
-  },
-  {
-    description:
-      'Report a photo: {"reason": "WRONG_VESSEL|COPYRIGHT|PRIVACY|OTHER", "message": "…"}. Needs an API key.',
-    method: 'POST',
-    path: '/v1/{cfr|mmsi}/{key}/photos/{n}/reports'
-  },
-  {
-    description: 'Request an API key: {"name", "email", "organisation"?, "intendedUse"}. Sent by email once approved.',
-    method: 'POST',
-    path: '/v1/api-key-requests'
-  }
+  { method: 'GET', path: '/v1/{cfr|mmsi}/{key}' },
+  { method: 'GET', path: '/v1/{cfr|mmsi}/{key}.jpg' },
+  { method: 'GET', path: '/v1/{cfr|mmsi}/{key}/photos/{n}.jpg' },
+  { method: 'GET', path: '/v1/search?q=ker avel' },
+  { method: 'GET', path: '/v1/vessels/recent' },
+  { method: 'GET', path: '/v1/export.json' },
+  { method: 'POST', path: '/v1/{cfr|mmsi}/{key}/photos' },
+  { method: 'POST', path: '/v1/{cfr|mmsi}/{key}/link' },
+  { method: 'POST', path: '/v1/{cfr|mmsi}/{key}/photos/{n}/reports' },
+  { method: 'POST', path: '/v1/api-key-requests' }
 ]
 
 export function DocsPage() {
   const { hash } = useLocation()
   const origin = window.location.origin
-  usePageMeta('Free vessel photo API, by CFR or MMSI')
+  const { t } = useTranslation()
+  usePageMeta(t.docs.pageTitle)
 
   useEffect(() => {
     if (hash) {
@@ -75,41 +35,38 @@ export function DocsPage() {
 
   return (
     <Page>
-      <Chip>API v1 · no key required</Chip>
-      <Title>The vessel photo API</Title>
-      <Lead>
-        CFR and MMSI are both first-class keys: every URL exists under each of them and returns the same vessel and
-        photos. A vessel can have one key or both — a non-EU ship with only an MMSI works just as well.
-      </Lead>
+      <Chip>{t.docs.chip}</Chip>
+      <Title>{t.docs.title}</Title>
+      <Lead>{t.docs.lead}</Lead>
 
       <Keys>
         <Card>
-          <small>Key · CFR (EU fleet register)</small>
+          <small>{t.docs.keyCfr}</small>
           <strong>FRA000123456</strong>
           <code>/v1/cfr/FRA000123456/photos/1.jpg</code>
         </Card>
         <Card>
-          <small>Key · MMSI (radio identity)</small>
+          <small>{t.docs.keyMmsi}</small>
           <strong>227000101</strong>
           <code>/v1/mmsi/227000101/photos/1.jpg</code>
         </Card>
       </Keys>
 
       <Section>
-        <SectionTitle>Endpoints</SectionTitle>
-        {ENDPOINTS.map(endpoint => (
+        <SectionTitle>{t.docs.endpoints}</SectionTitle>
+        {ENDPOINTS.map((endpoint, index) => (
           <Endpoint key={endpoint.method + endpoint.path}>
             <div>
               <Method $isPost={endpoint.method === 'POST'}>{endpoint.method}</Method>
               <code>{endpoint.path}</code>
             </div>
-            <p>{endpoint.description}</p>
+            <p>{t.docs.endpointDescriptions[index]}</p>
           </Endpoint>
         ))}
       </Section>
 
       <Section>
-        <SectionTitle>Example</SectionTitle>
+        <SectionTitle>{t.docs.example}</SectionTitle>
         <CodeBlock>{`GET ${origin}/v1/cfr/FRA000123456
 
 {
@@ -137,16 +94,15 @@ export function DocsPage() {
   "history": [...]
 }`}</CodeBlock>
         <p>
-          Errors come back as <code>{'{"code": "NOT_FOUND", "message": "…"}'}</code> with a 400, 404 or 409 status.
+          {t.docs.errorsIntro} <code>{'{"code": "NOT_FOUND", "message": "…"}'}</code> {t.docs.errorsOutro}
         </p>
       </Section>
 
       <Section id="api-key">
-        <SectionTitle>API key</SectionTitle>
+        <SectionTitle>{t.docs.apiKeyTitle}</SectionTitle>
         <p>
-          Every <code>GET</code> is open, without key. <code>POST</code> requests need an API key in the{' '}
-          <code>x-api-key</code> header: <Link to="/api-key">request one</Link>, it is free. Without it, they return a{' '}
-          <code>401</code>.
+          {t.docs.apiKeyText1} <Link to="/api-key">{t.docs.apiKeyLink}</Link>
+          {t.docs.apiKeyText2}
         </p>
         <CodeBlock>{`curl -X POST -H "x-api-key: ovp_…" \\
   -F file=@boat.jpg -F credit="Jane Doe" -F licence=CC-BY-4.0 \\
@@ -154,56 +110,44 @@ export function DocsPage() {
       </Section>
 
       <Section id="rate-limits">
-        <SectionTitle>Rate limits</SectionTitle>
-        <p>
-          Up to 600 <code>GET</code> per minute per IP, and 1,000 <code>POST</code> per hour per API key. Every response
-          tells where you stand in <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code> and{' '}
-          <code>X-RateLimit-Reset</code> (seconds). Above the limit, requests return a <code>429</code> with a{' '}
-          <code>Retry-After</code> header. Need more? Download the whole dataset from <code>/v1/export.json</code>, or
-          ask for a higher limit.
-        </p>
+        <SectionTitle>{t.docs.rateLimitsTitle}</SectionTitle>
+        <p>{t.docs.rateLimitsText}</p>
       </Section>
 
       <Chips>
-        <Chip>CORS enabled</Chip>
-        <Chip>Reading needs no API key</Chip>
-        <Chip>Always show the credit</Chip>
+        {t.docs.chips.map(chip => (
+          <Chip key={chip}>{chip}</Chip>
+        ))}
       </Chips>
 
       <Section id="licences">
-        <SectionTitle>Licences</SectionTitle>
-        <p>
-          Every photo is published by its author under one of these licences. Reuse it freely, as long as you show the
-          credit line given in <code>attribution</code> when the licence asks for it.
-        </p>
+        <SectionTitle>{t.docs.licencesTitle}</SectionTitle>
+        <p>{t.docs.licencesText}</p>
         <ul>
           <li>
             <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer" target="_blank">
               CC BY 4.0
             </a>{' '}
-            — reuse with credit.
+            {t.docs.licenceBy}
           </li>
           <li>
             <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noreferrer" target="_blank">
               CC BY-SA 4.0
             </a>{' '}
-            — reuse with credit; changes shared under the same licence.
+            {t.docs.licenceBySa}
           </li>
           <li>
             <a href="https://creativecommons.org/publicdomain/zero/1.0/" rel="noreferrer" target="_blank">
               CC0
             </a>{' '}
-            — public domain, no credit required.
+            {t.docs.licenceCc0}
           </li>
         </ul>
       </Section>
 
       <Section id="self-host">
-        <SectionTitle>Self-host it</SectionTitle>
-        <p>
-          The service is one container (Spring Boot serving the API and this web app) and one PostgreSQL database, which
-          also stores the images. Set <code>DATABASE_URL</code> and <code>ADMIN_PASSWORD</code>, and run it.
-        </p>
+        <SectionTitle>{t.docs.selfHostTitle}</SectionTitle>
+        <p>{t.docs.selfHostText}</p>
         <CodeBlock>{`docker compose up`}</CodeBlock>
       </Section>
     </Page>

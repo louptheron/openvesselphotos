@@ -2,15 +2,17 @@ import { Link } from 'react-router-dom'
 
 import { Container, Lead, Title } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
+import { useTranslation } from '../../i18n'
 
 export function NotFoundPage() {
-  usePageMeta('Page not found')
+  const { t } = useTranslation()
+  usePageMeta(t.notFound.title)
 
   return (
     <Container style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 96, paddingTop: 48 }}>
-      <Title>Page not found</Title>
+      <Title>{t.notFound.title}</Title>
       <Lead>
-        This page doesn't exist. <Link to="/">Search vessel photos</Link>
+        {t.notFound.text} <Link to="/">{t.notFound.link}</Link>
       </Lead>
     </Container>
   )

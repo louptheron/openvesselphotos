@@ -18,23 +18,17 @@ import {
   Title
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
+import { useTranslation } from '../../i18n'
 import { ChartCard, ChartSection } from '../../components/Chart'
 import { CHART_COLORS, COLORS, FONTS } from '../../theme'
 import { getVesselPath, isValidKey, normalizeKey } from '../../utils/vesselKey'
 
-const KEY_TYPES: Record<KeyType, { hint: string; label: string; placeholder: string }> = {
-  cfr: {
-    hint: '3-letter country code + 9 characters, from the EU fleet register.',
-    label: 'CFR number',
-    placeholder: 'FRA000123456'
-  },
-  mmsi: { hint: '9 digits, the radio identity shown on AIS.', label: 'MMSI number', placeholder: '227000101' }
-}
+const KEY_PLACEHOLDERS: Record<KeyType, string> = { cfr: 'FRA000123456', mmsi: '227000101' }
 
 const LICENCES = [
-  { description: 'Anyone can reuse it with your credit.', label: 'CC BY 4.0', value: 'CC-BY-4.0' },
-  { description: 'Reuse with credit; changes shared alike.', label: 'CC BY-SA 4.0', value: 'CC-BY-SA-4.0' },
-  { description: 'Public domain. No credit required.', label: 'CC0', value: 'CC0-1.0' }
+  { label: 'CC BY 4.0', value: 'CC-BY-4.0' },
+  { label: 'CC BY-SA 4.0', value: 'CC-BY-SA-4.0' },
+  { label: 'CC0', value: 'CC0-1.0' }
 ]
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024
@@ -55,7 +49,12 @@ export function ContributePage() {
   const [submitPhoto, { error, isLoading, isSuccess, reset }] = useSubmitPhotoMutation()
   const [today] = useState(() => new Date().toISOString().slice(0, 10))
 
-  usePageMeta('Contribute a vessel photo')
+  const { t } = useTranslation()
+  usePageMeta(t.contribute.pageTitle)
+  const keyTexts =
+    keyType === 'cfr'
+      ? { hint: t.contribute.cfrHint, label: t.contribute.cfrLabel }
+      : { hint: t.contribute.mmsiHint, label: t.contribute.mmsiLabel }
   const normalizedKey = normalizeKey(key)
   const isKeyValid = isValidKey(keyType, key)
   const { data: vessel, isFetching: isLookingUp } = useGetVesselQuery(
@@ -72,7 +71,7 @@ export function ContributePage() {
     [previewUrl]
   )
 
-  const fileError = file && file.size > MAX_FILE_SIZE ? 'This file is larger than 15 MB.' : undefined
+  const fileError = file && file.size > MAX_FILE_SIZE ? t.contribute.fileTooLarge : undefined
   const licenceLabel = LICENCES.find(item => item.value === licence)?.label
   const canSubmit = isKeyValid && !!file && !fileError && credit.trim().length > 0 && hasRights && !isLoading
 
@@ -111,16 +110,15 @@ export function ContributePage() {
   if (isSuccess) {
     return (
       <Intro>
-        <Title>Thank you!</Title>
-        <Lead>
-          Your photo of {vessel?.name ?? `${keyType.toUpperCase()} ${normalizedKey}`} is in the review queue. It goes
-          live once a volunteer has checked it.
-        </Lead>
+        <Title>{t.contribute.thanksTitle}</Title>
+        <Lead>{t.contribute.thanksText(vessel?.name ?? `${keyType.toUpperCase()} ${normalizedKey}`)}</Lead>
         <Buttons>
           <PrimaryButton onClick={startOver} type="button">
-            Send another photo
+            {t.contribute.sendAnother}
           </PrimaryButton>
-          {vessel && <Link to={getVesselPath(vessel)}>Back to {vessel.name ?? 'the vessel'}</Link>}
+          {vessel && (
+            <Link to={getVesselPath(vessel)}>{t.contribute.backTo(vessel.name ?? t.contribute.theVessel)}</Link>
+          )}
         </Buttons>
       </Intro>
     )
@@ -131,11 +129,8 @@ export function ContributePage() {
       <ChartSection>
         <ChartIntro>
           <IntroCard>
-            <Title>Contribute a photo</Title>
-            <Lead>
-              Your own picture, an open licence, and the vessel's CFR or MMSI. It goes live once a volunteer has
-              reviewed it.
-            </Lead>
+            <Title>{t.contribute.title}</Title>
+            <Lead>{t.contribute.lead}</Lead>
           </IntroCard>
         </ChartIntro>
       </ChartSection>
@@ -143,9 +138,9 @@ export function ContributePage() {
       <Columns>
         <Form onSubmit={submit}>
           <Step>
-            <legend>1 · Which vessel?</legend>
+            <legend>{t.contribute.step1}</legend>
             <KeyTypes>
-              <legend className="visually-hidden">Key type</legend>
+              <legend className="visually-hidden">{t.contribute.keyType}</legend>
               {(['cfr', 'mmsi'] as const).map(type => (
                 <Pill
                   key={type}
@@ -162,16 +157,16 @@ export function ContributePage() {
               ))}
             </KeyTypes>
             <Field>
-              <Label htmlFor="key">{KEY_TYPES[keyType].label}</Label>
+              <Label htmlFor="key">{keyTexts.label}</Label>
               <KeyInput
                 aria-describedby="key-hint"
                 aria-invalid={key.length > 0 && !isKeyValid}
                 id="key"
                 onChange={event => setKey(event.target.value)}
-                placeholder={KEY_TYPES[keyType].placeholder}
+                placeholder={KEY_PLACEHOLDERS[keyType]}
                 value={key}
               />
-              <Muted id="key-hint">{KEY_TYPES[keyType].hint}</Muted>
+              <Muted id="key-hint">{keyTexts.hint}</Muted>
             </Field>
             {isKeyValid && !isLookingUp && vessel && (
               <Match>
@@ -189,24 +184,25 @@ export function ContributePage() {
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
                 <span>
-                  Matches <Link to={getVesselPath(vessel)}>{vessel.name ?? 'an unnamed vessel'}</Link> ·{' '}
+                  {t.contribute.matches}{' '}
+                  <Link to={getVesselPath(vessel)}>{vessel.name ?? t.contribute.anUnnamedVessel}</Link> ·{' '}
                   <Mono>
                     CFR {vessel.cfr ?? '—'} · MMSI {vessel.mmsi ?? '—'}
                   </Mono>{' '}
-                  · {vessel.photos.length} photo{vessel.photos.length === 1 ? '' : 's'}
+                  · {t.common.photos(vessel.photos.length)}
                 </span>
               </Match>
             )}
             {isKeyValid && !isLookingUp && !vessel && (
               <>
-                <Muted>No vessel with this key yet — it will be created when your photo is approved.</Muted>
+                <Muted>{t.contribute.noVesselYet}</Muted>
                 <Field>
-                  <Label htmlFor="vessel-name">Vessel name</Label>
+                  <Label htmlFor="vessel-name">{t.contribute.vesselName}</Label>
                   <Input
                     id="vessel-name"
                     maxLength={100}
                     onChange={event => setVesselName(event.target.value)}
-                    placeholder="e.g. Ker Avel"
+                    placeholder={t.contribute.vesselNamePlaceholder}
                     value={vesselName}
                   />
                 </Field>
@@ -215,7 +211,7 @@ export function ContributePage() {
           </Step>
 
           <Step>
-            <legend>2 · The photo</legend>
+            <legend>{t.contribute.step2}</legend>
             <input
               accept="image/jpeg,image/png"
               className="visually-hidden"
@@ -225,7 +221,7 @@ export function ContributePage() {
             />
             <DropZone htmlFor="file">
               {previewUrl ? (
-                <img alt="Your upload" src={previewUrl} />
+                <img alt={t.contribute.yourUpload} src={previewUrl} />
               ) : (
                 <svg
                   aria-hidden="true"
@@ -243,13 +239,13 @@ export function ContributePage() {
                   <path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3" />
                 </svg>
               )}
-              <strong>{file ? file.name : 'Choose a photo'}</strong>
-              <Muted>JPEG or PNG · the vessel clearly visible · 15 MB max</Muted>
+              <strong>{file ? file.name : t.contribute.choosePhoto}</strong>
+              <Muted>{t.contribute.fileHint}</Muted>
             </DropZone>
             {fileError && <ErrorMessage>{fileError}</ErrorMessage>}
             <TwoColumns>
               <Field>
-                <Label htmlFor="taken">Date taken</Label>
+                <Label htmlFor="taken">{t.contribute.dateTaken}</Label>
                 <Input
                   id="taken"
                   max={today}
@@ -260,13 +256,13 @@ export function ContributePage() {
               </Field>
               <Field>
                 <Label htmlFor="place">
-                  Place <Optional>(optional)</Optional>
+                  {t.contribute.place} <Optional>{t.common.optional}</Optional>
                 </Label>
                 <Input
                   id="place"
                   maxLength={200}
                   onChange={event => setPlace(event.target.value)}
-                  placeholder="e.g. Concarneau harbour"
+                  placeholder={t.contribute.placePlaceholder}
                   value={place}
                 />
               </Field>
@@ -274,18 +270,18 @@ export function ContributePage() {
           </Step>
 
           <Step>
-            <legend>3 · Credit and licence</legend>
+            <legend>{t.contribute.step3}</legend>
             <Field>
-              <Label htmlFor="credit">Credit as</Label>
+              <Label htmlFor="credit">{t.contribute.creditAs}</Label>
               <Input
                 id="credit"
                 maxLength={100}
                 onChange={event => setCredit(event.target.value)}
-                placeholder="Your name or handle"
+                placeholder={t.contribute.creditPlaceholder}
                 value={credit}
               />
             </Field>
-            <Licences aria-label="Licence" role="radiogroup">
+            <Licences aria-label={t.contribute.licence} role="radiogroup">
               {LICENCES.map(item => (
                 <LicenceOption key={item.value} $active={licence === item.value}>
                   <input
@@ -296,19 +292,19 @@ export function ContributePage() {
                     value={item.value}
                   />
                   <strong>{item.label}</strong>
-                  <span>{item.description}</span>
+                  <span>{t.contribute.licences[item.value]}</span>
                 </LicenceOption>
               ))}
             </Licences>
             <Checkbox>
               <input checked={hasRights} onChange={event => setHasRights(event.target.checked)} type="checkbox" />
-              <span>I took this photo, or I hold the right to publish it under {licenceLabel}.</span>
+              <span>{t.contribute.rights(licenceLabel ?? '')}</span>
             </Checkbox>
           </Step>
 
           <Field>
             <Label htmlFor="email">
-              Email <Optional>(optional, only seen by reviewers if they have a question)</Optional>
+              {t.contribute.email} <Optional>{t.contribute.emailHint}</Optional>
             </Label>
             <Input
               autoComplete="email"
@@ -318,46 +314,45 @@ export function ContributePage() {
               value={email}
             />
           </Field>
-          {error && <ErrorMessage>{getErrorMessage(error)}</ErrorMessage>}
+          {error && <ErrorMessage>{getErrorMessage(error, t)}</ErrorMessage>}
           <Buttons>
             <PrimaryButton disabled={!canSubmit} type="submit">
-              {isLoading ? 'Sending…' : 'Send for review'}
+              {isLoading ? t.common.sending : t.contribute.submit}
             </PrimaryButton>
-            <Muted>No account needed.</Muted>
+            <Muted>{t.contribute.noAccount}</Muted>
           </Buttons>
         </Form>
 
         <Aside>
           <NextSteps>
-            <h2>What happens next</h2>
+            <h2>{t.contribute.nextTitle}</h2>
             <ol>
               <li>
-                <strong>Received.</strong> Your photo waits in the review queue.
+                <strong>{t.contribute.nextReceived}</strong> {t.contribute.nextReceivedText}
               </li>
               <li>
-                <strong>Reviewed.</strong> A volunteer checks the vessel matches its key and the licence is clear.
+                <strong>{t.contribute.nextReviewed}</strong> {t.contribute.nextReviewedText}
               </li>
               <li>
-                <strong>Published.</strong> Live on the site and the API under both CFR and MMSI.
+                <strong>{t.contribute.nextPublished}</strong> {t.contribute.nextPublishedText}
               </li>
             </ol>
           </NextSteps>
           <Tips>
-            <h2>A good vessel photo</h2>
+            <h2>{t.contribute.tipsTitle}</h2>
             <ul>
-              <li>The whole hull in frame, side-on if you can</li>
-              <li>Name or registration readable</li>
-              <li>No people's faces up close</li>
-              <li>Only photos you took yourself</li>
+              {t.contribute.tips.map(tip => (
+                <li key={tip}>{tip}</li>
+              ))}
             </ul>
-            <Muted>Location data (EXIF/GPS) is removed from every photo.</Muted>
+            <Muted>{t.contribute.exif}</Muted>
           </Tips>
           <Muted>
-            Prefer scripts?{' '}
+            {t.contribute.scripts}{' '}
             <Link to="/docs">
               POST /v1/{'{cfr|mmsi}'}/{'{key}'}/photos
             </Link>{' '}
-            does the same.
+            {t.contribute.scriptsEnd}
           </Muted>
         </Aside>
       </Columns>

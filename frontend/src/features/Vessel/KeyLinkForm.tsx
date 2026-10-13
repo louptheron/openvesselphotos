@@ -4,10 +4,12 @@ import styled from 'styled-components'
 import { getErrorMessage, useSuggestKeyLinkMutation } from '../../api/api'
 import type { KeyType, Vessel } from '../../api/types'
 import { ErrorMessage, Field, Input, Label, SecondaryButton, SuccessMessage, TextButton } from '../../components/ui'
+import { useTranslation } from '../../i18n'
 import { isValidKey, normalizeKey } from '../../utils/vesselKey'
 
 /** Suggests the key (CFR or MMSI) the vessel is missing. */
 export function KeyLinkForm({ vessel, vesselKey }: { vessel: Vessel; vesselKey: { key: string; keyType: KeyType } }) {
+  const { t } = useTranslation()
   const missingKeyType: KeyType = vessel.cfr ? 'mmsi' : 'cfr'
   const [isOpen, setIsOpen] = useState(false)
   const [missingKey, setMissingKey] = useState('')
@@ -16,12 +18,12 @@ export function KeyLinkForm({ vessel, vesselKey }: { vessel: Vessel; vesselKey: 
   const label = missingKeyType.toUpperCase()
 
   if (isSuccess) {
-    return <SuccessMessage>Thanks! The {label} will be added once a reviewer has checked it.</SuccessMessage>
+    return <SuccessMessage>{t.keyLink.thanks(label)}</SuccessMessage>
   }
   if (!isOpen) {
     return (
       <OpenButton onClick={() => setIsOpen(true)} type="button">
-        Know its {label}? Suggest it →
+        {t.keyLink.open(label)}
       </OpenButton>
     )
   }
@@ -46,16 +48,16 @@ export function KeyLinkForm({ vessel, vesselKey }: { vessel: Vessel; vesselKey: 
         />
       </Field>
       <Field>
-        <Label htmlFor="link-contributor">Your name (optional)</Label>
+        <Label htmlFor="link-contributor">{t.keyLink.yourName}</Label>
         <Input id="link-contributor" onChange={event => setContributor(event.target.value)} value={contributor} />
       </Field>
-      {error && <ErrorMessage>{getErrorMessage(error)}</ErrorMessage>}
+      {error && <ErrorMessage>{getErrorMessage(error, t)}</ErrorMessage>}
       <div>
         <SecondaryButton disabled={!isValid || isLoading} type="submit">
-          Suggest this {label}
+          {t.keyLink.submit(label)}
         </SecondaryButton>
         <TextButton onClick={() => setIsOpen(false)} type="button">
-          Cancel
+          {t.common.cancel}
         </TextButton>
       </div>
     </Form>

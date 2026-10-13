@@ -3,9 +3,12 @@ import styled from 'styled-components'
 
 import { COLORS, FONTS } from '../theme'
 import { LogoMark } from './Logo'
+import { useTranslation } from '../i18n'
 import { Container } from './ui'
 
 export function Layout() {
+  const { language, setLanguage, t } = useTranslation()
+
   return (
     <>
       <Header>
@@ -13,16 +16,24 @@ export function Layout() {
           <LogoMark />
           <span>Open Vessel Photos</span>
         </Brand>
-        <Nav aria-label="Main">
+        <Nav aria-label={t.layout.navLabel}>
           <NavItem end to="/">
-            Search
+            {t.layout.search}
           </NavItem>
-          <NavItem to="/docs">API</NavItem>
-          <NavItem to="/contribute">Contribute</NavItem>
+          <NavItem to="/docs">{t.layout.api}</NavItem>
+          <NavItem to="/contribute">{t.layout.contribute}</NavItem>
           {/* A plain link: as a NavLink, it would be highlighted together with "API" on /docs */}
           <NavItem as={Link} to="/docs#licences">
-            Licences
+            {t.layout.licences}
           </NavItem>
+          <LanguageButton
+            aria-label={t.language.switchLabel}
+            lang={language === 'en' ? 'fr' : 'en'}
+            onClick={() => setLanguage(language === 'en' ? 'fr' : 'en')}
+            type="button"
+          >
+            {t.language.switchText}
+          </LanguageButton>
         </Nav>
       </Header>
       <main>
@@ -33,17 +44,17 @@ export function Layout() {
           <span>
             Open Vessel Photos ·{' '}
             <a href="https://github.com/louptheron/openvesselphotos" rel="noreferrer" target="_blank">
-              code
+              {t.layout.footerCode}
             </a>{' '}
-            under{' '}
+            {t.layout.footerUnder}{' '}
             <a href="https://github.com/louptheron/openvesselphotos/blob/main/LICENSE" rel="noreferrer" target="_blank">
               AGPL-3.0
             </a>{' '}
-            · photos under their own open licences
+            · {t.layout.footerPhotos}
           </span>
           <span>
-            <a href="/v1/export.json">Download the dataset</a> · <Link to="/docs">API</Link> ·{' '}
-            <Link to="/api-key">API key</Link> · <Link to="/admin">Review</Link>
+            <a href="/v1/export.json">{t.layout.dataset}</a> · <Link to="/docs">{t.layout.api}</Link> ·{' '}
+            <Link to="/api-key">{t.layout.apiKey}</Link> · <Link to="/admin">{t.layout.review}</Link>
           </span>
         </FooterInner>
       </Footer>
@@ -94,6 +105,21 @@ const NavItem = styled(NavLink)`
     font-weight: 600;
     box-shadow: inset 0 -2px 0 ${COLORS.accent};
   }
+`
+
+const LanguageButton = styled.button`
+  min-width: 44px;
+  min-height: 44px;
+  margin-left: 4px;
+  padding: 0 10px;
+  border: 1px solid ${COLORS.inputBorder};
+  border-radius: 22px;
+  background: ${COLORS.white};
+  color: ${COLORS.ink};
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 `
 
 const Footer = styled.footer`

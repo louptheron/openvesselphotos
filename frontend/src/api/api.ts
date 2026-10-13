@@ -1,5 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
+import type { Messages } from '../i18n/en'
+
 import type {
   ApiKey,
   ApiKeyRequest,
@@ -111,16 +113,23 @@ export const {
   useSuggestKeyLinkMutation
 } = api
 
-/** Extracts the backend message from an RTK Query error. */
-export function getErrorMessage(error: unknown): string {
+/** The message of an RTK Query error: translated from its code, or the backend's own message (in English). */
+export function getErrorMessage(error: unknown, t: Messages): string {
   if (error && typeof error === 'object' && 'data' in error) {
     const { data } = error as { data: unknown }
-    if (data && typeof data === 'object' && 'message' in data && typeof data.message === 'string') {
-      return data.message
+    if (data && typeof data === 'object') {
+      const code = 'code' in data && typeof data.code === 'string' ? data.code : undefined
+      const translated = code ? t.errors.byCode[code] : undefined
+      if (translated) {
+        return translated
+      }
+      if ('message' in data && typeof data.message === 'string') {
+        return data.message
+      }
     }
   }
 
-  return 'Something went wrong. Please try again.'
+  return t.errors.generic
 }
 
 export function getErrorStatus(error: unknown): number | string | undefined {

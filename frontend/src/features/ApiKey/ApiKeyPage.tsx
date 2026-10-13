@@ -18,10 +18,12 @@ import {
   Title
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
+import { useTranslation } from '../../i18n'
 import { COLORS, FONTS } from '../../theme'
 
 export function ApiKeyPage() {
-  usePageMeta('Request an API key')
+  const { t } = useTranslation()
+  usePageMeta(t.apiKey.pageTitle)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [organisation, setOrganisation] = useState('')
@@ -46,22 +48,18 @@ export function ApiKeyPage() {
 
   return (
     <Page>
-      <Title>Request an API key</Title>
-      <Lead>
-        Reading the API is free and open. An API key is only needed to send data with a script: contribute photos,
-        suggest keys or report photos through <code>POST</code> requests.
-      </Lead>
+      <Title>{t.apiKey.title}</Title>
+      <Lead>{t.apiKey.lead}</Lead>
 
       <Columns>
         {isSuccess ? (
           <SuccessMessage>
-            <strong>Request received.</strong> A reviewer will send your API key to {email.trim()} once your request is
-            approved.
+            <strong>{t.apiKey.received}</strong> {t.apiKey.receivedText(email.trim())}
           </SuccessMessage>
         ) : (
           <Form as="form" onSubmit={submit}>
             <Field>
-              <Label htmlFor="api-name">Your name</Label>
+              <Label htmlFor="api-name">{t.apiKey.name}</Label>
               <Input
                 autoComplete="name"
                 id="api-name"
@@ -71,7 +69,7 @@ export function ApiKeyPage() {
               />
             </Field>
             <Field>
-              <Label htmlFor="api-email">Email</Label>
+              <Label htmlFor="api-email">{t.apiKey.email}</Label>
               <Input
                 autoComplete="email"
                 id="api-email"
@@ -79,11 +77,11 @@ export function ApiKeyPage() {
                 type="email"
                 value={email}
               />
-              <Muted>The key is sent to this address.</Muted>
+              <Muted>{t.apiKey.emailHint}</Muted>
             </Field>
             <Field>
               <Label htmlFor="api-organisation">
-                Organisation or project <Optional>(optional)</Optional>
+                {t.apiKey.organisation} <Optional>{t.common.optional}</Optional>
               </Label>
               <Input
                 id="api-organisation"
@@ -93,35 +91,31 @@ export function ApiKeyPage() {
               />
             </Field>
             <Field>
-              <Label htmlFor="api-use">What will you use it for?</Label>
+              <Label htmlFor="api-use">{t.apiKey.use}</Label>
               <TextArea
                 id="api-use"
                 maxLength={1000}
                 onChange={event => setIntendedUse(event.target.value)}
-                placeholder="e.g. Import the photos taken by our harbour team, about 50 a month."
+                placeholder={t.apiKey.usePlaceholder}
                 value={intendedUse}
               />
             </Field>
             <Checkbox>
               <input checked={acceptsTerms} onChange={event => setAcceptsTerms(event.target.checked)} type="checkbox" />
-              <span>
-                I will only send photos their authors agreed to publish under an open licence, with their credit.
-              </span>
+              <span>{t.apiKey.terms}</span>
             </Checkbox>
-            {error && <ErrorMessage>{getErrorMessage(error)}</ErrorMessage>}
+            {error && <ErrorMessage>{getErrorMessage(error, t)}</ErrorMessage>}
             <div>
               <PrimaryButton disabled={!canSubmit} type="submit">
-                {isLoading ? 'Sending…' : 'Request a key'}
+                {isLoading ? t.common.sending : t.apiKey.submit}
               </PrimaryButton>
             </div>
           </Form>
         )}
 
         <Aside>
-          <h2>How to use it</h2>
-          <p>
-            Send the key in the <code>x-api-key</code> header of your POST requests:
-          </p>
+          <h2>{t.apiKey.howTitle}</h2>
+          <p>{t.apiKey.howHeader}</p>
           <pre>{`curl -X POST \\
   -H "x-api-key: ovp_…" \\
   -F file=@boat.jpg \\
@@ -129,8 +123,7 @@ export function ApiKeyPage() {
   -F licence=CC-BY-4.0 \\
   ${window.location.origin}/v1/cfr/FRA000123456/photos`}</pre>
           <p>
-            Keep it secret: never put it in a web page or a mobile app. Everything sent is still reviewed before
-            publication. See the <Link to="/docs">API docs</Link>.
+            {t.apiKey.howSecret} <Link to="/docs">{t.apiKey.apiDocs}</Link>.
           </p>
         </Aside>
       </Columns>

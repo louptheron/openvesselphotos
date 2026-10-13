@@ -2,11 +2,13 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { VesselSummary } from '../api/types'
+import { useTranslation } from '../i18n'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../theme'
 import { getPhotoUrl, getVesselPath } from '../utils/vesselKey'
 import { BoatPlaceholder } from './Logo'
 
 export function VesselCard({ index, vessel }: { index: number; vessel: VesselSummary }) {
+  const { t } = useTranslation()
   const photo = vessel.mainPhoto
 
   return (
@@ -14,7 +16,7 @@ export function VesselCard({ index, vessel }: { index: number; vessel: VesselSum
       <Picture $sky={getSkyAndSea(SKIES[index % SKIES.length] ?? COLORS.info)}>
         {photo ? (
           <img
-            alt={`${vessel.name ?? 'Vessel'}, by ${photo.credit}`}
+            alt={t.vesselCard.photoAlt(vessel.name ?? t.common.unnamedVessel, photo.credit)}
             loading="lazy"
             sizes="(max-width: 600px) 100vw, 320px"
             src={getPhotoUrl(photo.urls, '320')}
@@ -26,7 +28,7 @@ export function VesselCard({ index, vessel }: { index: number; vessel: VesselSum
       </Picture>
       <Body>
         <h3>
-          <Link to={getVesselPath(vessel)}>{vessel.name ?? 'Unnamed vessel'}</Link>
+          <Link to={getVesselPath(vessel)}>{vessel.name ?? t.common.unnamedVessel}</Link>
         </h3>
         <Keys>
           <div>
@@ -46,7 +48,7 @@ export function VesselCard({ index, vessel }: { index: number; vessel: VesselSum
         ) : (
           <Credit>
             <span>{[vessel.registration, vessel.port].filter(Boolean).join(' · ')}</span>
-            <span>No photo yet</span>
+            <span>{t.common.noPhotoYet}</span>
           </Credit>
         )}
       </Body>

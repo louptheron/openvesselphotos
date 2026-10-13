@@ -5,19 +5,18 @@ import { useGetActiveApiKeysQuery } from '../../api/api'
 import type { ApprovedApiKey } from '../../api/types'
 import { Card, Muted, PrimaryButton, SecondaryButton, SectionTitle, TextButton } from '../../components/ui'
 import { COLORS, FONTS } from '../../theme'
+import { useTranslation } from '../../i18n'
 
 /** Shows a key once, right after its approval: only its hash is stored. */
 export function ApprovedApiKeyBanner({ approved, onClose }: { approved: ApprovedApiKey; onClose: () => void }) {
   const [isCopied, setIsCopied] = useState(false)
+  const { t } = useTranslation()
   const { apiKey, key } = approved
   const docsUrl = `${window.location.origin}/docs#api-key`
   const mailto =
     `mailto:${encodeURIComponent(apiKey.email)}` +
-    `?subject=${encodeURIComponent('Your Open Vessel Photos API key')}` +
-    `&body=${encodeURIComponent(
-      `Hello ${apiKey.name},\n\nYour API key request was approved. Here is your key:\n\n${key}\n\n` +
-        `Send it in the x-api-key header of your POST requests, and keep it secret. Documentation: ${docsUrl}\n`
-    )}`
+    `?subject=${encodeURIComponent(t.admin.emailSubject)}` +
+    `&body=${encodeURIComponent(t.admin.emailBody(apiKey.name, key, docsUrl))}`
 
   const copy = async () => {
     await navigator.clipboard.writeText(key)
@@ -26,18 +25,18 @@ export function ApprovedApiKeyBanner({ approved, onClose }: { approved: Approved
 
   return (
     <Banner>
-      <strong>API key created for {apiKey.name}</strong>
-      <span>Send it now: it won't be shown again.</span>
+      <strong>{t.admin.keyCreatedFor(apiKey.name)}</strong>
+      <span>{t.admin.sendItNow}</span>
       <code>{key}</code>
       <div>
         <PrimaryButton as="a" href={mailto}>
-          Email it to {apiKey.email}
+          {t.admin.emailIt(apiKey.email)}
         </PrimaryButton>
         <SecondaryButton onClick={copy} type="button">
-          {isCopied ? 'Copied' : 'Copy the key'}
+          {isCopied ? t.common.copied : t.admin.copyKey}
         </SecondaryButton>
         <TextButton onClick={onClose} type="button">
-          Done
+          {t.admin.done}
         </TextButton>
       </div>
     </Banner>
@@ -46,23 +45,24 @@ export function ApprovedApiKeyBanner({ approved, onClose }: { approved: Approved
 
 export function ActiveApiKeys({ isLoading, onRevoke }: { isLoading: boolean; onRevoke: (id: number) => void }) {
   const { data: apiKeys } = useGetActiveApiKeysQuery()
+  const { formatDate, t } = useTranslation()
 
   return (
     <Section>
-      <SectionTitle as="h2">Active API keys</SectionTitle>
-      {apiKeys?.length === 0 && <Muted>No active key.</Muted>}
+      <SectionTitle as="h2">{t.admin.activeKeys}</SectionTitle>
+      {apiKeys?.length === 0 && <Muted>{t.admin.noActiveKey}</Muted>}
       {apiKeys && apiKeys.length > 0 && (
         <TableBox>
           <table>
             <thead>
               <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Email</th>
-                <th scope="col">Key</th>
-                <th scope="col">Created</th>
-                <th scope="col">Last used</th>
+                <th scope="col">{t.admin.keyColumns.name}</th>
+                <th scope="col">{t.admin.keyColumns.email}</th>
+                <th scope="col">{t.admin.keyColumns.key}</th>
+                <th scope="col">{t.admin.keyColumns.created}</th>
+                <th scope="col">{t.admin.keyColumns.lastUsed}</th>
                 <th scope="col">
-                  <span className="visually-hidden">Actions</span>
+                  <span className="visually-hidden">{t.admin.keyColumns.actions}</span>
                 </th>
               </tr>
             </thead>
@@ -83,7 +83,7 @@ export function ActiveApiKeys({ isLoading, onRevoke }: { isLoading: boolean; onR
                   <td>{formatDate(apiKey.lastUsedAt)}</td>
                   <td>
                     <RevokeButton disabled={isLoading} onClick={() => onRevoke(apiKey.id)} type="button">
-                      Revoke
+                      {t.admin.revoke}
                     </RevokeButton>
                   </td>
                 </tr>
@@ -94,10 +94,6 @@ export function ActiveApiKeys({ isLoading, onRevoke }: { isLoading: boolean; onR
       )}
     </Section>
   )
-}
-
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString() : '—'
 }
 
 const Banner = styled.output`

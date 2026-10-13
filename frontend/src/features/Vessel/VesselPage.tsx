@@ -16,6 +16,7 @@ import {
   SectionTitle
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
+import { useTranslation } from '../../i18n'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../../theme'
 import { getPhotoUrl, normalizeKey } from '../../utils/vesselKey'
 import { KeyLinkForm } from './KeyLinkForm'
@@ -24,7 +25,7 @@ import { ReportForm } from './ReportForm'
 const SIZES = [
   { label: '320 px', value: '320' },
   { label: '800 px', value: '800' },
-  { label: 'Full', value: 'full' }
+  { label: undefined, value: 'full' }
 ] as const
 
 type Size = (typeof SIZES)[number]['value']
@@ -34,19 +35,20 @@ export function VesselPage() {
   const keyType: KeyType = params.keyType === 'mmsi' ? 'mmsi' : 'cfr'
   const key = normalizeKey(params.key ?? '')
   const { data: vessel, error, isLoading } = useGetVesselQuery({ key, keyType })
+  const { t } = useTranslation()
   const keys = vessel
     ? [vessel.cfr && `CFR ${vessel.cfr}`, vessel.mmsi && `MMSI ${vessel.mmsi}`].filter(Boolean).join(', ')
     : ''
   usePageMeta(
     vessel
-      ? `${vessel.name ?? keys} (${keys}) — vessel photos`
+      ? t.vessel.pageTitle(vessel.name ?? keys, keys)
       : isLoading
         ? undefined
-        : `No vessel with ${keyType.toUpperCase()} ${key}`
+        : t.vessel.notFoundPageTitle(`${keyType.toUpperCase()} ${key}`)
   )
 
   if (isLoading) {
-    return <Container>Loading…</Container>
+    return <Container>{t.common.loading}</Container>
   }
   if (!vessel) {
     const status = getErrorStatus(error)
@@ -54,20 +56,21 @@ export function VesselPage() {
     return (
       <NotFound>
         <h1>
-          {status === 404 || status === 400 ? `No vessel with ${keyType.toUpperCase()} ${key} yet` : 'Unavailable'}
+          {status === 404 || status === 400
+            ? t.vessel.notFoundTitle(`${keyType.toUpperCase()} ${key}`)
+            : t.vessel.unavailable}
         </h1>
         {status === 404 && (
           <p>
-            Nobody has shared a photo of it so far.{' '}
-            <Link to={`/contribute?${keyType}=${key}`}>Contribute the first photo →</Link>
+            {t.vessel.notFoundText} <Link to={`/contribute?${keyType}=${key}`}>{t.vessel.contributeFirst}</Link>
           </p>
         )}
         {status === 400 && (
           <p>
-            This doesn't look like a valid {keyType.toUpperCase()}. <Link to="/">Back to search</Link>
+            {t.vessel.invalidKey(keyType.toUpperCase())} <Link to="/">{t.vessel.backToSearch}</Link>
           </p>
         )}
-        {status !== 404 && status !== 400 && <p>Please try again later.</p>}
+        {status !== 404 && status !== 400 && <p>{t.vessel.tryLater}</p>}
       </NotFound>
     )
   }
@@ -76,12 +79,13 @@ export function VesselPage() {
 }
 
 function VesselDetails({ vessel }: { vessel: Vessel }) {
+  const { formatDate, t } = useTranslation()
   const [pickedIndex, setPickedIndex] = useState(0)
   const [size, setSize] = useState<Size>('800')
   const [copied, setCopied] = useState(false)
   const [isReporting, setIsReporting] = useState(false)
   const photo: Photo | undefined = vessel.photos[pickedIndex] ?? vessel.photos[0]
-  const name = vessel.name ?? 'Unnamed vessel'
+  const name = vessel.name ?? t.common.unnamedVessel
   const vesselKey = vessel.cfr
     ? { key: vessel.cfr, keyType: 'cfr' as const }
     : { key: vessel.mmsi ?? '', keyType: 'mmsi' as const }
@@ -100,8 +104,8 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
 
   return (
     <>
-      <Breadcrumb aria-label="Breadcrumb">
-        <Link to="/">Search</Link> <span aria-hidden="true">›</span> {name}
+      <Breadcrumb aria-label={t.vessel.breadcrumb}>
+        <Link to="/">{t.vessel.search}</Link> <span aria-hidden="true">›</span> {name}
       </Breadcrumb>
 
       <Main>
@@ -109,7 +113,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
           {photo ? (
             <Figure>
               <img
-                alt={`${name}, by ${photo.credit}`}
+                alt={t.vessel.photoAlt(name, photo.credit)}
                 src={getPhotoUrl(photo.urls, '800')}
                 srcSet={`${getPhotoUrl(photo.urls, '800')} 800w, ${getPhotoUrl(photo.urls, 'full')} 1600w`}
                 sizes="(max-width: 900px) 100vw, 760px"
@@ -119,8 +123,8 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
                   © {photo.credit} · {photo.licenceName}
                 </span>
                 <span>
-                  Photo {photo.n} of {vessel.photos.length}
-                  {photo.takenOn && ` · taken ${photo.takenOn}`}
+                  {t.vessel.photoOf(photo.n, vessel.photos.length)}
+                  {photo.takenOn && ` · ${t.vessel.taken(formatDate(photo.takenOn))}`}
                   {photo.place && ` · ${photo.place}`}
                 </span>
               </figcaption>
@@ -128,19 +132,19 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
           ) : (
             <EmptyFigure>
               <BoatPlaceholder width={320} />
-              <p>No photo of {name} yet.</p>
+              <p>{t.vessel.noPhotoOf(name)}</p>
               <PrimaryButton as={Link} to={`/contribute?${contributeQuery}`}>
-                Add the first photo
+                {t.vessel.addFirstPhoto}
               </PrimaryButton>
             </EmptyFigure>
           )}
 
-          <Thumbnails aria-label="Photos of this vessel">
+          <Thumbnails aria-label={t.vessel.photosLabel}>
             {vessel.photos.map((item, index) => (
               <Thumbnail
                 key={item.n}
                 $active={item.n === photo?.n}
-                aria-label={`Show photo ${item.n}`}
+                aria-label={t.vessel.showPhoto(item.n)}
                 aria-pressed={item.n === photo?.n}
                 onClick={() => {
                   setPickedIndex(index)
@@ -165,7 +169,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
                 <path d="M12 5v14" />
                 <path d="M5 12h14" />
               </svg>
-              Add a photo
+              {t.vessel.addPhoto}
             </AddPhoto>
           </Thumbnails>
 
@@ -174,14 +178,14 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
               <ReportForm key={photo.n} n={photo.n} onClose={() => setIsReporting(false)} vesselKey={vesselKey} />
             ) : (
               <ReportButton onClick={() => setIsReporting(true)} type="button">
-                Report photo {photo.n}
+                {t.vessel.reportPhoto(photo.n)}
               </ReportButton>
             ))}
         </Gallery>
 
         <Aside>
           <Heading>
-            {vessel.flag && <FlagChip>Flag · {vessel.flag} (from CFR)</FlagChip>}
+            {vessel.flag && <FlagChip>{t.vessel.flag(vessel.flag)}</FlagChip>}
             <h1>{name}</h1>
             {(vessel.registration || vessel.port) && (
               <Registration>{[vessel.registration, vessel.port].filter(Boolean).join(' · ')}</Registration>
@@ -202,13 +206,14 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
 
           {photo && (
             <UsePanel>
-              <h2>Use this photo</h2>
+              <h2>{t.vessel.useThisPhoto}</h2>
               <Muted>
-                Credit line — required by the licence{photo.licence === 'CC0-1.0' && ' (CC0: optional but appreciated)'}
+                {t.vessel.creditLine}
+                {photo.licence === 'CC0-1.0' && t.vessel.creditLineCc0}
               </Muted>
               <Attribution>{photo.attribution}</Attribution>
               <Sizes>
-                <legend className="visually-hidden">Image size</legend>
+                <legend className="visually-hidden">{t.vessel.imageSize}</legend>
                 {SIZES.map(item => (
                   <Pill
                     key={item.value}
@@ -217,15 +222,15 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
                     onClick={() => setSize(item.value)}
                     type="button"
                   >
-                    {item.label}
+                    {item.label ?? t.vessel.sizeFull}
                   </Pill>
                 ))}
               </Sizes>
-              <Muted>Image URL, either key works</Muted>
+              <Muted>{t.vessel.imageUrl}</Muted>
               <CodeBlock>{imageUrls.join('\n')}</CodeBlock>
               <Actions>
                 <PrimaryButton onClick={copy} type="button">
-                  {copied ? 'Copied' : 'Copy credit + URL'}
+                  {copied ? t.common.copied : t.vessel.copyCreditAndUrl}
                 </PrimaryButton>
                 <SecondaryButton
                   as="a"
@@ -233,7 +238,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
                   rel="noreferrer"
                   target="_blank"
                 >
-                  JSON for this vessel
+                  {t.vessel.json}
                 </SecondaryButton>
               </Actions>
             </UsePanel>
@@ -243,21 +248,21 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
 
       {vessel.history.length > 0 && (
         <History>
-          <SectionTitle>History</SectionTitle>
+          <SectionTitle>{t.vessel.history}</SectionTitle>
           <TableBox>
             <table>
               <thead>
                 <tr>
-                  <th scope="col">Date</th>
-                  <th scope="col">Change</th>
-                  <th scope="col">By</th>
+                  <th scope="col">{t.vessel.historyDate}</th>
+                  <th scope="col">{t.vessel.historyChange}</th>
+                  <th scope="col">{t.vessel.historyBy}</th>
                 </tr>
               </thead>
               <tbody>
                 {vessel.history.map(event => (
                   <tr key={`${event.date}-${event.description}`}>
-                    <td>{event.date.slice(0, 10)}</td>
-                    <td>{event.description}</td>
+                    <td>{formatDate(event.date)}</td>
+                    <td>{t.vessel.historyEvent(event)}</td>
                     <td>{event.by ?? '—'}</td>
                   </tr>
                 ))}
