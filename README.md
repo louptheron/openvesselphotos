@@ -189,3 +189,15 @@ See `/docs` on a running instance. In short:
 | POST   | `/v1/{cfr\|mmsi}/{key}/link`                  | Suggest the missing key                       |
 | POST   | `/v1/{cfr\|mmsi}/{key}/photos/{n}/reports`    | Report a photo                                |
 | POST   | `/v1/api-key-requests`                       | Request an API key (no key needed)            |
+
+## Licence
+
+Open Vessel Photos — Copyright © 2026 Loup Theron and contributors.
+
+The code is free software: you can redistribute it and/or modify it under the terms of the
+[GNU Affero General Public License](LICENSE), version 3 or (at your option) any later version. Anyone may run their
+own instance; a modified version offered as a service must publish its source code too.
+
+The photos are not covered by this licence: each one keeps the open licence chosen by its author (CC BY 4.0,
+CC BY-SA 4.0 or CC0), shown with it on the site and in the API.
+

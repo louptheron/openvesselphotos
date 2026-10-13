@@ -27,7 +27,17 @@ export function Layout() {
       </main>
       <Footer>
         <FooterInner>
-          <span>Open Vessel Photos · open-source code · photos under their own open licences</span>
+          <span>
+            Open Vessel Photos ·{' '}
+            <a href="https://github.com/louptheron/openvesselphotos" rel="noreferrer" target="_blank">
+              code
+            </a>{' '}
+            under{' '}
+            <a href="https://github.com/louptheron/openvesselphotos/blob/main/LICENSE" rel="noreferrer" target="_blank">
+              AGPL-3.0
+            </a>{' '}
+            · photos under their own open licences
+          </span>
           <span>
             <a href="/v1/export.json">Download the dataset</a> · <Link to="/docs">API</Link> ·{' '}
             <Link to="/api-key">API key</Link> · <Link to="/admin">Review</Link>
