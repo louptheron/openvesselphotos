@@ -9,6 +9,7 @@ import { Chip, Container, Muted, PrimaryButton, SectionTitle } from '../../compo
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { CHART_COLORS, COLORS, FONTS } from '../../theme'
 import { detectKey } from '../../utils/vesselKey'
+import { ChartCredits } from './ChartCredits'
 import { ChartVessels } from './ChartVessels'
 
 export function HomePage() {
@@ -93,6 +94,7 @@ export function HomePage() {
             </Muted>
           </HeroCard>
         </Hero>
+        {!recentResult.isLoading && <ChartCredits libraryVesselCount={recentResult.data?.length ?? 0} />}
       </ChartSection>
 
       <Results aria-label="Results" aria-live="polite">
