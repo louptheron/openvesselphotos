@@ -195,7 +195,7 @@ class PublicVesselController(
         return ResponseEntity
             .ok()
             .contentType(MediaType.IMAGE_JPEG)
-            .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePublic())
+            .cacheControl(CacheControl.maxAge(Duration.ofDays(1)).cachePublic())
             .body(image.content)
     }
 

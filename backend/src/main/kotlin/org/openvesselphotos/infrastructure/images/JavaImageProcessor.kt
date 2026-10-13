@@ -15,9 +15,11 @@ import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.locks.ReentrantLock
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
+import kotlin.concurrent.withLock
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -28,26 +30,14 @@ import kotlin.math.roundToInt
 class JavaImageProcessor : ImageProcessor {
     private val logger = LoggerFactory.getLogger(JavaImageProcessor::class.java)
 
-    override fun process(bytes: ByteArray): ProcessedImage {
-        val decoded =
-            try {
-                ImageIO.read(ByteArrayInputStream(bytes))
-            } catch (e: Exception) {
-                logger.info("Could not decode an uploaded image: ${e.message}")
-                null
-            }
-                ?: throw BackendUsageException(
-                    BackendUsageErrorCode.INVALID_IMAGE,
-                    "The file is not a JPEG or PNG image.",
-                )
+    /** One image at a time: decoding and resizing are the most memory-hungry operations of the app. */
+    private val processingLock = ReentrantLock()
 
+    override fun process(bytes: ByteArray): ProcessedImage = processingLock.withLock { processOne(bytes) }
+
+    private fun processOne(bytes: ByteArray): ProcessedImage {
+        val decoded = decode(bytes)
         val image = toRgb(applyExifOrientation(decoded, readExifOrientation(bytes)))
-        if (image.width < MIN_WIDTH || image.height < MIN_HEIGHT) {
-            throw BackendUsageException(
-                BackendUsageErrorCode.INVALID_IMAGE,
-                "The image is too small (${image.width}×${image.height}), it must be at least ${MIN_WIDTH}×$MIN_HEIGHT pixels.",
-            )
-        }
 
         val full = scaleToFit(image, ImageSize.FULL.pixels)
         val files =
@@ -61,6 +51,56 @@ class JavaImageProcessor : ImageProcessor {
             }
 
         return ProcessedImage(width = full.width, height = full.height, files = files)
+    }
+
+    /**
+     * Decodes the image at a reduced resolution when it is larger than needed (source subsampling), so that a
+     * 24-megapixel photo never sits in memory at full size: this keeps the app within a small container.
+     */
+    private fun decode(bytes: ByteArray): BufferedImage {
+        val invalidImage =
+            BackendUsageException(BackendUsageErrorCode.INVALID_IMAGE, "The file is not a JPEG or PNG image.")
+        val input = ImageIO.createImageInputStream(ByteArrayInputStream(bytes)) ?: throw invalidImage
+
+        return input.use {
+            val reader =
+                ImageIO
+                    .getImageReaders(
+                        input,
+                    ).asSequence()
+                    .firstOrNull { it.formatName.lowercase() in SUPPORTED_FORMATS }
+                    ?: throw invalidImage
+            try {
+                reader.input = input
+                val width = reader.getWidth(0)
+                val height = reader.getHeight(0)
+                if (width < MIN_WIDTH || height < MIN_HEIGHT) {
+                    throw BackendUsageException(
+                        BackendUsageErrorCode.INVALID_IMAGE,
+                        "The image is too small ($width×$height), it must be at least ${MIN_WIDTH}×$MIN_HEIGHT pixels.",
+                    )
+                }
+                if (width.toLong() * height > MAX_PIXELS) {
+                    throw BackendUsageException(
+                        BackendUsageErrorCode.INVALID_IMAGE,
+                        "The image is too large ($width×$height).",
+                    )
+                }
+
+                // Keeps at least the full size's resolution; the exact size is reached by resizing
+                val subsampling = (max(width, height) / ImageSize.FULL.pixels).coerceAtLeast(1)
+                val params = reader.defaultReadParam.apply { setSourceSubsampling(subsampling, subsampling, 0, 0) }
+
+                reader.read(0, params)
+            } catch (e: BackendUsageException) {
+                throw e
+            } catch (e: Exception) {
+                logger.info("Could not decode an uploaded image: ${e.message}")
+                throw invalidImage
+            } finally {
+                reader.dispose()
+            }
+        }
     }
 
     private fun readExifOrientation(bytes: ByteArray): Int =
@@ -224,6 +264,10 @@ class JavaImageProcessor : ImageProcessor {
     companion object {
         const val MIN_WIDTH = 320
         const val MIN_HEIGHT = 200
-        const val JPEG_QUALITY = 0.85f
+        const val JPEG_QUALITY = 0.82f
+
+        /** 100 megapixels: above, it is not a photo but an attempt to exhaust the memory. */
+        const val MAX_PIXELS = 100_000_000L
+        private val SUPPORTED_FORMATS = setOf("jpeg", "jpg", "png")
     }
 }

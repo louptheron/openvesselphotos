@@ -8,7 +8,7 @@ A free, open-source library of vessel photos, searchable by **CFR** (EU fleet re
 - a free JSON + image API, with no key: `/v1/cfr/FRA000123456.jpg`, `/v1/mmsi/227000101`, … (see `/docs`);
 - a review queue (`/admin`) protected by a unique admin password.
 
-Every photo is published only after review. Uploads are re-encoded as JPEG in 3 sizes (320 px, 800 px, full ≤ 2400
+Every photo is published only after review. Uploads are re-encoded as JPEG in 3 sizes (320 px, 800 px, full ≤ 1600
 px), which also strips EXIF/GPS metadata.
 
 ## Stack
@@ -81,7 +81,7 @@ Variables are listed in `backend/.env.example`.
 | `OPENVESSELPHOTOS_ADMIN_PASSWORD`                 | _(empty: admin disabled)_  | Unique password of `/admin`                         |
 | `PORT`                                            | _(set by Scalingo)_        | HTTP port, takes precedence over the next one       |
 | `OPENVESSELPHOTOS_SERVER_PORT`                    | `8880`                     | HTTP port                                           |
-| `JAVA_OPTS`                                       |                            | JVM options, e.g. `-XX:MaxRAMPercentage=75`         |
+| `JAVA_OPTS`                                       |                            | Extra JVM options, override those of the `Procfile` |
 
 The admin session is a signed, HttpOnly cookie valid 12 hours. Its key derives from the password: changing
 `OPENVESSELPHOTOS_ADMIN_PASSWORD` signs everybody out. After 10 wrong passwords, an IP is locked out for 15 minutes.
@@ -137,17 +137,38 @@ builds the frontend) and the Gradle buildpack (`./gradlew stage` packages it in 
 
 ```sh
 scalingo create openvesselphotos --region osc-fr1
+scalingo --app openvesselphotos scale web:1:S
 scalingo --app openvesselphotos addons-add postgresql postgresql-starter-512
 scalingo --app openvesselphotos env-set OPENVESSELPHOTOS_ADMIN_PASSWORD="$(openssl rand -base64 24)"
-scalingo --app openvesselphotos env-set JAVA_OPTS="-XX:MaxRAMPercentage=75"
 scalingo --app openvesselphotos env-set OPENVESSELPHOTOS_CLIENT_IP_HEADER=X-Real-IP
 git push scalingo main
 ```
 
-Use a container of at least size M (512 MB): Spring Boot and image resizing need the memory. Flyway migrates the
-database at startup. The Docker image (`infra/docker/app/Dockerfile`) is for local use and self-hosting.
+Flyway migrates the database at startup. The Docker image (`infra/docker/app/Dockerfile`) is for local use and self-hosting.
 
-Keep an eye on the database size: each photo takes about 1 MB (three JPEG sizes).
+## Costs
+
+The cheapest setup on Scalingo is one **S** container and a **Starter 512** database: €14.40 excl. VAT per 30 days
+(€7.20 each, prices of October 2026). Containers can't scale to zero and there is no free database plan.
+
+The app is sized for it:
+
+- **256 MB of memory.** The `Procfile` (and the Dockerfile) set the JVM options: 96 MB heap, serial GC, small code
+  cache. Tested under S limits (256 MB, 64 MB swap, 128 processes, ¼ CPU) with 3 simultaneous uploads of 24-megapixel
+  photos: no error, at most 49 MB of swap. Without these options, the app is killed for lack of memory. Startup takes
+  about 40 s on a quarter of a CPU.
+- **Uploads are decoded at reduced resolution** (source subsampling) and **one at a time**, so a large photo never sits
+  in memory at full size. Images over 100 megapixels are refused.
+- **20 Tomcat threads and 3 database connections**: an S container allows 128 threads, Starter 512 allows 30
+  connections.
+- **Storage**: images are kept in PostgreSQL. Full size is capped at 1600 px (JPEG quality 82). Starter 512 includes
+  10 GB, enough for roughly 20,000 photos (about 0.5 MB each, all sizes). Beyond, storage costs about €0.50 per GB
+  per month. Rejected and removed photos are deleted.
+- **Cache**: images are cached for a day by browsers and proxies, which spares the small container. A free CDN in
+  front of the domain (e.g. Cloudflare) would serve most image requests without reaching it.
+
+If the app gets slow or swaps a lot, move to M (€14.40) with `scalingo scale web:1:M` and
+`JAVA_OPTS="-Xmx256m -XX:MaxMetaspaceSize=160m"`.
 
 ## API
 

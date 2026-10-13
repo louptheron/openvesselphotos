@@ -129,8 +129,8 @@ export function DocsPage() {
     "attribution": "Photo: J. Le Bihan / Open Vessel Photos, CC BY 4.0",
     "takenOn": "2026-06-01",
     "place": "Concarneau",
-    "width": 2400,
-    "height": 1600
+    "width": 1600,
+    "height": 1067
   }],
   "history": [...]
 }`}</CodeBlock>
