@@ -305,7 +305,6 @@ const Main = styled(Container).attrs({ as: 'section' })`
     flex-wrap: nowrap;
     align-items: stretch;
     gap: 18px;
-
   }
 `
 
