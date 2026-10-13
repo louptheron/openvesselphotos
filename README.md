@@ -1,5 +1,7 @@
 # Open Vessel Photos
 
+[![CI](https://github.com/louptheron/openvesselphotos/actions/workflows/ci.yml/badge.svg)](https://github.com/louptheron/openvesselphotos/actions/workflows/ci.yml)
+
 A free, open-source library of vessel photos, searchable by **CFR** (EU fleet register) or **MMSI** (radio identity).
 
 - a public site: search, vessel pages, photo contribution;
@@ -55,6 +57,16 @@ make lint-back       # format backend code
 make lint-front      # fix and format frontend code
 make run-app-docker  # production image + database, on http://localhost:8880
 ```
+
+## CI
+
+GitHub Actions, on every pull request and on `main`:
+
+- `ci.yml`: backend lint and tests (`make test-back`), frontend lint and tests (`make test-front`), the build as on
+  Scalingo (`npm run scalingo-postbuild` then `./gradlew stage`) and the Docker image, in parallel.
+- `security.yml`: Trivy scans the Docker image (OS packages and Java dependencies) on `main` and every week; results
+  are in the repository's Security tab.
+- Dependabot opens monthly grouped updates for GitHub Actions, Gradle, npm and the Docker base images.
 
 ## Configuration
 
