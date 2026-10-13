@@ -9,6 +9,8 @@ export function ChartSection({ children, overlay }: { children: ReactNode; overl
   return (
     <Wrapper>
       <img alt="" aria-hidden="true" src={chartUrl} />
+      {/* Fades the chart, so that the vessels drawn on it and the content stand out */}
+      <Veil />
       {overlay}
       {children}
     </Wrapper>
@@ -47,6 +49,12 @@ export function WaveDivider() {
     </svg>
   )
 }
+
+const Veil = styled.div`
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.4);
+`
 
 const Wrapper = styled.div`
   position: relative;

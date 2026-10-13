@@ -52,14 +52,6 @@
     <path d="M1162 193 L1166 202 H1158 Z" fill="#6BA37A" stroke="#3F4E58" stroke-width="0.45"></path>
     <rect x="1165" y="162" width="6" height="8" fill="#D46A6A" stroke="#3F4E58" stroke-width="0.45"></rect>
     <path d="M1178 127 L1182 136 H1174 Z" fill="#6BA37A" stroke="#3F4E58" stroke-width="0.45"></path>
-    <circle cx="1141" cy="269" r="64" fill="none" stroke="#C04F98" stroke-width="1" stroke-dasharray="6 4"></circle>
-    <text x="1084" y="300" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-style="italic" font-size="8" fill="#B0408A">Zone réglementée</text>
-    <path d="M1141 252 L986 196 M1141 252 L978 300 M1141 252 L1046 400 M1141 252 L1200 430" stroke="#6F8390" stroke-width="0.6" stroke-dasharray="7 5"></path>
-    <path d="M990 200 A 160 160 0 0 0 1182 406" fill="none" stroke="#6F8390" stroke-width="0.6" stroke-dasharray="3 4"></path>
-    <text x="1002" y="214" transform="rotate(20 1002 214)" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#1D2833">R.6M</text>
-    <text x="1010" y="292" transform="rotate(-16 1010 292)" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#1D2833">W.9M</text>
-    <text x="1062" y="372" transform="rotate(-58 1062 372)" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#1D2833">G.6M</text>
-    <text x="1150" y="412" transform="rotate(-80 1150 412)" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#1D2833">W.9M</text>
     <path d="M1141 252 Q1120 226 1108 238 Q1112 258 1141 252 Z" fill="#C2479A" transform="translate(1141 252) scale(0.6) translate(-1141 -252)"></path><circle cx="1141" cy="252" r="3" fill="#3F4E58"></circle>
     <text x="1068" y="232" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#1D2833">Oc(2)WRG.6s</text>
     <circle cx="1152" cy="272" r="2.4" fill="#3F4E58"></circle><text x="1160" y="276" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#1D2833">F.R</text>
@@ -366,30 +358,6 @@
     <text x="1288" y="142" font-size="8.0">CROSS-ÉTEL</text>
     <text x="1206" y="382" font-size="9.6">Pointe d’Erdeven</text>
     <text x="1310" y="430" font-size="8.0">(31) Observation</text>
-    </g>
-    <g transform="translate(880 160) rotate(250) scale(0.7)">
-    <path d="M-5 14 L-14 46 M5 14 L14 46" stroke="#FFFFFF" stroke-width="2.2" fill="none" opacity="0.9"></path>
-    <path d="M0 14 V60" stroke="#0B2233" stroke-width="0.7" stroke-dasharray="3 4" fill="none" opacity="0.7"></path>
-    <path d="M0 -15 C6 -7 6 9 5 14 H-5 C-6 9 -6 -7 0 -15 Z" fill="#3E5578" stroke="#FFFFFF" stroke-width="1"></path>
-    <rect x="-3" y="-2" width="6" height="7" fill="#FFFFFF"></rect>
-    </g>
-    <g transform="translate(1210 560) rotate(320) scale(0.7)">
-    <path d="M-5 14 L-14 46 M5 14 L14 46" stroke="#FFFFFF" stroke-width="2.2" fill="none" opacity="0.9"></path>
-    <path d="M0 14 V60" stroke="#0B2233" stroke-width="0.7" stroke-dasharray="3 4" fill="none" opacity="0.7"></path>
-    <path d="M0 -15 C6 -7 6 9 5 14 H-5 C-6 9 -6 -7 0 -15 Z" fill="#3E5578" stroke="#FFFFFF" stroke-width="1"></path>
-    <rect x="-3" y="-2" width="6" height="7" fill="#FFFFFF"></rect>
-    </g>
-    <g transform="translate(980 560) rotate(200) scale(0.7)">
-    <path d="M-5 14 L-14 46 M5 14 L14 46" stroke="#FFFFFF" stroke-width="2.2" fill="none" opacity="0.9"></path>
-    <path d="M0 14 V60" stroke="#0B2233" stroke-width="0.7" stroke-dasharray="3 4" fill="none" opacity="0.7"></path>
-    <path d="M0 -15 C6 -7 6 9 5 14 H-5 C-6 9 -6 -7 0 -15 Z" fill="#3E5578" stroke="#FFFFFF" stroke-width="1"></path>
-    <rect x="-3" y="-2" width="6" height="7" fill="#FFFFFF"></rect>
-    </g>
-    <g transform="translate(1280 470) rotate(140) scale(0.7)">
-    <path d="M-5 14 L-14 46 M5 14 L14 46" stroke="#FFFFFF" stroke-width="2.2" fill="none" opacity="0.9"></path>
-    <path d="M0 14 V60" stroke="#0B2233" stroke-width="0.7" stroke-dasharray="3 4" fill="none" opacity="0.7"></path>
-    <path d="M0 -15 C6 -7 6 9 5 14 H-5 C-6 9 -6 -7 0 -15 Z" fill="#3E5578" stroke="#FFFFFF" stroke-width="1"></path>
-    <rect x="-3" y="-2" width="6" height="7" fill="#FFFFFF"></rect>
     </g>
     </g>
     </svg>

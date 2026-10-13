@@ -6,19 +6,25 @@ import { CHART_COLORS, COLORS } from '../../theme'
 import { getPhotoUrl, getVesselPath } from '../../utils/vesselKey'
 import { COMMONS_VESSELS } from './commonsVessels'
 
-/** Where the vessels sit on the chart (in its 1440×620 coordinates, before its 60 px offset), as in the mockup. */
+/**
+ * Where the vessels sit on the chart (in its 1440×620 coordinates, before its 60 px offset). The cards are larger than
+ * in the mockup and placed so that they stay visible on 1360 px wide screens, where the chart is cropped on the sides.
+ */
 const SPOTS = [
-  { boat: COLORS.ink, card: [1236, 228], heading: 225, line: [1236, 290], position: [1098, 312], sky: '#CFE0EA' },
+  { boat: COLORS.ink, card: [1130, 140], heading: 225, line: [1130, 262], position: [1098, 312], sky: '#CFE0EA' },
   {
     boat: CHART_COLORS.photoCount,
-    card: [968, 52],
+    card: [900, 40],
     heading: 305,
-    line: [968, 114],
+    line: [950, 192],
     position: [952, 232],
     sky: '#E6D9C6'
   },
   { boat: '#2D5B7A', card: [1070, 404], heading: 165, line: [1070, 466], position: [1012, 468], sky: '#D5E3DA' }
 ] as const
+
+/** Cards are drawn at 156×124 and scaled up, to give their photos more room. */
+const CARD_SCALE = 1.22
 
 type Card = {
   /** Shown in the bottom right corner */
@@ -69,7 +75,7 @@ export function ChartVessels({ vessels }: { vessels: VesselSummary[] }) {
     <svg aria-hidden="true" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1440 620">
       <defs>
         <filter height="150%" id="cardShadow" width="140%" x="-20%" y="-20%">
-          <feDropShadow dx="0" dy="3" floodColor={COLORS.ink} floodOpacity="0.22" stdDeviation="4" />
+          <feDropShadow dx="0" dy="4" floodColor={COLORS.ink} floodOpacity="0.3" stdDeviation="5" />
         </filter>
       </defs>
       <g transform="translate(60 0)">
@@ -90,7 +96,9 @@ export function ChartVessels({ vessels }: { vessels: VesselSummary[] }) {
                 stroke={COLORS.ink}
                 strokeWidth="1.2"
               />
-              <circle cx={x} cy={y} fill="none" r="24" stroke={COLORS.accent} strokeWidth="2" />
+              {/* A halo detaches the vessel from the chart */}
+              <circle cx={x} cy={y} fill={COLORS.white} opacity="0.85" r="27" />
+              <circle cx={x} cy={y} fill="none" r="24" stroke={COLORS.accent} strokeWidth="2.5" />
               <g transform={`translate(${x} ${y}) rotate(${spot.heading})`}>
                 <path
                   d="M-5 14 L-14 46 M5 14 L14 46"
@@ -128,7 +136,7 @@ export function ChartVessels({ vessels }: { vessels: VesselSummary[] }) {
                 tabIndex={-1}
                 target={card.isExternal ? '_blank' : undefined}
               >
-                <g transform={`translate(${cardX} ${cardY})`}>
+                <g transform={`translate(${cardX} ${cardY}) scale(${CARD_SCALE})`}>
                   <rect fill={COLORS.white} filter="url(#cardShadow)" height="124" rx="10" width="156" />
                   <clipPath id={clipId}>
                     <rect height="74" rx="6" width="144" x="6" y="6" />
