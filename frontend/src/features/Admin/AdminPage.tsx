@@ -70,7 +70,6 @@ function LoginForm() {
           <Label htmlFor="password">Admin password</Label>
           <Input
             autoComplete="current-password"
-            autoFocus
             id="password"
             onChange={event => setPassword(event.target.value)}
             type="password"

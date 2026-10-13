@@ -98,7 +98,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
           {photo ? (
             <Figure>
               <img
-                alt={`${name}, photo ${photo.n} by ${photo.credit}`}
+                alt={`${name}, by ${photo.credit}`}
                 src={getPhotoUrl(photo.urls, '800')}
                 srcSet={`${getPhotoUrl(photo.urls, '800')} 800w, ${getPhotoUrl(photo.urls, 'full')} 2400w`}
                 sizes="(max-width: 900px) 100vw, 760px"
@@ -190,7 +190,8 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
                 Credit line — required by the licence{photo.licence === 'CC0-1.0' && ' (CC0: optional but appreciated)'}
               </Muted>
               <Attribution>{photo.attribution}</Attribution>
-              <div aria-label="Image size" role="group">
+              <Sizes>
+                <legend className="visually-hidden">Image size</legend>
                 {SIZES.map(item => (
                   <Pill
                     key={item.value}
@@ -202,7 +203,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
                     {item.label}
                   </Pill>
                 ))}
-              </div>
+              </Sizes>
               <Muted>Image URL, either key works</Muted>
               <CodeBlock>{imageUrls.join('\n')}</CodeBlock>
               <Actions>
@@ -433,15 +434,18 @@ const UsePanel = styled(Card)`
     font-weight: 600;
   }
 
-  [role='group'] {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
   pre {
     font-size: 12px;
   }
+`
+
+const Sizes = styled.fieldset`
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 `
 
 const Attribution = styled.div`

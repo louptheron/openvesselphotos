@@ -44,7 +44,7 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
   const [selectedId, setSelectedId] = useState<string>()
   const [runAction, { error, isLoading }] = useAdminActionMutation()
 
-  const act = (path: string, body?: object) => runAction({ body, path })
+  const act = (path: string, body?: object) => runAction(body ? { body, path } : { path })
 
   const items: Record<Tab, Item[]> = {
     keyLinks: queue.keyLinks.map(link => ({
@@ -269,7 +269,7 @@ function PhotoReview({
 function Preview({ photo }: { photo: AdminPhoto }) {
   return (
     <a href={`/v1/admin/photos/${photo.id}.jpg?size=full`} rel="noreferrer" target="_blank">
-      <PreviewImage alt="Submitted photo" src={`/v1/admin/photos/${photo.id}.jpg?size=800`} />
+      <PreviewImage alt="Submission preview" src={`/v1/admin/photos/${photo.id}.jpg?size=800`} />
     </a>
   )
 }

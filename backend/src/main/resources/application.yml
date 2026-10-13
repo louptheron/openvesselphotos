@@ -1,0 +1,38 @@
+server:
+    # PORT is set by Scalingo
+    port: ${PORT:${OPENVESSELPHOTOS_SERVER_PORT:8880}}
+    forward-headers-strategy: framework
+    compression:
+        enabled: true
+        mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+        min-response-size: 2048
+
+openvesselphotos:
+    # Unique admin password. Empty = admin disabled.
+    admin-password: ${OPENVESSELPHOTOS_ADMIN_PASSWORD:}
+    database:
+        # Scalingo sets SCALINGO_POSTGRESQL_URL and its alias DATABASE_URL (postgresql://user:password@host:port/db?sslmode=prefer).
+        # A jdbc: URL is accepted too.
+        url: ${SCALINGO_POSTGRESQL_URL:${DATABASE_URL:${OPENVESSELPHOTOS_DATABASE_URL}}}
+        hikari-max-pool-size: ${OPENVESSELPHOTOS_DATABASE_HIKARI_MAX_POOL_SIZE:5}
+
+spring:
+    application:
+        name: openvesselphotos
+    jmx:
+        enabled: false
+    jpa:
+        open-in-view: false
+        hibernate:
+            ddl-auto: validate
+        properties:
+            hibernate:
+                jdbc:
+                    time_zone: UTC
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+    flyway:
+        locations: classpath:/db/migration
+    servlet:
+        multipart:
+            max-file-size: 15MB
+            max-request-size: 16MB

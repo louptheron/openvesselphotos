@@ -14,7 +14,7 @@ export function VesselCard({ index, vessel }: { index: number; vessel: VesselSum
       <Picture $sky={SKIES[index % SKIES.length] ?? COLORS.info}>
         {photo ? (
           <img
-            alt={`${vessel.name ?? 'Vessel'}, photo by ${photo.credit}`}
+            alt={`${vessel.name ?? 'Vessel'}, by ${photo.credit}`}
             loading="lazy"
             sizes="(max-width: 600px) 100vw, 320px"
             src={getPhotoUrl(photo.urls, '320')}

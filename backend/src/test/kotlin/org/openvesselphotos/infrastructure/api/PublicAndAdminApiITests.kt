@@ -34,7 +34,7 @@ class PublicAndAdminApiITests {
         @DynamicPropertySource
         @JvmStatic
         fun properties(registry: DynamicPropertyRegistry) {
-            registry.add("openvesselphotos.database-url") {
+            registry.add("openvesselphotos.database.url") {
                 "postgres://${postgres.username}:${postgres.password}@${postgres.host}:${postgres.firstMappedPort}/${postgres.databaseName}"
             }
         }

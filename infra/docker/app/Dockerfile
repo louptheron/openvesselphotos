@@ -36,7 +36,7 @@ WORKDIR /home/openvesselphotos
 
 COPY --from=build-back /home/gradle/app/backend/build/libs/openvesselphotos.jar ./
 
-ENV PORT=8880
+ENV OPENVESSELPHOTOS_SERVER_PORT=8880
 EXPOSE 8880
 
 CMD ["sh", "-c", "exec java $JAVA_OPTS -jar openvesselphotos.jar"]

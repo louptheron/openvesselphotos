@@ -51,7 +51,7 @@ export function HomePage() {
           A simple, community-built library of vessel photos. Search it here or call the free API — every photo comes
           with its credit and licence.
         </p>
-        <SearchForm onSubmit={search} role="search">
+        <SearchForm aria-label="Search vessels" onSubmit={search}>
           <label className="visually-hidden" htmlFor="q">
             Search by name, CFR or MMSI
           </label>

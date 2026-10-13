@@ -1,17 +1,25 @@
 {
+  "extends": "@tsconfig/vite-react",
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "exactOptionalPropertyTypes": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "strict": true,
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,
-    "isolatedModules": true,
-    "types": ["vite/client"]
+    "strict": true,
+    "target": "ES2022",
+    "types": ["vite/client"],
+    "useUnknownInCatchVariables": true,
+    "verbatimModuleSyntax": true
   },
   "include": ["src", "vite.config.ts"]
 }

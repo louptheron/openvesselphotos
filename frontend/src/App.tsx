@@ -10,6 +10,8 @@ import { VesselPage } from './features/Vessel/VesselPage'
 
 export function App() {
   const { pathname } = useLocation()
+  // Scroll to the top on each page change
+  // oxlint-disable-next-line react/exhaustive-effect-dependencies
   useEffect(() => window.scrollTo(0, 0), [pathname])
 
   return (

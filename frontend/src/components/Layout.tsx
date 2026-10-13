@@ -5,8 +5,6 @@ import { COLORS, FONTS } from '../theme'
 import { LogoMark } from './Logo'
 import { Container } from './ui'
 
-const SOURCE_CODE_URL = import.meta.env.VITE_SOURCE_CODE_URL as string | undefined
-
 export function Layout() {
   return (
     <>
@@ -22,11 +20,6 @@ export function Layout() {
           <NavItem to="/docs">API</NavItem>
           <NavItem to="/contribute">Contribute</NavItem>
           <NavItem to="/docs#licences">Licences</NavItem>
-          {SOURCE_CODE_URL && (
-            <SourceLink href={SOURCE_CODE_URL} rel="noreferrer" target="_blank">
-              Source code
-            </SourceLink>
-          )}
         </Nav>
       </Header>
       <main>
@@ -86,21 +79,6 @@ const NavItem = styled(NavLink)`
   &.active {
     font-weight: 600;
     box-shadow: inset 0 -2px 0 ${COLORS.accent};
-  }
-`
-
-const SourceLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  height: 44px;
-  padding: 0 16px;
-  border-radius: 22px;
-  background: ${COLORS.ink};
-  color: ${COLORS.white};
-  text-decoration: none;
-
-  &:hover {
-    color: ${COLORS.white};
   }
 `
 

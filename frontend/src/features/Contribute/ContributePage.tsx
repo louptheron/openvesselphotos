@@ -51,6 +51,7 @@ export function ContributePage() {
   const [hasRights, setHasRights] = useState(false)
   const [email, setEmail] = useState('')
   const [submitPhoto, { error, isLoading, isSuccess, reset }] = useSubmitPhotoMutation()
+  const [today] = useState(() => new Date().toISOString().slice(0, 10))
 
   const normalizedKey = normalizeKey(key)
   const isKeyValid = isValidKey(keyType, key)
@@ -61,7 +62,9 @@ export function ContributePage() {
   const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : undefined), [file])
   useEffect(
     () => () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+      }
     },
     [previewUrl]
   )
@@ -81,10 +84,18 @@ export function ContributePage() {
     form.append('file', file)
     form.append('credit', credit.trim())
     form.append('licence', licence)
-    if (takenOn) form.append('takenOn', takenOn)
-    if (place.trim()) form.append('place', place.trim())
-    if (email.trim()) form.append('email', email.trim())
-    if (!vessel && vesselName.trim()) form.append('vesselName', vesselName.trim())
+    if (takenOn) {
+      form.append('takenOn', takenOn)
+    }
+    if (place.trim()) {
+      form.append('place', place.trim())
+    }
+    if (email.trim()) {
+      form.append('email', email.trim())
+    }
+    if (!vessel && vesselName.trim()) {
+      form.append('vesselName', vesselName.trim())
+    }
     submitPhoto({ form, key: normalizedKey, keyType })
   }
 
@@ -126,7 +137,8 @@ export function ContributePage() {
         <Form onSubmit={submit}>
           <Step>
             <legend>1 · Which vessel?</legend>
-            <div aria-label="Key type" role="group">
+            <KeyTypes>
+              <legend className="visually-hidden">Key type</legend>
               {(['cfr', 'mmsi'] as const).map(type => (
                 <Pill
                   key={type}
@@ -141,7 +153,7 @@ export function ContributePage() {
                   {type.toUpperCase()}
                 </Pill>
               ))}
-            </div>
+            </KeyTypes>
             <Field>
               <Label htmlFor="key">{KEY_TYPES[keyType].label}</Label>
               <KeyInput
@@ -206,7 +218,7 @@ export function ContributePage() {
             />
             <DropZone htmlFor="file">
               {previewUrl ? (
-                <img alt="Preview of your photo" src={previewUrl} />
+                <img alt="Your upload" src={previewUrl} />
               ) : (
                 <svg
                   aria-hidden="true"
@@ -233,7 +245,7 @@ export function ContributePage() {
                 <Label htmlFor="taken">Date taken</Label>
                 <Input
                   id="taken"
-                  max={new Date().toISOString().slice(0, 10)}
+                  max={today}
                   onChange={event => setTakenOn(event.target.value)}
                   type="date"
                   value={takenOn}
@@ -388,11 +400,14 @@ const Step = styled.fieldset`
     font-size: 20px;
     font-weight: 700;
   }
+`
 
-  [role='group'] {
-    display: flex;
-    gap: 6px;
-  }
+const KeyTypes = styled.fieldset`
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  gap: 6px;
 `
 
 const KeyInput = styled(Input)`

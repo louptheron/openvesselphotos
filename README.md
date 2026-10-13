@@ -37,40 +37,48 @@ frontend/src/
 
 ## Development
 
-Requirements: JDK 21, Node 24, Docker.
+Requirements: JDK 21, Node 24, Docker. Run `make` to list all commands.
 
 ```sh
-make install     # frontend dependencies
-make dev-db      # PostgreSQL in Docker (DB_PORT=5433 make dev-db if 5432 is taken)
-make dev-back    # API on http://localhost:8880, admin password "admin"
-make dev-front   # React app on http://localhost:3000 (proxies /v1 to the API)
+make install-front   # frontend dependencies
+make run-back        # PostgreSQL (Docker, port 5433) + API on http://localhost:8880
+make run-front       # React app on http://localhost:3000 (proxies /v1 to the API)
 ```
 
-If you changed `DB_PORT`, pass it to `make dev-back` as well.
-
-Checks:
+Like in MonitorFish, `make run-back` reads its variables from `backend/.env.local.defaults` (admin password: `admin`),
+overridden by an optional `.env` file at the root. The database uses port 5433, so that it runs alongside MonitorFish's
+(5432).
 
 ```sh
-make test        # backend (needs Docker for Testcontainers) + frontend
-make lint
-make format
+make test            # backend (ktlint + tests, needs Docker for Testcontainers) and frontend checks
+make lint-back       # format backend code
+make lint-front      # fix and format frontend code
+make run-app-docker  # production image + database, on http://localhost:8880
 ```
-
-Run the production image locally: `ADMIN_PASSWORD=… make docker-up`, then open http://localhost:8880.
 
 ## Configuration
 
-| Variable                                     | Default                                    | Description                                        |
-| -------------------------------------------- | ------------------------------------------ | -------------------------------------------------- |
-| `SCALINGO_POSTGRESQL_URL` or `DATABASE_URL`  | `postgres://ovp:ovp@localhost:5432/ovp`    | `postgres://` (Scalingo format) or `jdbc:` URL     |
-| `ADMIN_PASSWORD`                             | _(empty: admin disabled)_                  | Unique password of `/admin`                        |
-| `PORT`                                       | `8880`                                     | HTTP port                                          |
-| `DB_POOL_SIZE`                               | `5`                                        | Database connections per container                 |
-| `JAVA_OPTS`                                  |                                            | JVM options, e.g. `-XX:MaxRAMPercentage=75`        |
-| `VITE_SOURCE_CODE_URL`                       |                                            | At build time: shows a "Source code" link          |
+Variables are listed in `backend/.env.example`.
+
+| Variable                                          | Default                    | Description                                         |
+| ------------------------------------------------- | -------------------------- | --------------------------------------------------- |
+| `SCALINGO_POSTGRESQL_URL`, `DATABASE_URL`         | _(set by Scalingo)_        | Database URL, take precedence over the next one     |
+| `OPENVESSELPHOTOS_DATABASE_URL`                   | _(required otherwise)_     | `postgresql://user:password@host:port/db` or `jdbc:` |
+| `OPENVESSELPHOTOS_DATABASE_HIKARI_MAX_POOL_SIZE`  | `5`                        | Database connections per container                  |
+| `OPENVESSELPHOTOS_ADMIN_PASSWORD`                 | _(empty: admin disabled)_  | Unique password of `/admin`                         |
+| `PORT`                                            | _(set by Scalingo)_        | HTTP port, takes precedence over the next one       |
+| `OPENVESSELPHOTOS_SERVER_PORT`                    | `8880`                     | HTTP port                                           |
+| `JAVA_OPTS`                                       |                            | JVM options, e.g. `-XX:MaxRAMPercentage=75`         |
 
 The admin session is a signed, HttpOnly cookie valid 12 hours. Its key derives from the password: changing
-`ADMIN_PASSWORD` signs everybody out. After 10 wrong passwords, an IP is locked out for 15 minutes.
+`OPENVESSELPHOTOS_ADMIN_PASSWORD` signs everybody out. After 10 wrong passwords, an IP is locked out for 15 minutes.
+
+### Differences with MonitorFish
+
+- The Gradle wrapper is at the root (not in `backend/`): Scalingo's Gradle buildpack requires it there.
+- The database URL also comes from `SCALINGO_POSTGRESQL_URL` / `DATABASE_URL`, in Scalingo's `postgresql://` format.
+- Plain PostgreSQL (no PostGIS/TimescaleDB image), default Spring Boot logging (no Log4j2), no Keycloak.
+- Frontend: Vitest instead of Jest, no `import-meta-env` (no runtime frontend variable), native oxlint rules only.
 
 ## Deployment on Scalingo
 
@@ -81,7 +89,7 @@ builds the frontend) and the Gradle buildpack (`./gradlew stage` packages it in 
 ```sh
 scalingo create openvesselphotos --region osc-fr1
 scalingo --app openvesselphotos addons-add postgresql postgresql-starter-512
-scalingo --app openvesselphotos env-set ADMIN_PASSWORD="$(openssl rand -base64 24)"
+scalingo --app openvesselphotos env-set OPENVESSELPHOTOS_ADMIN_PASSWORD="$(openssl rand -base64 24)"
 scalingo --app openvesselphotos env-set JAVA_OPTS="-XX:MaxRAMPercentage=75"
 git push scalingo main
 ```

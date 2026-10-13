@@ -39,7 +39,6 @@ export function KeyLinkForm({ vessel, vesselKey }: { vessel: Vessel; vesselKey: 
       <Field>
         <Label htmlFor="missing-key">{label}</Label>
         <Input
-          autoFocus
           id="missing-key"
           onChange={event => setMissingKey(event.target.value)}
           placeholder={missingKeyType === 'cfr' ? 'FRA000123456' : '227000101'}

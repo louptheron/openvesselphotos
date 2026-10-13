@@ -14,8 +14,9 @@
     "dev": "vite --port 3000",
     "format": "prettier --write ./src",
     "test:format": "prettier --check ./src",
-    "test:lint": "oxlint src",
-    "test:type": "tsc --noEmit",
+    "test:lint": "oxlint --config=.oxlintrc.json src",
+    "test:lint:fix": "oxlint --fix --config=.oxlintrc.json src && prettier --write ./src",
+    "test:type": "tsc",
     "test:unit": "vitest run"
   },
   "dependencies": {
@@ -30,6 +31,8 @@
     "styled-components": "6.5.3"
   },
   "devDependencies": {
+    "@prettier/plugin-oxc": "0.2.2",
+    "@tsconfig/vite-react": "8.1.1",
     "@types/react": "18.3.31",
     "@types/react-dom": "18.3.7",
     "@vitejs/plugin-react": "6.1.2",

@@ -15,9 +15,9 @@ import javax.sql.DataSource
  */
 @Configuration
 class DatabaseConfig(
-    @param:Value("\${openvesselphotos.database-url}")
+    @param:Value("\${openvesselphotos.database.url}")
     private val databaseUrl: String,
-    @param:Value("\${openvesselphotos.database-pool-size}")
+    @param:Value("\${openvesselphotos.database.hikari-max-pool-size}")
     private val poolSize: Int,
 ) {
     @Bean
