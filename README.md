@@ -13,8 +13,6 @@ px), which also strips EXIF/GPS metadata.
 
 ## Stack
 
-Same conventions as [MonitorFish](https://github.com/MTES-MCT/monitorfish):
-
 | Part     | Technology                                                                       |
 | -------- | -------------------------------------------------------------------------------- |
 | Backend  | Kotlin, Spring Boot 4, JPA, Flyway, hexagonal layout (`domain` / `infrastructure`) |
@@ -47,9 +45,8 @@ make run-back        # PostgreSQL (Docker, port 5433) + API on http://localhost:
 make run-front       # React app on http://localhost:3000 (proxies /v1 to the API)
 ```
 
-Like in MonitorFish, `make run-back` reads its variables from `backend/.env.local.defaults` (admin password: `admin`),
-overridden by an optional `.env` file at the root. The database uses port 5433, so that it runs alongside MonitorFish's
-(5432).
+`make run-back` reads its variables from `backend/.env.local.defaults` (admin password: `admin`),
+overridden by an optional `.env` file at the root. The database uses port 5433.
 
 ```sh
 make test            # backend (ktlint + tests, needs Docker for Testcontainers) and frontend checks
@@ -89,7 +86,7 @@ The admin session is a signed, HttpOnly cookie valid 12 hours. Its key derives f
 ### API keys
 
 `GET` requests are open. `POST` requests to the public API need an API key in the `x-api-key` header
-(`ApiKeyCheckFilter`, as in MonitorFish), except those from the website's own forms: browsers mark them as same-origin
+(`ApiKeyCheckFilter`), except those from the website's own forms: browsers mark them as same-origin
 (`Sec-Fetch-Site`), and a key cannot be hidden in frontend code.
 
 Anyone can request a key at `/api-key`. Requests appear in the "API keys" tab of `/admin`: approving one creates the key
@@ -121,13 +118,6 @@ which React replaces once loaded (`PagesController`). Unknown vessels and pages 
 
 With a custom domain, set `OPENVESSELPHOTOS_PUBLIC_URL` so that canonical links never point to `*.scalingo.io`, and
 submit `https://<domain>/sitemap.xml` in Google Search Console.
-
-### Differences with MonitorFish
-
-- The Gradle wrapper is at the root (not in `backend/`): Scalingo's Gradle buildpack requires it there.
-- The database URL also comes from `SCALINGO_POSTGRESQL_URL` / `DATABASE_URL`, in Scalingo's `postgresql://` format.
-- Plain PostgreSQL (no PostGIS/TimescaleDB image), default Spring Boot logging (no Log4j2), no Keycloak.
-- Frontend: Vitest instead of Jest, no `import-meta-env` (no runtime frontend variable), native oxlint rules only.
 
 ## Deployment on Scalingo
 
