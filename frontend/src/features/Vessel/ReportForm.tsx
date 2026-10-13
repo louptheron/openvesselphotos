@@ -14,13 +14,9 @@ import {
   TextArea,
   TextButton
 } from '../../components/ui'
+import { useTranslation } from '../../i18n'
 
-const REASONS: Array<{ label: string; value: ReportReason }> = [
-  { label: 'It is not this vessel', value: 'WRONG_VESSEL' },
-  { label: 'It is my photo / not openly licensed', value: 'COPYRIGHT' },
-  { label: 'It shows people or private details', value: 'PRIVACY' },
-  { label: 'Other', value: 'OTHER' }
-]
+const REASONS: ReportReason[] = ['WRONG_VESSEL', 'COPYRIGHT', 'PRIVACY', 'OTHER']
 
 export function ReportForm({
   n,
@@ -31,12 +27,13 @@ export function ReportForm({
   onClose: () => void
   vesselKey: { key: string; keyType: KeyType }
 }) {
+  const { t } = useTranslation()
   const [reason, setReason] = useState<ReportReason>('WRONG_VESSEL')
   const [message, setMessage] = useState('')
   const [reportPhoto, { error, isLoading, isSuccess }] = useReportPhotoMutation()
 
   if (isSuccess) {
-    return <SuccessMessage>Thanks, a reviewer will look at photo {n}.</SuccessMessage>
+    return <SuccessMessage>{t.report.thanks(n)}</SuccessMessage>
   }
 
   const submit = (event: FormEvent) => {
@@ -46,19 +43,19 @@ export function ReportForm({
 
   return (
     <Form as="form" onSubmit={submit}>
-      <h2>Report photo {n}</h2>
+      <h2>{t.report.title(n)}</h2>
       <Field>
-        <Label htmlFor="report-reason">Reason</Label>
+        <Label htmlFor="report-reason">{t.report.reason}</Label>
         <Select id="report-reason" onChange={event => setReason(event.target.value as ReportReason)} value={reason}>
           {REASONS.map(item => (
-            <option key={item.value} value={item.value}>
-              {item.label}
+            <option key={item} value={item}>
+              {t.report.reasons[item]}
             </option>
           ))}
         </Select>
       </Field>
       <Field>
-        <Label htmlFor="report-message">Details (optional)</Label>
+        <Label htmlFor="report-message">{t.report.details}</Label>
         <TextArea
           id="report-message"
           maxLength={1000}
@@ -66,13 +63,13 @@ export function ReportForm({
           value={message}
         />
       </Field>
-      {error && <ErrorMessage>{getErrorMessage(error)}</ErrorMessage>}
+      {error && <ErrorMessage>{getErrorMessage(error, t)}</ErrorMessage>}
       <div>
         <SecondaryButton disabled={isLoading} type="submit">
-          Send report
+          {t.report.submit}
         </SecondaryButton>
         <TextButton onClick={onClose} type="button">
-          Cancel
+          {t.common.cancel}
         </TextButton>
       </div>
     </Form>

@@ -33,7 +33,13 @@ export type VesselSummary = {
 export type HistoryEvent = {
   by: string | null
   date: string
+  /** In English: the other fields give a translated text (see the vessel page) */
   description: string
+  key: string | null
+  licence: string | null
+  linkedTo: string | null
+  photoNumber: number | null
+  type: 'KEY_LINKED' | 'PHOTO_PUBLISHED' | 'VESSEL_ADDED'
 }
 
 export type Vessel = {

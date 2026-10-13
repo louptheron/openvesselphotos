@@ -6,32 +6,13 @@ import { getErrorMessage, useAdminActionMutation, useApproveApiKeyMutation } fro
 import type { AdminPhoto, AdminVessel, ApprovedApiKey, ReviewQueue } from '../../api/types'
 import { Card, ErrorMessage, Field, Input, Label, Muted, Pill, Select } from '../../components/ui'
 import { COLORS, FONTS } from '../../theme'
+import { useTranslation } from '../../i18n'
 import { getVesselPath } from '../../utils/vesselKey'
 import { ActiveApiKeys, ApprovedApiKeyBanner } from './ApiKeys'
 
 type Tab = 'apiKeys' | 'keyLinks' | 'photos' | 'reports'
 
-const TABS: Array<{ label: string; value: Tab }> = [
-  { label: 'Photos', value: 'photos' },
-  { label: 'Key links', value: 'keyLinks' },
-  { label: 'Reports', value: 'reports' },
-  { label: 'API keys', value: 'apiKeys' }
-]
-
-const REJECT_REASONS = [
-  "Vessel doesn't match the key",
-  "Not the contributor's own photo",
-  'Poor quality or vessel not visible',
-  'Duplicate of an existing photo',
-  'Other'
-]
-
-const REPORT_REASONS: Record<string, string> = {
-  COPYRIGHT: 'Copyright / licence',
-  OTHER: 'Other',
-  PRIVACY: 'People or private details',
-  WRONG_VESSEL: 'Wrong vessel'
-}
+const TABS: Tab[] = ['photos', 'keyLinks', 'reports', 'apiKeys']
 
 type Item = {
   id: string
@@ -47,6 +28,7 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
   const [runAction, { error, isLoading }] = useAdminActionMutation()
   const [approveApiKey, { error: approveError, isLoading: isApproving }] = useApproveApiKeyMutation()
   const [approvedApiKey, setApprovedApiKey] = useState<ApprovedApiKey>()
+  const { formatDate, t } = useTranslation()
 
   const act = (path: string, body?: object) => runAction(body ? { body, path } : { path })
 
@@ -64,26 +46,26 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
         <Detail>
           <h2>{request.name}</h2>
           <Muted>
-            Requested {formatDate(request.createdAt)} · <a href={`mailto:${request.email}`}>{request.email}</a>
+            {t.admin.requested(formatDate(request.createdAt))} · <a href={`mailto:${request.email}`}>{request.email}</a>
           </Muted>
           <Facts>
             <div>
-              <dt>Organisation or project</dt>
+              <dt>{t.admin.organisation}</dt>
               <dd>{request.organisation ?? '—'}</dd>
             </div>
           </Facts>
           <Message>{request.intendedUse}</Message>
           <Buttons>
             <Approve disabled={isApproving} onClick={() => approve(request.id)} type="button">
-              Approve and create the key
+              {t.admin.approveKey}
             </Approve>
             <Reject disabled={isLoading} onClick={() => act(`api-keys/${request.id}/reject`)} type="button">
-              Reject
+              {t.common.reject}
             </Reject>
           </Buttons>
         </Detail>
       ),
-      subtitle: `${request.organisation ?? request.email} · API key request`,
+      subtitle: `${request.organisation ?? request.email} · ${t.admin.apiKeyRequest}`,
       title: request.name
     })),
     keyLinks: queue.keyLinks.map(link => ({
@@ -92,33 +74,31 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
         <Detail>
           <LinkCompare>
             <div>
-              <small>Known key</small>
+              <small>{t.admin.knownKey}</small>
               <code>{link.vessel.cfr ? `CFR ${link.vessel.cfr}` : `MMSI ${link.vessel.mmsi}`}</code>
             </div>
             <div>
-              <small>Suggested key</small>
+              <small>{t.admin.suggestedKey}</small>
               <code>
                 {link.keyType.toUpperCase()} {link.key}
               </code>
             </div>
           </LinkCompare>
           <VesselHeading vessel={link.vessel} />
-          <Muted>
-            Suggested {formatDate(link.createdAt)} by {link.contributor ?? 'anonymous'}
-          </Muted>
-          <Checklist items={['Both keys found in a public register', 'Same vessel name and flag']} />
+          <Muted>{t.admin.suggestedBy(formatDate(link.createdAt), link.contributor ?? t.admin.anonymous)}</Muted>
+          <Checklist items={t.admin.linkChecks} />
           <Buttons>
             <Approve disabled={isLoading} onClick={() => act(`links/${link.id}/approve`)} type="button">
-              Link the keys
+              {t.admin.linkKeys}
             </Approve>
             <Reject disabled={isLoading} onClick={() => act(`links/${link.id}/reject`)} type="button">
-              Reject
+              {t.common.reject}
             </Reject>
           </Buttons>
         </Detail>
       ),
-      subtitle: `Add ${link.keyType.toUpperCase()} ${link.key}`,
-      title: link.vessel.name ?? 'Unnamed vessel'
+      subtitle: t.admin.addKey(`${link.keyType.toUpperCase()} ${link.key}`),
+      title: link.vessel.name ?? t.common.unnamedVessel
     })),
     photos: queue.photos.map(({ apiKeyName, photo, vessel }) => ({
       id: `photo-${photo.id}`,
@@ -133,7 +113,7 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
           vessel={vessel}
         />
       ),
-      subtitle: `${vessel ? 'New photo' : 'First photo · creates vessel'} · ${photo.licenceName}`,
+      subtitle: `${vessel ? t.admin.newPhoto : t.admin.firstPhoto} · ${photo.licenceName}`,
       title:
         vessel?.name ?? photo.submittedVesselName ?? `${photo.submittedKeyType.toUpperCase()} ${photo.submittedKey}`
     })),
@@ -145,28 +125,32 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
           <Preview photo={report.photo} />
           <VesselHeading vessel={report.vessel} />
           <Muted>
-            Reported {formatDate(report.createdAt)} · photo {report.photo.number} by {report.photo.credit} (
-            {report.photo.licenceName})
+            {t.admin.reported(
+              formatDate(report.createdAt),
+              report.photo.number,
+              report.photo.credit,
+              report.photo.licenceName
+            )}
           </Muted>
           <Facts>
             <div>
-              <dt>Reason</dt>
-              <dd>{REPORT_REASONS[report.reason]}</dd>
+              <dt>{t.admin.reason}</dt>
+              <dd>{t.admin.reportReasons[report.reason]}</dd>
             </div>
           </Facts>
           {report.message && <Message>{report.message}</Message>}
           <Buttons>
             <Reject disabled={isLoading} onClick={() => act(`reports/${report.id}/remove-photo`)} type="button">
-              Remove the photo
+              {t.admin.removePhoto}
             </Reject>
             <Neutral disabled={isLoading} onClick={() => act(`reports/${report.id}/dismiss`)} type="button">
-              Dismiss the report
+              {t.admin.dismissReport}
             </Neutral>
           </Buttons>
         </Detail>
       ),
-      subtitle: `Report · ${REPORT_REASONS[report.reason]} · photo ${report.photo.number}`,
-      title: report.vessel.name ?? 'Unnamed vessel'
+      subtitle: t.admin.reportSubtitle(t.admin.reportReasons[report.reason] ?? report.reason, report.photo.number),
+      title: report.vessel.name ?? t.common.unnamedVessel
     }))
   }
 
@@ -175,31 +159,31 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
 
   return (
     <>
-      <Tabs aria-label="Queue" role="tablist">
+      <Tabs aria-label={t.admin.queueLabel} role="tablist">
         {TABS.map(item => (
           <Pill
-            key={item.value}
-            $active={tab === item.value}
-            aria-selected={tab === item.value}
-            onClick={() => setTab(item.value)}
+            key={item}
+            $active={tab === item}
+            aria-selected={tab === item}
+            onClick={() => setTab(item)}
             role="tab"
             type="button"
           >
-            {item.label} <Count>{items[item.value].length}</Count>
+            {t.admin.tabs[item]} <Count>{items[item].length}</Count>
           </Pill>
         ))}
       </Tabs>
-      {error && <ErrorMessage>{getErrorMessage(error)}</ErrorMessage>}
-      {approveError && <ErrorMessage>{getErrorMessage(approveError)}</ErrorMessage>}
+      {error && <ErrorMessage>{getErrorMessage(error, t)}</ErrorMessage>}
+      {approveError && <ErrorMessage>{getErrorMessage(approveError, t)}</ErrorMessage>}
       {approvedApiKey && (
         <ApprovedApiKeyBanner approved={approvedApiKey} onClose={() => setApprovedApiKey(undefined)} />
       )}
 
       {list.length === 0 ? (
-        <Empty>Nothing to review here.</Empty>
+        <Empty>{t.admin.nothingToReview}</Empty>
       ) : (
         <Columns>
-          <List aria-label="Pending items">
+          <List aria-label={t.admin.pendingItems}>
             {list.map(item => (
               <li key={item.id}>
                 <ListButton
@@ -238,38 +222,39 @@ function PhotoReview({
   photo: AdminPhoto
   vessel: AdminVessel | null
 }) {
+  const { formatDate, t } = useTranslation()
   const [vesselName, setVesselName] = useState(photo.submittedVesselName ?? '')
-  const [rejectReason, setRejectReason] = useState(REJECT_REASONS[0])
+  const [rejectReason, setRejectReason] = useState(t.admin.rejectReasons[0])
 
   return (
     <Detail>
       <Preview photo={photo} />
-      {vessel ? <VesselHeading vessel={vessel} /> : <h2>New vessel</h2>}
+      {vessel ? <VesselHeading vessel={vessel} /> : <h2>{t.admin.newVessel}</h2>}
       <Muted>
-        Submitted {formatDate(photo.createdAt)} by {photo.credit}
+        {t.admin.submitted(formatDate(photo.createdAt), photo.credit)}
         {photo.contributorEmail && ` (${photo.contributorEmail})`}
-        {apiKeyName && ` · sent with the API key of ${apiKeyName}`}
+        {apiKeyName && t.admin.sentWithKey(apiKeyName)}
       </Muted>
       <Facts>
         <div>
-          <dt>Submitted key</dt>
+          <dt>{t.admin.submittedKey}</dt>
           <dd>
             {photo.submittedKeyType.toUpperCase()} {photo.submittedKey}
           </dd>
         </div>
         <div>
-          <dt>Licence</dt>
+          <dt>{t.admin.licence}</dt>
           <dd>{photo.licenceName}</dd>
         </div>
         <div>
-          <dt>Taken</dt>
+          <dt>{t.admin.taken}</dt>
           <dd>
-            {photo.takenOn ?? '—'}
+            {formatDate(photo.takenOn)}
             {photo.place && `, ${photo.place}`}
           </dd>
         </div>
         <div>
-          <dt>Size</dt>
+          <dt>{t.admin.size}</dt>
           <dd>
             {photo.width}×{photo.height}
           </dd>
@@ -277,7 +262,7 @@ function PhotoReview({
       </Facts>
       {!vessel && (
         <Field>
-          <Label htmlFor="vessel-name">Vessel name</Label>
+          <Label htmlFor="vessel-name">{t.admin.vesselName}</Label>
           <Input
             id="vessel-name"
             maxLength={100}
@@ -286,18 +271,11 @@ function PhotoReview({
           />
         </Field>
       )}
-      <Checklist
-        items={[
-          'Vessel in the photo matches the key',
-          'Contributor plausibly took it themselves',
-          'No close-up faces or private details',
-          'Not a duplicate'
-        ]}
-      />
+      <Checklist items={t.admin.photoChecks} />
       <Field>
-        <Label htmlFor="reject-reason">If rejecting, why?</Label>
+        <Label htmlFor="reject-reason">{t.admin.rejectWhy}</Label>
         <Select id="reject-reason" onChange={event => setRejectReason(event.target.value)} value={rejectReason}>
-          {REJECT_REASONS.map(reason => (
+          {t.admin.rejectReasons.map(reason => (
             <option key={reason}>{reason}</option>
           ))}
         </Select>
@@ -308,14 +286,14 @@ function PhotoReview({
           onClick={() => onAction(`photos/${photo.id}/approve`, { vesselName: vessel ? undefined : vesselName })}
           type="button"
         >
-          Approve and publish
+          {t.admin.approvePhoto}
         </Approve>
         <Reject
           disabled={isLoading}
           onClick={() => onAction(`photos/${photo.id}/reject`, { reason: rejectReason })}
           type="button"
         >
-          Reject
+          {t.common.reject}
         </Reject>
       </Buttons>
     </Detail>
@@ -323,19 +301,23 @@ function PhotoReview({
 }
 
 function Preview({ photo }: { photo: AdminPhoto }) {
+  const { t } = useTranslation()
+
   return (
     <a href={`/v1/admin/photos/${photo.id}.jpg?size=full`} rel="noreferrer" target="_blank">
-      <PreviewImage alt="Submission preview" src={`/v1/admin/photos/${photo.id}.jpg?size=800`} />
+      <PreviewImage alt={t.admin.previewAlt} src={`/v1/admin/photos/${photo.id}.jpg?size=800`} />
     </a>
   )
 }
 
 function VesselHeading({ vessel }: { vessel: AdminVessel }) {
+  const { t } = useTranslation()
+
   return (
     <div>
       <h2>
         <Link rel="noreferrer" target="_blank" to={getVesselPath(vessel)}>
-          {vessel.name ?? 'Unnamed vessel'}
+          {vessel.name ?? t.common.unnamedVessel}
         </Link>
       </h2>
       <Muted>
@@ -347,9 +329,11 @@ function VesselHeading({ vessel }: { vessel: AdminVessel }) {
 
 /** A reminder for the reviewer; nothing is saved. */
 function Checklist({ items }: { items: string[] }) {
+  const { t } = useTranslation()
+
   return (
     <fieldset>
-      <legend>Checklist</legend>
+      <legend>{t.admin.checklist}</legend>
       {items.map(item => (
         <label key={item}>
           <input type="checkbox" />
@@ -358,10 +342,6 @@ function Checklist({ items }: { items: string[] }) {
       ))}
     </fieldset>
   )
-}
-
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString() : '—'
 }
 
 const Tabs = styled.div`

@@ -1,11 +1,13 @@
 import { Fragment } from 'react'
 import styled from 'styled-components'
 
+import { useTranslation } from '../../i18n'
 import { CHART_COLORS } from '../../theme'
 import { COMMONS_VESSELS } from './commonsVessels'
 
 /** Credits of the Wikimedia Commons photos shown on the chart, as their licences require. */
 export function ChartCredits({ libraryVesselCount }: { libraryVesselCount: number }) {
+  const { t } = useTranslation()
   const shown = COMMONS_VESSELS.slice(libraryVesselCount)
   if (shown.length === 0) {
     return null
@@ -13,21 +15,21 @@ export function ChartCredits({ libraryVesselCount }: { libraryVesselCount: numbe
 
   return (
     <Credits>
-      Photos on the chart:{' '}
+      {t.chart.creditsIntro}{' '}
       {shown.map((vessel, index) => (
         <Fragment key={vessel.fileUrl}>
           {index > 0 && ', '}
           <a href={vessel.fileUrl} rel="noreferrer" target="_blank">
             {vessel.name}
           </a>{' '}
-          by {vessel.author} (
+          {t.chart.creditsBy} {vessel.author} (
           <a href={vessel.licenceUrl} rel="noreferrer" target="_blank">
             {vessel.licence}
           </a>
           )
         </Fragment>
       ))}
-      , cropped, from Wikimedia Commons.
+      {t.chart.creditsOutro}
     </Credits>
   )
 }

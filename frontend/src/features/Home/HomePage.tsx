@@ -7,6 +7,7 @@ import { ChartCard, ChartSection, WaveDivider } from '../../components/Chart'
 import { VesselCard } from '../../components/VesselCard'
 import { Chip, Container, Muted, PrimaryButton, SectionTitle } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
+import { useTranslation } from '../../i18n'
 import { CHART_COLORS, COLORS, FONTS } from '../../theme'
 import { detectKey } from '../../utils/vesselKey'
 import { ChartCredits } from './ChartCredits'
@@ -18,6 +19,7 @@ export function HomePage() {
   const [input, setInput] = useState(query)
   const navigate = useNavigate()
   const isNarrow = useIsNarrow()
+  const { t } = useTranslation()
 
   const isSearching = query.trim().length >= 2
   const searchResult = useSearchVesselsQuery(query, { skip: !isSearching })
@@ -49,7 +51,7 @@ export function HomePage() {
   }
 
   const detectedKey = isSearching ? detectKey(query) : undefined
-  usePageMeta(isSearching ? `Search: ${query}` : 'Open Vessel Photos — free photos of any vessel, by CFR or MMSI')
+  usePageMeta(isSearching ? t.home.searchPageTitle(query) : t.home.pageTitle)
 
   return (
     <>
@@ -57,30 +59,27 @@ export function HomePage() {
         <Hero>
           <HeroCard>
             <Chips>
-              <Chip>Free for everyone</Chip>
-              <Chip>Open-source code</Chip>
-              <Chip>Openly licensed photos</Chip>
+              {t.home.chips.map(chip => (
+                <Chip key={chip}>{chip}</Chip>
+              ))}
             </Chips>
-            <h1>Find a photo of any vessel, by its CFR or MMSI.</h1>
-            <p>
-              A simple, community-built library of vessel photos. Search it here or call the free API — every photo
-              comes with its credit and licence.
-            </p>
-            <SearchForm aria-label="Search vessels" onSubmit={search}>
+            <h1>{t.home.title}</h1>
+            <p>{t.home.lead}</p>
+            <SearchForm aria-label={t.home.searchFormLabel} onSubmit={search}>
               <label className="visually-hidden" htmlFor="q">
-                Search by name, CFR or MMSI
+                {t.home.searchLabel}
               </label>
               <input
                 id="q"
                 onChange={event => setInput(event.target.value)}
-                placeholder={isNarrow ? 'Name, CFR or MMSI' : 'Name, CFR (FRA000123456) or MMSI (227000101)'}
+                placeholder={isNarrow ? t.home.searchPlaceholderShort : t.home.searchPlaceholder}
                 type="search"
                 value={input}
               />
-              <PrimaryButton type="submit">Search</PrimaryButton>
+              <PrimaryButton type="submit">{t.home.searchButton}</PrimaryButton>
             </SearchForm>
             <Muted>
-              Try{' '}
+              {t.home.try}{' '}
               <ExampleButton onClick={() => showExample('FRA000123456')} type="button">
                 FRA000123456
               </ExampleButton>{' '}
@@ -98,31 +97,31 @@ export function HomePage() {
         {!recentResult.isLoading && <ChartCredits libraryVesselCount={recentResult.data?.length ?? 0} />}
       </ChartSection>
 
-      <Results aria-label="Results" aria-live="polite">
+      <Results aria-label={t.home.resultsLabel} aria-live="polite">
         <ResultsHeader>
-          <SectionTitle>{isSearching ? `Results for “${query}”` : 'Recently added'}</SectionTitle>
-          {isFetching && <Muted>Loading…</Muted>}
+          <SectionTitle>{isSearching ? t.home.resultsFor(query) : t.home.recentlyAdded}</SectionTitle>
+          {isFetching && <Muted>{t.common.loading}</Muted>}
         </ResultsHeader>
-        {isError && <p>The search is unavailable right now. Please try again later.</p>}
+        {isError && <p>{t.home.searchUnavailable}</p>}
         {vessels && vessels.length === 0 && (
           <Empty>
             {isSearching ? (
               <>
-                <p>No vessel matches “{query}”.</p>
+                <p>{t.home.noMatch(query)}</p>
                 {detectedKey ? (
                   <p>
-                    No photo of {detectedKey.keyType.toUpperCase()} {detectedKey.key} yet.{' '}
-                    <Link to={`/contribute?${detectedKey.keyType}=${detectedKey.key}`}>Contribute the first one →</Link>
+                    {t.home.noPhotoOfKey(`${detectedKey.keyType.toUpperCase()} ${detectedKey.key}`)}{' '}
+                    <Link to={`/contribute?${detectedKey.keyType}=${detectedKey.key}`}>{t.home.contributeFirst}</Link>
                   </p>
                 ) : (
                   <p>
-                    Search by CFR or MMSI to be sure, or <Link to="/contribute">contribute a photo</Link>.
+                    {t.home.searchByKey} <Link to="/contribute">{t.home.contributeAPhoto}</Link>.
                   </p>
                 )}
               </>
             ) : (
               <p>
-                No photo yet. <Link to="/contribute">Contribute the first one →</Link>
+                {t.home.noPhotoAtAll} <Link to="/contribute">{t.home.contributeFirst}</Link>
               </p>
             )}
           </Empty>
@@ -140,10 +139,10 @@ export function HomePage() {
       <ApiBand>
         <ApiBandInner>
           <div>
-            <h2>One URL per vessel.</h2>
-            <p>No key, no account. Drop the image straight into your app, or fetch the JSON for credit and licence.</p>
+            <h2>{t.home.apiTitle}</h2>
+            <p>{t.home.apiLead}</p>
             <PrimaryButton as={Link} to="/docs">
-              Read the API docs
+              {t.home.apiButton}
             </PrimaryButton>
           </div>
           <pre>
@@ -154,19 +153,19 @@ export function HomePage() {
 
       <Features>
         <div>
-          <h3>Contribute a photo</h3>
-          <p>Upload your own picture, pick an open licence, and it goes live once reviewed.</p>
-          <Link to="/contribute">Upload a photo →</Link>
+          <h3>{t.home.contributeTitle}</h3>
+          <p>{t.home.contributeText}</p>
+          <Link to="/contribute">{t.home.contributeLink}</Link>
         </div>
         <div>
-          <h3>Self-host it</h3>
-          <p>The whole service is open source. Run your own instance with one container and a PostgreSQL database.</p>
-          <Link to="/docs#self-host">How to run it →</Link>
+          <h3>{t.home.openTitle}</h3>
+          <p>{t.home.openText}</p>
+          <Link to="/docs#licences">{t.home.openLink}</Link>
         </div>
         <div>
-          <h3>Download everything</h3>
-          <p>Full dataset export of vessels, photo URLs, credits and licences, always up to date.</p>
-          <a href="/v1/export.json">Open data (JSON) →</a>
+          <h3>{t.home.datasetTitle}</h3>
+          <p>{t.home.datasetText}</p>
+          <a href="/v1/export.json">{t.home.datasetLink}</a>
         </div>
       </Features>
     </>

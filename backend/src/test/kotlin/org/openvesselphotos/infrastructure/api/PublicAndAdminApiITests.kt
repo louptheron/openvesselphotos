@@ -137,6 +137,22 @@ class PublicAndAdminApiITests {
         mockMvc.perform(post("/v1/admin/links/$linkId/approve").cookie(cookie)).andExpect(status().isNoContent)
 
         mockMvc.perform(get("/v1/mmsi/227000101/photos/1.jpg")).andExpect(status().isOk)
+        // History events carry their type and details, for clients to translate them
+        mockMvc
+            .perform(get("/v1/mmsi/227000101"))
+            .andExpect(
+                jsonPath(
+                    "$.history[?(@.type == 'KEY_LINKED')].key",
+                ).value(org.hamcrest.Matchers.contains("MMSI 227000101")),
+            ).andExpect(
+                jsonPath(
+                    "$.history[?(@.type == 'KEY_LINKED')].linkedTo",
+                ).value(org.hamcrest.Matchers.contains("CFR FRA000123456")),
+            ).andExpect(
+                jsonPath(
+                    "$.history[?(@.type == 'PHOTO_PUBLISHED')].photoNumber",
+                ).value(org.hamcrest.Matchers.contains(1)),
+            )
         mockMvc
             .perform(get("/v1/search").param("q", "ker"))
             .andExpect(jsonPath("$[0].mmsi").value("227000101"))

@@ -98,11 +98,27 @@ data class VesselSummaryDataOutput(
 
 data class HistoryEventDataOutput(
     val date: ZonedDateTime,
+    val type: String,
+    /** In English; clients can build a translated text from the other fields */
     val description: String,
     val by: String?,
+    val photoNumber: Int?,
+    val licence: String?,
+    val key: String?,
+    val linkedTo: String?,
 ) {
     companion object {
-        fun from(event: HistoryEvent) = HistoryEventDataOutput(event.date, event.description, event.by)
+        fun from(event: HistoryEvent) =
+            HistoryEventDataOutput(
+                date = event.date,
+                type = event.type.name,
+                description = event.description,
+                by = event.by,
+                photoNumber = event.photoNumber,
+                licence = event.licence,
+                key = event.key,
+                linkedTo = event.linkedTo,
+            )
     }
 }
 
