@@ -142,6 +142,12 @@ Above a limit, the API returns a `429` with `Retry-After`. With several containe
 The client IP is the TCP address, unless `OPENVESSELPHOTOS_CLIENT_IP_HEADER` names a header set by the proxy in front of
 the app: on Scalingo, `X-Real-IP`. Never set it without such a proxy, or clients could choose their IP.
 
+Behind Cloudflare's proxy (orange cloud), that address is a Cloudflare server: also set
+`OPENVESSELPHOTOS_BEHIND_CLOUDFLARE=true`. The client IP is then the `CF-Connecting-IP` header, trusted only when the
+request comes from one of [Cloudflare's addresses](https://www.cloudflare.com/ips/) (listed in `ClientIp`). A request
+sent to the app's `*.scalingo.io` domain directly keeps its own address, so that header can't be used to dodge the rate
+limits.
+
 ### Search engines
 
 The backend serves the React app's `index.html` with, for each page, its title, description, canonical URL, Open Graph

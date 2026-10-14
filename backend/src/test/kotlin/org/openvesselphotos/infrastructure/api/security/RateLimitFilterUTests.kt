@@ -9,7 +9,7 @@ import org.springframework.mock.web.MockHttpServletResponse
 class RateLimitFilterUTests {
     private val filter =
         RateLimitFilter(
-            clientIp = ClientIp(""),
+            clientIp = ClientIp("", false),
             readsPerMinute = 3,
             writesPerHour = 1,
             apiKeyWritesPerHour = 2,
