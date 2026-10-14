@@ -4,6 +4,20 @@ import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselKey
 import java.time.LocalDate
 
+data class VesselCoverageCounts(
+    val registerVessels: Int,
+    val registerPhotographed: Int,
+    val photographedVessels: Int,
+)
+
+data class PortVesselCounts(
+    val code: String,
+    /** The name most of its vessels give */
+    val name: String?,
+    val vessels: Int,
+    val photographed: Int,
+)
+
 data class VesselImportCounts(
     val created: Int,
     val updated: Int,
@@ -37,6 +51,19 @@ interface VesselRepository {
     fun countCreatedByDay(day: LocalDate): Map<LocalDate, Int>
 
     fun countWithApprovedPhotos(): Int
+
+    fun countCoverage(): VesselCoverageCounts
+
+    /** Vessels and photographed vessels of each port of registration (by UN/LOCODE), or of one port. */
+    fun countByPort(code: String? = null): List<PortVesselCounts>
+
+    /** Vessels of a port, with or without an approved photo, ordered by name. */
+    fun findByPortCode(
+        code: String,
+        isPhotographed: Boolean,
+        offset: Int,
+        limit: Int,
+    ): List<Vessel>
 
     /** Vessels with at least one approved photo, ordered by id. */
     fun findPageWithApprovedPhotos(

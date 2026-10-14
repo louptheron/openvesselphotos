@@ -11,6 +11,8 @@ data class Vessel(
     val registration: String? = null,
     /** Port of registration */
     val port: String? = null,
+    /** UN/LOCODE of the port of registration, e.g. FRBES */
+    val portCode: String? = null,
     val createdAt: ZonedDateTime? = null,
 ) {
     /** ISO 3166-1 alpha-3 code, the first three letters of the CFR. */

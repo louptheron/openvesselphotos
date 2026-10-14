@@ -12,6 +12,7 @@ export const fr: Messages = {
   layout: {
     navLabel: 'Principale',
     search: 'Recherche',
+    ports: 'Ports',
     api: 'API',
     contribute: 'Contribuer',
     licences: 'Licences',
@@ -80,6 +81,72 @@ export const fr: Messages = {
     datasetTitle: 'Tout télécharger',
     datasetText: 'Export complet des navires, des URL des photos, des crédits et des licences, toujours à jour.',
     datasetLink: 'Données ouvertes (JSON) →'
+  },
+  coverage: {
+    barLabel: 'Navires du registre de la flotte de l’UE ayant une photo',
+    register: (photographed, total, count) =>
+      count > 1
+        ? `${photographed}${_}navires sur ${total} du registre de la flotte de l’UE ont une photo.`
+        : `${photographed}${_}navire sur ${total} du registre de la flotte de l’UE a une photo.`,
+    library: (photos, vessels) => `${photos}${_}photos de ${vessels}${_}navires en tout.`,
+    help: 'Aidez à photographier les autres →'
+  },
+  ports: {
+    pageTitle: 'Les ports et leurs navires',
+    chip: 'Registre de la flotte de l’UE',
+    title: 'Ports',
+    lead: `Chaque port d’immatriculation avec ses navires et combien ont déjà une photo${_}: trouvez ceux qui en attendent une près de chez vous.`,
+    scopeFranceOnly: `Pour l’instant, la France seulement${_}: le registre de la flotte de l’UE est importé pour la France (métropole et outre-mer). Les autres États membres apparaîtront ici à mesure que leurs registres seront importés.`,
+    scopeCountries: countries => `Registre de la flotte de l’UE importé pour${_}: ${countries}.`,
+    unavailable: 'Les ports sont indisponibles pour le moment. Réessayez plus tard.',
+    none: `Aucun port pour l’instant${_}: importez le registre de la flotte de l’UE depuis l’administration.`,
+    mainland: 'Métropole',
+    regionsLabel: 'Afficher une région',
+    regions: {
+      AZ: 'Açores',
+      GF: 'Guyane',
+      GP: 'Guadeloupe',
+      IC: 'Canaries',
+      MD: 'Madère',
+      MQ: 'Martinique',
+      PM: 'Saint-Pierre-et-Miquelon',
+      RE: 'La Réunion',
+      YT: 'Mayotte'
+    },
+    markerSummary: (vessels, photographed) => `${vessels}${_}navires, dont ${photographed} avec une photo`,
+    shareWithPhoto: percent => `${percent}${_}% avec une photo`,
+    legendCircle: `Taille et nombre${_}: navires du port. Anneau vert${_}: part avec une photo.`,
+    legendColor: `Couleur${_}: part avec une photo`,
+    tableCaption: 'Les ports, leurs navires et combien ont une photo',
+    port: 'Port',
+    country: 'Pays',
+    vessels: 'Navires',
+    photographed: 'Avec une photo',
+    share: 'Part',
+    tableTitle: count => `Tous les ports (${count})`,
+    searchLabel: 'Chercher un port',
+    searchPlaceholder: 'Nom ou code du port (ex. Brest, FRBES)',
+    allCountries: 'Tous les pays',
+    shown: (shown, total) => `${shown} ports sur ${total}`,
+    noMatch: query => `Aucun port ne correspond à «${_}${query}${_}».`,
+    pagination: 'Pages de ports',
+    previous: '← Précédente',
+    next: 'Suivante →',
+    pageOf: (page, count) => `Page ${page} sur ${count}`,
+    portPageTitle: (name, code) => `Navires de ${name} (${code})`,
+    notFound: code => `Aucun port ${code}`,
+    allPorts: 'Tous les ports →',
+    coverage: (photographed, total, count) =>
+      count > 1
+        ? `${photographed}${_}navires sur les ${total} immatriculés ici ont une photo.`
+        : `${photographed}${_}navire sur les ${total} immatriculés ici a une photo.`,
+    photographedTitle: count => `Avec une photo (${count})`,
+    wantedTitle: count => `En attente d’une photo (${count})`,
+    wantedText: `Vous en avez croisé un${_}? Prenez-le en photo et partagez-la sous licence libre.`,
+    addPhoto: 'Ajouter une photo',
+    showMore: 'Voir plus',
+    homeTitle: 'Les navires par port',
+    homeLead: `Chaque cercle est un port${_}: plus il est grand, plus il a de navires${_}; plus il est vert, plus ils ont de photos.`
   },
   chart: {
     commons: 'Commons',
@@ -254,6 +321,9 @@ export const fr: Messages = {
       `Une photo précise${_}; le même n sous l’un ou l’autre identifiant est le même fichier. Même paramètre ?size.`,
       'Recherche par nom, port, immatriculation, ou début de CFR ou de MMSI. 24 résultats au plus.',
       'Les navires dont les photos ont été publiées le plus récemment. ?limit=12 (48 au plus).',
+      `La part de la bibliothèque photographiée${_}: navires du registre de la flotte de l’UE (avec un CFR) et ceux qui ont une photo, tous les navires avec une photo, et le nombre de photos.`,
+      `Les ports d’immatriculation (UN/LOCODE, par exemple FRBES) avec leurs coordonnées, leur nombre de navires et de navires avec une photo. /v1/ports/{code} pour un seul.`,
+      `Les navires d’un port${_}: photographed=true pour ceux qui ont une photo, false pour ceux qui en attendent une. ?page=0, 48 par page.`,
       `Toutes les données${_}: chaque navire avec les URL, crédits et licences de ses photos.`,
       `Envoyer une photo (multipart${_}: file, credit, licence, takenOn?, place?, email?, vesselName?, et mmsi? sous un CFR ou cfr? sous un MMSI), sous l’identifiant que vous connaissez. Publiée après vérification. Nécessite une clé d’API.`,
       'Proposer l’identifiant manquant, ex. {"keyType": "cfr", "key": "FRA000123456"}. Appliqué après vérification. Nécessite une clé d’API.',

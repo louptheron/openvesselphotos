@@ -199,7 +199,15 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
             {vessel.flag && <FlagChip>{t.vessel.flag(vessel.flag)}</FlagChip>}
             <h1>{name}</h1>
             {(vessel.registration || vessel.port) && (
-              <Registration>{[vessel.registration, vessel.port].filter(Boolean).join(' · ')}</Registration>
+              <Registration>
+                {vessel.registration}
+                {vessel.registration && vessel.port && ' · '}
+                {vessel.port && vessel.portCode ? (
+                  <Link to={`/ports/${vessel.portCode}`}>{vessel.port}</Link>
+                ) : (
+                  vessel.port
+                )}
+              </Registration>
             )}
           </Heading>
 

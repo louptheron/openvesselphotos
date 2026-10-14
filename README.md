@@ -79,6 +79,7 @@ Variables are listed in `backend/.env.example`.
 | `PORT`                                            | _(set by Scalingo)_        | HTTP port, takes precedence over the next one       |
 | `OPENVESSELPHOTOS_SERVER_PORT`                    | `8880`                     | HTTP port                                           |
 | `JAVA_OPTS`                                       |                            | Extra JVM options, override those of the `Procfile` |
+| `VITE_CARTO_BASEMAP_KEY`                          | _(OpenStreetMap tiles)_    | CARTO basemap key of the ports map, read at build   |
 
 The admin session is a signed, HttpOnly cookie valid 12 hours. Its key derives from the password: changing
 `OPENVESSELPHOTOS_ADMIN_PASSWORD` signs everybody out. After 10 wrong passwords, an IP is locked out for 15 minutes.
@@ -90,14 +91,30 @@ Vessels can exist before their first photo: their page then invites visitors to 
 section of `/admin`:
 
 - an export of the [EU fleet register](https://webgate.ec.europa.eu/fleet-europa/search_en) (CSV, current fleet of a
-  country; columns `CFR`, `MMSI`, `Name of Vessel`, `External Marking`, `Place of Registration Name`, or `Vessel Name`,
-  `Ext. Marking`, `Port Name` in older exports), or
-- a CSV with the columns `cfr`, `mmsi`, `name`, `registration` (hull marking, e.g. `LO 752221`), `port`.
+  country; columns `CFR`, `MMSI`, `Name of Vessel`, `External Marking`, `Place of Registration Name`,
+  `Place of Registration Code`, or `Vessel Name`, `Ext. Marking`, `Port Name` in older exports), or
+- a CSV with the columns `cfr`, `mmsi`, `name`, `registration` (hull marking, e.g. `LO 752221`), `port`, `port_code`.
 
 Existing vessels are never overwritten: only their missing name, registration and port are filled in, so an import can
 be run again. Rows without a valid CFR or MMSI are skipped and reported. Vessels whose last event in the register is a
 retirement (`RET`), a destruction (`DES`) or an export (`EXP`) are no longer in the fleet and are not imported: use the
 "Latest" export (one line per vessel), not "Full History".
+
+### Ports
+
+`/ports` shows the ports of registration on a map, each as a circle sized by its number of vessels (written inside),
+coloured and ringed by the share of them with a photo, then lists them all in a table (search, sort by column,
+pagination; the state is in the URL). `/ports/{code}` lists a port's vessels, photographed or still waiting for a photo.
+For now only France's register is imported, which the page says.
+
+Ports are identified by their UN/LOCODE (the register's `Place of Registration Code`, e.g. `FRBES` for Brest), placed with
+the coordinates of `backend/src/main/resources/ports.csv`, built from UN/LOCODE by `backend/scripts/ports.py`.
+
+The map uses [Leaflet](https://leafletjs.com), loaded only where a map is shown, and CARTO's light basemap (Positron,
+from OpenStreetMap data), which needs a key: set `VITE_CARTO_BASEMAP_KEY` when building the frontend (on Scalingo, as
+an environment variable: the build reads it). Without it, for instance in development, the map shows OpenStreetMap's
+standard tiles. The key ends up in the tile URLs, so restrict it to the site's domain in CARTO's dashboard. Visitors'
+browsers load the tiles from CARTO's servers.
 
 ### Imported photos
 
@@ -210,6 +227,9 @@ See `/docs` on a running instance. In short:
 | GET    | `/v1/{cfr\|mmsi}/{key}/photos/{n}.jpg`        | Photo `n`, same file under both keys          |
 | GET    | `/v1/search?q=`                              | Search by name, CFR or MMSI prefix            |
 | GET    | `/v1/vessels/recent`                         | Latest published vessels                      |
+| GET    | `/v1/coverage`                               | Vessels of the register photographed, counts  |
+| GET    | `/v1/ports`, `/v1/ports/{code}`              | Ports, coordinates, vessels photographed      |
+| GET    | `/v1/ports/{code}/vessels?photographed=`     | Vessels of a port, with or without a photo    |
 | GET    | `/v1/export.json`                            | Whole dataset                                 |
 | POST   | `/v1/{cfr\|mmsi}/{key}/photos`                | Contribute a photo (multipart), API key       |
 | POST   | `/v1/{cfr\|mmsi}/{key}/link`                  | Suggest the missing key                       |

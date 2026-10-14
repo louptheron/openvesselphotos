@@ -2,6 +2,7 @@ package org.openvesselphotos.domain.use_cases.admin
 
 import org.openvesselphotos.config.UseCase
 import org.openvesselphotos.domain.entities.KeyType
+import org.openvesselphotos.domain.entities.Port
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselKey
 import org.openvesselphotos.domain.exceptions.BackendUsageException
@@ -16,6 +17,8 @@ data class VesselImportRow(
     val name: String?,
     val registration: String?,
     val port: String?,
+    /** UN/LOCODE of the port, e.g. FRBES */
+    val portCode: String? = null,
     /** Event of the EU fleet register (e.g. "MOD", or "RET" for a retired vessel) */
     val event: String? = null,
 )
@@ -34,7 +37,7 @@ data class VesselImportResult(
 
 /**
  * Creates the vessels of a fleet list (e.g. the EU fleet register), without photos. Existing vessels are never
- * overwritten: only their missing name, registration and port are filled in. Vessels whose last event is a retirement,
+ * overwritten: only their missing name, registration, port and port code are filled in. Vessels whose last event is a retirement,
  * a destruction or an export are no longer in the fleet: they are not imported.
  */
 @UseCase
@@ -61,7 +64,12 @@ class ImportVessels(
                         mmsi = mmsi,
                         name = row.name.clean(100),
                         registration = row.registration.clean(20),
-                        port = row.port.clean(100),
+                        port = row.port.clean(100)?.let { Port.prettyName(it) },
+                        portCode =
+                            row.portCode
+                                ?.trim()
+                                ?.uppercase()
+                                ?.takeIf { Port.isCode(it) },
                     )
                 val hasLeftFleet = row.event?.trim()?.uppercase() in OUT_OF_FLEET_EVENTS
                 vessels[cfr ?: "mmsi:$mmsi"] = vessel.takeUnless { hasLeftFleet }

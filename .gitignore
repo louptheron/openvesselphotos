@@ -7,3 +7,5 @@ node_modules/
 .DS_Store
 .kotlin/
 .vitest/
+# Vite settings of a developer, e.g. VITE_CARTO_BASEMAP_KEY
+.env.local

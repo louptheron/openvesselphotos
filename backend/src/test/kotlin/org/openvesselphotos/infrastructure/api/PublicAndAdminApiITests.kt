@@ -549,6 +549,128 @@ class PublicAndAdminApiITests {
     }
 
     @Test
+    fun `Coverage Should count the register's vessels and those photographed`() {
+        val cookie = adminCookie()
+
+        fun coverage(field: String) =
+            Regex(""""$field":(\d+)""")
+                .find(
+                    mockMvc
+                        .perform(get("/v1/coverage"))
+                        .andExpect(status().isOk)
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+                .toInt()
+
+        val registerVessels = coverage("registerVessels")
+        val registerPhotographed = coverage("registerPhotographed")
+        val photos = coverage("photos")
+
+        mockMvc
+            .perform(
+                multipart("/v1/admin/vessels/import")
+                    .file(
+                        MockMultipartFile(
+                            "file",
+                            "fleet.csv",
+                            "text/csv",
+                            "cfr;name\nFRA000900001;COVERED\nFRA000900002;NOT YET".toByteArray(),
+                        ),
+                    ).cookie(cookie),
+            ).andExpect(status().isOk)
+        submitPhoto("cfr", "FRA000900001")
+        val queue =
+            mockMvc
+                .perform(get("/v1/admin/queue").cookie(cookie))
+                .andReturn()
+                .response.contentAsString
+        val photoId =
+            Regex(""""id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000900001"""")
+                .find(queue)!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+
+        assertThat(coverage("registerVessels")).isEqualTo(registerVessels + 2)
+        assertThat(coverage("registerPhotographed")).isEqualTo(registerPhotographed + 1)
+        assertThat(coverage("photos")).isEqualTo(photos + 1)
+        assertThat(coverage("photographedVessels")).isGreaterThanOrEqualTo(coverage("registerPhotographed"))
+    }
+
+    @Test
+    fun `Ports Should list their vessels and how many are photographed`() {
+        val cookie = adminCookie()
+        mockMvc
+            .perform(
+                multipart("/v1/admin/vessels/import")
+                    .file(
+                        MockMultipartFile(
+                            "file",
+                            "fleet.csv",
+                            "text/csv",
+                            (
+                                "CFR;Name of Vessel;Place of Registration Code;" +
+                                    "Place of Registration Name;Event Type\n" +
+                                    "FRA000800001;ALPHA;FRM2R;Marennes;MOD\n" +
+                                    "FRA000800002;BRAVO;FRM2R;Marennes;CST\n" +
+                                    "FRA000800003;CHARLIE;MQFDF;Fort-De-France;MOD\n"
+                            ).toByteArray(),
+                        ),
+                    ).cookie(cookie),
+            ).andExpect(status().isOk)
+        submitPhoto("cfr", "FRA000800001")
+        val queue =
+            mockMvc
+                .perform(get("/v1/admin/queue").cookie(cookie))
+                .andReturn()
+                .response.contentAsString
+        val photoId =
+            Regex(""""id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000800001"""")
+                .find(queue)!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(get("/v1/ports"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[?(@.code == 'FRM2R')].vessels").value(org.hamcrest.Matchers.contains(2)))
+            .andExpect(jsonPath("$[?(@.code == 'FRM2R')].photographed").value(org.hamcrest.Matchers.contains(1)))
+            .andExpect(
+                jsonPath("$[?(@.code == 'MQFDF')].name").value(org.hamcrest.Matchers.contains("Fort-de-France")),
+            ).andExpect(jsonPath("$[?(@.code == 'MQFDF')].country").value(org.hamcrest.Matchers.contains("MQ")))
+        mockMvc
+            .perform(get("/v1/ports/frm2r"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.name").value("Marennes"))
+            .andExpect(jsonPath("$.latitude").isNumber)
+        mockMvc
+            .perform(get("/v1/ports/FRM2R/vessels").param("photographed", "true"))
+            .andExpect(jsonPath("$[*].name").value(org.hamcrest.Matchers.contains("ALPHA")))
+            .andExpect(jsonPath("$[0].portCode").value("FRM2R"))
+            .andExpect(jsonPath("$[0].photoCount").value(1))
+        mockMvc
+            .perform(get("/v1/ports/FRM2R/vessels").param("photographed", "false"))
+            .andExpect(jsonPath("$[*].name").value(org.hamcrest.Matchers.contains("BRAVO")))
+        mockMvc.perform(get("/v1/ports/ZZZZZ")).andExpect(status().isNotFound)
+
+        assertThat(
+            mockMvc
+                .perform(get("/ports/FRM2R"))
+                .andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString,
+        ).contains("Vessels of Marennes (FRM2R)", "ALPHA", "BRAVO")
+        mockMvc.perform(get("/ports/ZZZZZ")).andExpect(status().isNotFound)
+        assertThat(
+            mockMvc
+                .perform(get("/sitemap-pages.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("/ports/FRM2R")
+    }
+
+    @Test
     fun `Usage statistics Should count images by the site showing them, and API calls by key`() {
         val cookie = adminCookie()
         val id =

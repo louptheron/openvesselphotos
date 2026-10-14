@@ -59,7 +59,8 @@
     },
     {
       "files": [
-        "src/index.tsx"
+        "src/index.tsx",
+        "src/features/Ports/PortsMap.tsx"
       ],
       "rules": {
         "import/no-unassigned-import": "off"

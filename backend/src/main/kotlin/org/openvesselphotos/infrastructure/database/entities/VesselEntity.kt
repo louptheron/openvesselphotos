@@ -20,6 +20,8 @@ class VesselEntity(
     val name: String?,
     val registration: String?,
     val port: String?,
+    @Column(name = "port_code")
+    val portCode: String?,
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: ZonedDateTime? = null,
 ) {
@@ -31,6 +33,7 @@ class VesselEntity(
             name = name,
             registration = registration,
             port = port,
+            portCode = portCode,
             createdAt = createdAt,
         )
 
@@ -43,6 +46,7 @@ class VesselEntity(
                 name = vessel.name,
                 registration = vessel.registration,
                 port = vessel.port,
+                portCode = vessel.portCode,
                 createdAt = vessel.createdAt,
             )
     }
