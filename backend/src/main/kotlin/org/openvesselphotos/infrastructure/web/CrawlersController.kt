@@ -28,7 +28,7 @@ class CrawlersController(
         |
         """.trimMargin()
 
-    /** Sitemap index: the static pages, then every vessel page by files of [VESSELS_PER_SITEMAP]. */
+    /** Sitemap index: the static pages, then every vessel page with photos by files of [VESSELS_PER_SITEMAP]. */
     @GetMapping("/sitemap.xml")
     fun sitemapIndex(): ResponseEntity<String> {
         val baseUrl = publicUrl.get()

@@ -118,6 +118,8 @@ class PagesController(
                 title = "$name ($keys) — vessel photos | $SITE_NAME",
                 description = description,
                 canonicalPath = canonicalPath,
+                // Pages without photo are near-identical: indexed once their first photo is approved
+                isIndexable = photos.isNotEmpty(),
                 imageUrl = photos.firstOrNull()?.let { photoUrl(baseUrl, vessel, it, ImageSize.MEDIUM) },
                 structuredData =
                     listOf(

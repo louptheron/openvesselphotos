@@ -62,10 +62,12 @@ class JpaVesselRepository(
                 java.sql.Date.valueOf(day),
             ).toMap()
 
-    override fun findPage(
+    override fun countWithApprovedPhotos(): Int = dbVesselRepository.countWithApprovedPhotos().toInt()
+
+    override fun findPageWithApprovedPhotos(
         offset: Int,
         limit: Int,
-    ): List<Vessel> = dbVesselRepository.findPage(offset, limit).map { it.toVessel() }
+    ): List<Vessel> = dbVesselRepository.findPageWithApprovedPhotos(offset, limit).map { it.toVessel() }
 
     /** JDBC batches: a whole fleet register (tens of thousands of vessels) imports in seconds. */
     override fun importAll(vessels: List<Vessel>): VesselImportCounts {
