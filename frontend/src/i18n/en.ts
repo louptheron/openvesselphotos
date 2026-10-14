@@ -112,7 +112,7 @@ export const en = {
     flag: (flag: string) => `Flag · ${flag} (from CFR)`,
     useThisPhoto: 'Use this photo',
     creditLine: 'Credit line — required by the licence',
-    creditLineCc0: ' (CC0: optional but appreciated)',
+    creditLineOptional: ' (optional for this licence, but appreciated)',
     imageSize: 'Image size',
     sizeFull: 'Full',
     imageUrl: 'Image URL, either key works',
@@ -272,6 +272,8 @@ export const en = {
     licenceBy: '— reuse with credit.',
     licenceBySa: '— reuse with credit; changes shared under the same licence.',
     licenceCc0: '— public domain, no credit required.',
+    licenceOlder:
+      'Photos imported from Wikimedia Commons or Flickr keep their own licence, which can also be an older version of these (CC BY or CC BY-SA 1.0 to 3.0) or the public domain.',
     selfHostTitle: 'Self-host it',
     selfHostText:
       'The service is one container (Spring Boot serving the API and this web app) and one PostgreSQL database, which also stores the images. Set OPENVESSELPHOTOS_DATABASE_URL and OPENVESSELPHOTOS_ADMIN_PASSWORD, and run it.'

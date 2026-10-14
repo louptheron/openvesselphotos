@@ -114,7 +114,7 @@ export const fr: Messages = {
     flag: (flag: string) => `Pavillon · ${flag} (d’après le CFR)`,
     useThisPhoto: 'Utiliser cette photo',
     creditLine: 'Ligne de crédit — exigée par la licence',
-    creditLineCc0: `${_}(CC0${_}: facultative mais appréciée)`,
+    creditLineOptional: `${_}(facultative pour cette licence, mais appréciée)`,
     imageSize: 'Taille de l’image',
     sizeFull: 'Originale',
     imageUrl: 'URL de l’image, avec l’une ou l’autre clé',
@@ -274,6 +274,8 @@ export const fr: Messages = {
     licenceBy: '— réutilisation avec crédit.',
     licenceBySa: '— réutilisation avec crédit, modifications partagées sous la même licence.',
     licenceCc0: '— domaine public, aucun crédit exigé.',
+    licenceOlder:
+      'Les photos importées de Wikimedia Commons ou de Flickr gardent leur propre licence, qui peut aussi être une version plus ancienne de celles-ci (CC BY ou CC BY-SA 1.0 à 3.0) ou le domaine public.',
     selfHostTitle: 'L’héberger soi-même',
     selfHostText:
       'Le service tient en un conteneur (Spring Boot, qui sert l’API et cette application web) et une base PostgreSQL, qui stocke aussi les images. Renseignez OPENVESSELPHOTOS_DATABASE_URL et OPENVESSELPHOTOS_ADMIN_PASSWORD, puis lancez-le.'

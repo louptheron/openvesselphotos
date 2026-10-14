@@ -199,5 +199,6 @@ The code is free software: you can redistribute it and/or modify it under the te
 own instance; a modified version offered as a service must publish its source code too.
 
 The photos are not covered by this licence: each one keeps the open licence chosen by its author (CC BY 4.0,
-CC BY-SA 4.0 or CC0), shown with it on the site and in the API.
+CC BY-SA 4.0 or CC0; photos imported from Wikimedia Commons or Flickr can also be under CC BY or CC BY-SA 1.0 to 3.0,
+or in the public domain), shown with it on the site and in the API.
 
