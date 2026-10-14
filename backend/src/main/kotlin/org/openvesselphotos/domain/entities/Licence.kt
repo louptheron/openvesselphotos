@@ -33,8 +33,13 @@ enum class Licence(
     ;
 
     companion object {
+        /** Also accepts the enum name or the label ("CC BY-SA 3.0", "Public domain"), as in Commons exports. */
         fun fromSpdx(value: String): Licence =
-            entries.find { it.spdx.equals(value, ignoreCase = true) || it.name.equals(value, ignoreCase = true) }
+            entries.find {
+                it.spdx.equals(value, ignoreCase = true) ||
+                    it.name.equals(value, ignoreCase = true) ||
+                    it.label.equals(value, ignoreCase = true)
+            }
                 ?: throw BackendUsageException(
                     BackendUsageErrorCode.INVALID_INPUT,
                     "Unknown licence '$value', expected one of ${entries.joinToString { it.spdx }}.",

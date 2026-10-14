@@ -21,6 +21,8 @@ interface PhotoRepository {
 
     fun nextNumber(vesselId: Int): Int
 
+    fun existsBySourceUrl(sourceUrl: String): Boolean
+
     fun save(photo: Photo): Photo
 
     fun saveFile(

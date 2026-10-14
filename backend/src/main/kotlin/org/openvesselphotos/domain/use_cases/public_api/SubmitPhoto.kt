@@ -10,11 +10,14 @@ import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.images.ImageProcessor
 import org.openvesselphotos.domain.repositories.PhotoRepository
 import org.openvesselphotos.domain.repositories.VesselRepository
+import org.openvesselphotos.domain.use_cases.findVesselByKeys
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 
 data class PhotoSubmission(
     val key: VesselKey,
+    /** The vessel's key of the other type, when the contributor knows both */
+    val otherKey: VesselKey? = null,
     val image: ByteArray,
     val credit: String,
     val licence: Licence,
@@ -48,8 +51,12 @@ class SubmitPhoto(
             throw BackendUsageException(BackendUsageErrorCode.INVALID_INPUT, "Invalid email.")
         }
 
+        if (submission.otherKey != null && submission.otherKey.type == submission.key.type) {
+            throw BackendUsageException(BackendUsageErrorCode.INVALID_INPUT, "Both keys are of the same type.")
+        }
+        // Checked now rather than at review, so that the contributor can fix a mistyped key
+        val vessel = findVesselByKeys(vesselRepository, listOfNotNull(submission.key, submission.otherKey))
         val image = imageProcessor.process(submission.image)
-        val vessel = vesselRepository.findByKey(submission.key)
 
         val photo =
             photoRepository.save(
@@ -57,6 +64,7 @@ class SubmitPhoto(
                     vesselId = vessel?.id,
                     status = PhotoStatus.PENDING,
                     submittedKey = submission.key,
+                    submittedOtherKey = submission.otherKey,
                     submittedVesselName =
                         submission.vesselName
                             ?.trim()

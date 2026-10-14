@@ -42,6 +42,8 @@ class JpaPhotoRepository(
 
     override fun nextNumber(vesselId: Int): Int = dbPhotoRepository.nextNumber(vesselId)
 
+    override fun existsBySourceUrl(sourceUrl: String): Boolean = dbPhotoRepository.existsBySourceUrl(sourceUrl)
+
     override fun save(photo: Photo): Photo {
         val saved = dbPhotoRepository.saveAndFlush(PhotoEntity.fromPhoto(photo))
 

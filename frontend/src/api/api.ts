@@ -7,6 +7,7 @@ import type {
   ApiKeyRequest,
   ApprovedApiKey,
   KeyType,
+  PhotoImportStatus,
   ReportReason,
   ReviewQueue,
   VesselImportResult,
@@ -78,6 +79,18 @@ export const api = createApi({
       invalidatesTags: ['Vessels'],
       query: form => ({ body: form, method: 'POST', url: '/admin/vessels/import' })
     }),
+    cancelPhotoImport: builder.mutation<void, void>({
+      invalidatesTags: ['PhotoImport'],
+      query: () => ({ method: 'POST', url: '/admin/photos/import/cancel' })
+    }),
+    getPhotoImport: builder.query<PhotoImportStatus, void>({
+      providesTags: ['PhotoImport'],
+      query: () => '/admin/photos/import'
+    }),
+    importPhotos: builder.mutation<PhotoImportStatus, FormData>({
+      invalidatesTags: ['PhotoImport', 'Vessels'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/photos/import' })
+    }),
     getReviewQueue: builder.query<ReviewQueue, void>({
       providesTags: ['Queue'],
       query: () => '/admin/queue'
@@ -92,16 +105,19 @@ export const api = createApi({
     })
   }),
   reducerPath: 'api',
-  tagTypes: ['ApiKeys', 'Queue', 'Vessels']
+  tagTypes: ['ApiKeys', 'PhotoImport', 'Queue', 'Vessels']
 })
 
 export const {
   useAdminActionMutation,
   useApproveApiKeyMutation,
+  useCancelPhotoImportMutation,
   useGetActiveApiKeysQuery,
+  useGetPhotoImportQuery,
   useGetRecentVesselsQuery,
   useGetReviewQueueQuery,
   useGetVesselQuery,
+  useImportPhotosMutation,
   useImportVesselsMutation,
   useLazyGetVesselQuery,
   useLoginMutation,

@@ -13,7 +13,6 @@ import {
   Label,
   Lead,
   Muted,
-  Pill,
   PrimaryButton,
   Title
 } from '../../components/ui'
@@ -22,6 +21,8 @@ import { useTranslation } from '../../i18n'
 import { ChartCard, ChartSection } from '../../components/Chart'
 import { CHART_COLORS, COLORS, FONTS } from '../../theme'
 import { getVesselPath, isValidKey, normalizeKey } from '../../utils/vesselKey'
+
+const KEY_TYPES: KeyType[] = ['cfr', 'mmsi']
 
 const KEY_PLACEHOLDERS: Record<KeyType, string> = { cfr: 'FRA000123456', mmsi: '227000101' }
 
@@ -35,9 +36,11 @@ const MAX_FILE_SIZE = 15 * 1024 * 1024
 
 export function ContributePage() {
   const [searchParams] = useSearchParams()
-  const initialKeyType: KeyType = searchParams.get('mmsi') && !searchParams.get('cfr') ? 'mmsi' : 'cfr'
-  const [keyType, setKeyType] = useState<KeyType>(initialKeyType)
-  const [key, setKey] = useState(searchParams.get(initialKeyType) ?? '')
+  // A vessel can have both keys: one is enough, both are welcome
+  const [keys, setKeys] = useState<Record<KeyType, string>>({
+    cfr: searchParams.get('cfr') ?? '',
+    mmsi: searchParams.get('mmsi') ?? ''
+  })
   const [vesselName, setVesselName] = useState('')
   const [file, setFile] = useState<File>()
   const [takenOn, setTakenOn] = useState('')
@@ -51,16 +54,24 @@ export function ContributePage() {
 
   const { t } = useTranslation()
   usePageMeta(t.contribute.pageTitle)
-  const keyTexts =
-    keyType === 'cfr'
-      ? { hint: t.contribute.cfrHint, label: t.contribute.cfrLabel }
-      : { hint: t.contribute.mmsiHint, label: t.contribute.mmsiLabel }
-  const normalizedKey = normalizeKey(key)
-  const isKeyValid = isValidKey(keyType, key)
-  const { data: vessel, isFetching: isLookingUp } = useGetVesselQuery(
-    { key: normalizedKey, keyType },
-    { skip: !isKeyValid }
-  )
+  const isFilled = (type: KeyType) => keys[type].trim().length > 0
+  const isValid = (type: KeyType) => isValidKey(type, keys[type])
+  const isKeyValid = (isValid('cfr') || isValid('mmsi')) && KEY_TYPES.every(type => !isFilled(type) || isValid(type))
+  // Sent under the CFR when there is one, with the MMSI as the other key
+  const keyType: KeyType = isValid('cfr') ? 'cfr' : 'mmsi'
+  const normalizedKey = normalizeKey(keys[keyType])
+  const otherKeyType: KeyType = keyType === 'cfr' ? 'mmsi' : 'cfr'
+  const otherKey = isValid(otherKeyType) ? normalizeKey(keys[otherKeyType]) : undefined
+  const cfrLookup = useGetVesselQuery({ key: normalizeKey(keys.cfr), keyType: 'cfr' }, { skip: !isValid('cfr') })
+  const mmsiLookup = useGetVesselQuery({ key: normalizeKey(keys.mmsi), keyType: 'mmsi' }, { skip: !isValid('mmsi') })
+  const isLookingUp = cfrLookup.isFetching || mmsiLookup.isFetching
+  const cfrVessel = isValid('cfr') ? cfrLookup.currentData : undefined
+  const mmsiVessel = isValid('mmsi') ? mmsiLookup.currentData : undefined
+  const vessel = cfrVessel ?? mmsiVessel
+  // Both keys must be those of the same vessel
+  const hasKeyConflict =
+    (!!cfrVessel && !!mmsiVessel && cfrVessel.cfr !== mmsiVessel.cfr) ||
+    (!!vessel && KEY_TYPES.some(type => isValid(type) && !!vessel[type] && vessel[type] !== normalizeKey(keys[type])))
   const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : undefined), [file])
   useEffect(
     () => () => {
@@ -73,7 +84,8 @@ export function ContributePage() {
 
   const fileError = file && file.size > MAX_FILE_SIZE ? t.contribute.fileTooLarge : undefined
   const licenceLabel = LICENCES.find(item => item.value === licence)?.label
-  const canSubmit = isKeyValid && !!file && !fileError && credit.trim().length > 0 && hasRights && !isLoading
+  const canSubmit =
+    isKeyValid && !hasKeyConflict && !!file && !fileError && credit.trim().length > 0 && hasRights && !isLoading
 
   const pickFile = (event: ChangeEvent<HTMLInputElement>) => setFile(event.target.files?.[0])
 
@@ -94,6 +106,9 @@ export function ContributePage() {
     }
     if (email.trim()) {
       form.append('email', email.trim())
+    }
+    if (otherKey) {
+      form.append(otherKeyType, otherKey)
     }
     if (!vessel && vesselName.trim()) {
       form.append('vesselName', vesselName.trim())
@@ -139,36 +154,27 @@ export function ContributePage() {
         <Form onSubmit={submit}>
           <Step>
             <legend>{t.contribute.step1}</legend>
-            <KeyTypes>
-              <legend className="visually-hidden">{t.contribute.keyType}</legend>
-              {(['cfr', 'mmsi'] as const).map(type => (
-                <Pill
-                  key={type}
-                  $active={keyType === type}
-                  aria-pressed={keyType === type}
-                  onClick={() => {
-                    setKeyType(type)
-                    setKey('')
-                  }}
-                  type="button"
-                >
-                  {type.toUpperCase()}
-                </Pill>
+            <Muted>{t.contribute.keysHint}</Muted>
+            <KeyFields>
+              {KEY_TYPES.map(type => (
+                <Field key={type}>
+                  <Label htmlFor={`key-${type}`}>
+                    {type === 'cfr' ? t.contribute.cfrLabel : t.contribute.mmsiLabel}
+                  </Label>
+                  <KeyInput
+                    aria-describedby={`key-${type}-hint`}
+                    aria-invalid={isFilled(type) && !isValid(type)}
+                    id={`key-${type}`}
+                    onChange={event => setKeys({ ...keys, [type]: event.target.value })}
+                    placeholder={KEY_PLACEHOLDERS[type]}
+                    value={keys[type]}
+                  />
+                  <Muted id={`key-${type}-hint`}>{type === 'cfr' ? t.contribute.cfrHint : t.contribute.mmsiHint}</Muted>
+                </Field>
               ))}
-            </KeyTypes>
-            <Field>
-              <Label htmlFor="key">{keyTexts.label}</Label>
-              <KeyInput
-                aria-describedby="key-hint"
-                aria-invalid={key.length > 0 && !isKeyValid}
-                id="key"
-                onChange={event => setKey(event.target.value)}
-                placeholder={KEY_PLACEHOLDERS[keyType]}
-                value={key}
-              />
-              <Muted id="key-hint">{keyTexts.hint}</Muted>
-            </Field>
-            {isKeyValid && !isLookingUp && vessel && (
+            </KeyFields>
+            {isKeyValid && !isLookingUp && hasKeyConflict && <ErrorMessage>{t.contribute.keysConflict}</ErrorMessage>}
+            {isKeyValid && !isLookingUp && !hasKeyConflict && vessel && (
               <Match>
                 <svg
                   aria-hidden="true"
@@ -425,12 +431,10 @@ const Step = styled.fieldset`
   }
 `
 
-const KeyTypes = styled.fieldset`
-  margin: 0;
-  padding: 0;
-  border: none;
-  display: flex;
-  gap: 6px;
+const KeyFields = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
 `
 
 const KeyInput = styled(Input)`
