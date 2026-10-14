@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -10,6 +10,7 @@ import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
 import { COLORS, FONTS } from '../../theme'
 import { getVesselPath } from '../../utils/vesselKey'
+import { MapPlaceholder, PortsMap } from './LazyPortsMap'
 
 /** Same as the backend (GetPortVessels.PAGE_SIZE): a shorter page is the last one. */
 const PAGE_SIZE = 48
@@ -41,16 +42,23 @@ export function PortPage() {
         <Link to="/ports">{t.ports.title}</Link> <span aria-hidden="true">›</span> {port.name}
       </Breadcrumb>
       <Page>
-        <Heading>
-          <Chip>{new Intl.DisplayNames([language], { type: 'region' }).of(port.country) ?? port.country}</Chip>
-          <h1>{port.name}</h1>
-          <Muted>UN/LOCODE {port.code}</Muted>
-        </Heading>
-        <CoverageBar
-          label={t.ports.coverage(formatNumber(port.photographed), formatNumber(port.vessels), port.photographed)}
-          photographed={port.photographed}
-          total={port.vessels}
-        />
+        <Top>
+          <Heading>
+            <Chip>{new Intl.DisplayNames([language], { type: 'region' }).of(port.country) ?? port.country}</Chip>
+            <h1>{port.name}</h1>
+            <Muted>UN/LOCODE {port.code}</Muted>
+            <CoverageBar
+              label={t.ports.coverage(formatNumber(port.photographed), formatNumber(port.vessels), port.photographed)}
+              photographed={port.photographed}
+              total={port.vessels}
+            />
+          </Heading>
+          {port.latitude !== null && (
+            <Suspense fallback={<MapPlaceholder $isCompact />}>
+              <PortsMap isCompact ports={[port]} />
+            </Suspense>
+          )}
+        </Top>
 
         {port.photographed > 0 && (
           <section>
@@ -141,11 +149,27 @@ const Page = styled(Container)`
   }
 `
 
+const Top = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: 760px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
 const Heading = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
+
+  > div:last-child {
+    align-self: stretch;
+    margin-top: 12px;
+  }
 
   h1 {
     margin: 0;

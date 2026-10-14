@@ -11,7 +11,8 @@ import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
 import { CHART_COLORS, COLORS, FONTS } from '../../theme'
 import { detectKey } from '../../utils/vesselKey'
-import { MapPlaceholder, PortsMap } from '../Ports/PortsPage'
+import { MapPlaceholder, PortsMap } from '../Ports/LazyPortsMap'
+import { ScopeNote } from '../Ports/ScopeNote'
 import { ChartCredits } from './ChartCredits'
 import { ChartVessels } from './ChartVessels'
 
@@ -160,6 +161,7 @@ export function HomePage() {
         <PortsSection aria-labelledby="ports-title">
           <SectionTitle id="ports-title">{t.ports.homeTitle}</SectionTitle>
           <Muted>{t.ports.homeLead}</Muted>
+          <ScopeNote ports={ports} />
           <Suspense fallback={<MapPlaceholder />}>
             <PortsMap ports={ports} />
           </Suspense>
