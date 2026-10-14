@@ -89,6 +89,7 @@ export const en = {
     photoAlt: (name: string, credit: string) => `${name}, by ${credit}`
   },
   vessel: {
+    source: 'Source',
     pageTitle: (name: string, keys: string) => `${name} (${keys}) — vessel photos`,
     notFoundPageTitle: (key: string) => `No vessel with ${key}`,
     notFoundTitle: (key: string) => `No vessel with ${key} yet`,
@@ -112,7 +113,7 @@ export const en = {
     flag: (flag: string) => `Flag · ${flag} (from CFR)`,
     useThisPhoto: 'Use this photo',
     creditLine: 'Credit line — required by the licence',
-    creditLineCc0: ' (CC0: optional but appreciated)',
+    creditLineOptional: ' (optional for this licence, but appreciated)',
     imageSize: 'Image size',
     sizeFull: 'Full',
     imageUrl: 'Image URL, either key works',
@@ -175,7 +176,8 @@ export const en = {
     title: 'Contribute a photo',
     lead: "Your own picture, an open licence, and the vessel's CFR or MMSI. It goes live once a volunteer has reviewed it.",
     step1: '1 · Which vessel?',
-    keyType: 'Key type',
+    keysHint: 'Fill in one of them, or both if you know them.',
+    keysConflict: 'This CFR and this MMSI are those of two different vessels: check them.',
     matches: 'Matches',
     anUnnamedVessel: 'an unnamed vessel',
     noVesselYet: 'No vessel with this key yet — it will be created when your photo is approved.',
@@ -250,7 +252,7 @@ export const en = {
       'Search by name, port, registration, or the beginning of a CFR or MMSI. Up to 24 results.',
       'Vessels with the most recently published photos. ?limit=12 (max 48).',
       'The whole dataset: every vessel with its photo URLs, credits and licences.',
-      'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, vesselName?), under whichever key you know. Published after review. Needs an API key.',
+      'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, vesselName?, plus mmsi? under a CFR or cfr? under an MMSI), under whichever key you know. Published after review. Needs an API key.',
       'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review. Needs an API key.',
       'Report a photo: {"reason": "WRONG_VESSEL|COPYRIGHT|PRIVACY|OTHER", "message": "…"}. Needs an API key.',
       'Request an API key: {"name", "email", "organisation"?, "intendedUse"}. Sent by email once approved.'
@@ -272,6 +274,8 @@ export const en = {
     licenceBy: '— reuse with credit.',
     licenceBySa: '— reuse with credit; changes shared under the same licence.',
     licenceCc0: '— public domain, no credit required.',
+    licenceOlder:
+      'Photos imported from Wikimedia Commons or Flickr keep their own licence, which can also be an older version of these (CC BY or CC BY-SA 1.0 to 3.0) or the public domain.',
     selfHostTitle: 'Self-host it',
     selfHostText:
       'The service is one container (Spring Boot serving the API and this web app) and one PostgreSQL database, which also stores the images. Set OPENVESSELPHOTOS_DATABASE_URL and OPENVESSELPHOTOS_ADMIN_PASSWORD, and run it.'
@@ -370,6 +374,21 @@ export const en = {
     csvFile: 'CSV file',
     importing: 'Importing…',
     import: 'Import',
+    photoImportTitle: 'Import photos',
+    photoImportText:
+      'Publishes openly licensed photos without review, e.g. from Wikimedia Commons. CSV columns: mmsi and/or cfr, vessel_name, author, licence, file_page (page of the original photo), image_1600_url and, optionally, date. Images are downloaded from Wikimedia Commons or Flickr one at a time, in the background: this can take a few hours. Photos already imported are skipped, so the same file can be sent again after an interruption.',
+    photoImportRunning: 'Import running…',
+    photoImportFinished: 'Last import finished.',
+    photoImportProgress: (s: {
+      done: number
+      total: number
+      imported: number
+      alreadyImported: number
+      failed: number
+      invalid: number
+    }) =>
+      `${s.done} / ${s.total} photos: ${s.imported} imported, ${s.alreadyImported} already there, ${s.failed} failed. ${s.invalid} invalid lines skipped.`,
+    stopImport: 'Stop',
     importResult: (r: { read: number; created: number; updated: number; unchanged: number; skipped: number }) =>
       `${r.read} lines read: ${r.created} vessels created, ${r.updated} completed, ${r.unchanged} already up to date, ${r.skipped} skipped.`
   }

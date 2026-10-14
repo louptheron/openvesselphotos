@@ -96,6 +96,15 @@ section of `/admin`:
 Existing vessels are never overwritten: only their missing name, registration and port are filled in, so an import can
 be run again. Rows without a valid CFR or MMSI are skipped and reported.
 
+### Imported photos
+
+Openly licensed photos found elsewhere (Wikimedia Commons, Flickr) can be published without review from the "Import
+photos" section of `/admin`, with a CSV of the columns `mmsi` and/or `cfr`, `vessel_name`, `author`, `licence` (SPDX
+identifier or label, e.g. `CC-BY-SA-3.0` or `CC BY-SA 3.0`), `file_page` (the page of the original photo, linked from
+its credit), `image_1600_url` and, optionally, `date`. The images are downloaded from `wikimedia.org` and
+`staticflickr.com` only, one at a time and in the background (under a second per photo); `/admin` shows the progress.
+Photos are recognized by their `file_page`, so a file can be sent again after an interruption without duplicates.
+
 ### API keys
 
 `GET` requests are open. `POST` requests to the public API need an API key in the `x-api-key` header
@@ -199,5 +208,6 @@ The code is free software: you can redistribute it and/or modify it under the te
 own instance; a modified version offered as a service must publish its source code too.
 
 The photos are not covered by this licence: each one keeps the open licence chosen by its author (CC BY 4.0,
-CC BY-SA 4.0 or CC0), shown with it on the site and in the API.
+CC BY-SA 4.0 or CC0; photos imported from Wikimedia Commons or Flickr can also be under CC BY or CC BY-SA 1.0 to 3.0,
+or in the public domain), shown with it on the site and in the API.
 

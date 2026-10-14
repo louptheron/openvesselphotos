@@ -117,12 +117,22 @@ class PublicVesselController(
         @RequestParam(required = false) place: String?,
         @RequestParam(required = false) email: String?,
         @RequestParam(required = false) vesselName: String?,
+        @RequestParam(required = false) cfr: String?,
+        @RequestParam(required = false) mmsi: String?,
         @RequestAttribute(name = ApiKeyCheckFilter.API_KEY_ID_ATTRIBUTE, required = false) apiKeyId: Int?,
     ): SubmissionDataOutput {
+        val submittedKey = toKey(keyType, key)
+        // The vessel's other key, when the contributor knows both: ?mmsi= under a CFR, ?cfr= under an MMSI
+        val otherKey =
+            when (submittedKey.type) {
+                KeyType.CFR -> mmsi
+                KeyType.MMSI -> cfr
+            }?.takeIf { it.isNotBlank() }?.let { VesselKey.of(submittedKey.type.other, it) }
         val photo =
             submitPhoto.execute(
                 PhotoSubmission(
-                    key = toKey(keyType, key),
+                    key = submittedKey,
+                    otherKey = otherKey,
                     image = file.bytes,
                     credit = credit,
                     licence = Licence.fromSpdx(licence),

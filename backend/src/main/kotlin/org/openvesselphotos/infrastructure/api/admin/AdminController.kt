@@ -8,7 +8,9 @@ import org.openvesselphotos.domain.use_cases.admin.ApprovePhoto
 import org.openvesselphotos.domain.use_cases.admin.GetActiveApiKeys
 import org.openvesselphotos.domain.use_cases.admin.GetPendingPhotoImage
 import org.openvesselphotos.domain.use_cases.admin.GetReviewQueue
+import org.openvesselphotos.domain.use_cases.admin.ImportPhotos
 import org.openvesselphotos.domain.use_cases.admin.ImportVessels
+import org.openvesselphotos.domain.use_cases.admin.PhotoImportStatus
 import org.openvesselphotos.domain.use_cases.admin.RejectApiKeyRequest
 import org.openvesselphotos.domain.use_cases.admin.RejectPhoto
 import org.openvesselphotos.domain.use_cases.admin.ResolveReport
@@ -52,6 +54,7 @@ class AdminController(
     private val rejectApiKeyRequest: RejectApiKeyRequest,
     private val revokeApiKey: RevokeApiKey,
     private val importVessels: ImportVessels,
+    private val importPhotos: ImportPhotos,
 ) {
     @PostMapping("/login")
     fun login(
@@ -168,4 +171,23 @@ class AdminController(
     fun importVesselsFromCsv(
         @RequestPart file: MultipartFile,
     ): VesselImportResult = importVessels.execute(VesselsCsvParser.parse(String(file.bytes, Charsets.UTF_8)))
+
+    /**
+     * Publishes openly licensed photos without review, e.g. from Wikimedia Commons: starts a background import and
+     * returns its status at once. The images are downloaded one at a time.
+     */
+    @PostMapping("/photos/import", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    fun importPhotosFromCsv(
+        @RequestPart file: MultipartFile,
+    ): PhotoImportStatus = importPhotos.start(PhotosCsvParser.parse(String(file.bytes, Charsets.UTF_8)))
+
+    @GetMapping("/photos/import")
+    fun photoImportStatus(): PhotoImportStatus = importPhotos.status()
+
+    @PostMapping("/photos/import/cancel")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun cancelPhotoImport() {
+        importPhotos.cancel()
+    }
 }

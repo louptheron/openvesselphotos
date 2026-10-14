@@ -32,6 +32,9 @@ class PhotoEntity(
     val submittedKeyType: KeyType,
     @Column(name = "submitted_key")
     val submittedKey: String,
+    /** Of the other type than [submittedKeyType] */
+    @Column(name = "submitted_other_key")
+    val submittedOtherKey: String?,
     @Column(name = "submitted_vessel_name")
     val submittedVesselName: String?,
     val credit: String,
@@ -52,6 +55,8 @@ class PhotoEntity(
     val rejectReason: String?,
     @Column(name = "api_key_id")
     val apiKeyId: Int?,
+    @Column(name = "source_url")
+    val sourceUrl: String?,
 ) {
     fun toPhoto() =
         Photo(
@@ -60,6 +65,7 @@ class PhotoEntity(
             number = number,
             status = status,
             submittedKey = VesselKey(submittedKeyType, submittedKey),
+            submittedOtherKey = submittedOtherKey?.let { VesselKey(submittedKeyType.other, it) },
             submittedVesselName = submittedVesselName,
             credit = credit,
             licence = licence,
@@ -72,6 +78,7 @@ class PhotoEntity(
             reviewedAt = reviewedAt,
             rejectReason = rejectReason,
             apiKeyId = apiKeyId,
+            sourceUrl = sourceUrl,
         )
 
     companion object {
@@ -83,6 +90,7 @@ class PhotoEntity(
                 status = photo.status,
                 submittedKeyType = photo.submittedKey.type,
                 submittedKey = photo.submittedKey.value,
+                submittedOtherKey = photo.submittedOtherKey?.value,
                 submittedVesselName = photo.submittedVesselName,
                 credit = photo.credit,
                 licence = photo.licence,
@@ -95,6 +103,7 @@ class PhotoEntity(
                 reviewedAt = photo.reviewedAt,
                 rejectReason = photo.rejectReason,
                 apiKeyId = photo.apiKeyId,
+                sourceUrl = photo.sourceUrl,
             )
     }
 }

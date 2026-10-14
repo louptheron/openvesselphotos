@@ -3,11 +3,11 @@ package org.openvesselphotos.domain.use_cases.admin
 import org.openvesselphotos.config.UseCase
 import org.openvesselphotos.domain.entities.Photo
 import org.openvesselphotos.domain.entities.PhotoStatus
-import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.exceptions.BackendUsageErrorCode
 import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.repositories.PhotoRepository
 import org.openvesselphotos.domain.repositories.VesselRepository
+import org.openvesselphotos.domain.use_cases.findOrCreateVessel
 import org.springframework.transaction.annotation.Transactional
 import java.time.ZonedDateTime
 
@@ -25,14 +25,8 @@ class ApprovePhoto(
         val photo = findPendingPhoto(photoRepository, photoId)
         val name = vesselName?.trim()?.take(100)?.ifEmpty { null } ?: photo.submittedVesselName
 
-        val existingVessel =
-            photo.vesselId?.let { vesselRepository.findById(it) } ?: vesselRepository.findByKey(photo.submittedKey)
         val vessel =
-            when {
-                existingVessel == null -> vesselRepository.save(Vessel.create(photo.submittedKey, name))
-                existingVessel.name == null && name != null -> vesselRepository.save(existingVessel.copy(name = name))
-                else -> existingVessel
-            }
+            findOrCreateVessel(vesselRepository, listOfNotNull(photo.submittedKey, photo.submittedOtherKey), name)
         val vesselId = requireNotNull(vessel.id)
 
         return photoRepository.save(

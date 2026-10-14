@@ -22,6 +22,7 @@ import {
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
 import { ReviewQueuePanel } from './ReviewQueuePanel'
+import { PhotoImport } from './PhotoImport'
 import { VesselImport } from './VesselImport'
 
 export function AdminPage() {
@@ -54,6 +55,7 @@ export function AdminPage() {
       </Header>
       <ReviewQueuePanel queue={queue} />
       <VesselImport />
+      <PhotoImport />
     </Page>
   )
 }

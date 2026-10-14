@@ -10,6 +10,9 @@ enum class KeyType(
     MMSI("mmsi"),
     ;
 
+    /** A vessel has at most one key of each type: a CFR and an MMSI. */
+    val other: KeyType get() = if (this == CFR) MMSI else CFR
+
     companion object {
         fun fromPathName(value: String): KeyType =
             entries.find { it.pathName == value.lowercase() }

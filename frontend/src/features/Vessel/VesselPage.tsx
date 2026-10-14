@@ -22,6 +22,9 @@ import { getPhotoUrl, normalizeKey } from '../../utils/vesselKey'
 import { KeyLinkForm } from './KeyLinkForm'
 import { ReportForm } from './ReportForm'
 
+/** Licences under which crediting the author is welcome but not required */
+const LICENCES_WITHOUT_CREDIT = new Set(['CC0-1.0', 'LicenseRef-PublicDomain'])
+
 const SIZES = [
   { label: '320 px', value: '320' },
   { label: '800 px', value: '800' },
@@ -121,6 +124,14 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
               <figcaption>
                 <span>
                   © {photo.credit} · {photo.licenceName}
+                  {photo.source && (
+                    <>
+                      {' · '}
+                      <a href={photo.source} rel="noreferrer" target="_blank">
+                        {t.vessel.source}
+                      </a>
+                    </>
+                  )}
                 </span>
                 <span>
                   {t.vessel.photoOf(photo.n, vessel.photos.length)}
@@ -209,7 +220,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
               <h2>{t.vessel.useThisPhoto}</h2>
               <Muted>
                 {t.vessel.creditLine}
-                {photo.licence === 'CC0-1.0' && t.vessel.creditLineCc0}
+                {LICENCES_WITHOUT_CREDIT.has(photo.licence) && t.vessel.creditLineOptional}
               </Muted>
               <Attribution>{photo.attribution}</Attribution>
               <Sizes>

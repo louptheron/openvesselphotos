@@ -240,6 +240,8 @@ function PhotoReview({
           <dt>{t.admin.submittedKey}</dt>
           <dd>
             {photo.submittedKeyType.toUpperCase()} {photo.submittedKey}
+            {photo.submittedOtherKey &&
+              ` · ${photo.submittedKeyType === 'cfr' ? 'MMSI' : 'CFR'} ${photo.submittedOtherKey}`}
           </dd>
         </div>
         <div>

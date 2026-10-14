@@ -13,6 +13,8 @@ export type Photo = {
   licenceName: string
   n: number
   place: string | null
+  /** Page of the original photo, for a photo imported from Wikimedia Commons or Flickr */
+  source: string | null
   takenOn: string | null
   urls: PhotoUrls
   width: number
@@ -83,6 +85,8 @@ export type AdminPhoto = {
   place: string | null
   submittedKey: string
   submittedKeyType: KeyType
+  /** The key of the other type, when the contributor gave both */
+  submittedOtherKey: string | null
   submittedVesselName: string | null
   takenOn: string | null
   width: number
@@ -120,6 +124,19 @@ export type VesselImportResult = {
   skipped: number
   unchanged: number
   updated: number
+}
+
+export type PhotoImportStatus = {
+  alreadyImported: number
+  done: number
+  errors: string[]
+  failed: number
+  finishedAt: string | null
+  imported: number
+  invalid: number
+  isRunning: boolean
+  startedAt: string | null
+  total: number
 }
 
 export type ReviewQueue = {
