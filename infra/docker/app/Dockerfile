@@ -16,7 +16,7 @@ RUN npm run build
 ###########################
 # Build backend with gradle #
 ###########################
-FROM gradle:9.7.1-jdk21 AS build-back
+FROM gradle:9.8.1-jdk21 AS build-back
 
 WORKDIR /home/gradle/app
 COPY settings.gradle.kts build.gradle.kts ./
