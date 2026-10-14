@@ -42,7 +42,10 @@ interface VesselRepository {
 
     fun save(vessel: Vessel): Vessel
 
-    /** Inserts the new vessels; fills in the missing name, registration and port of the existing ones. */
+    /**
+     * Inserts the new vessels. For the existing ones, fills in the missing name, registration, port and port code, and
+     * replaces the register's data with the given one.
+     */
     fun importAll(vessels: List<Vessel>): VesselImportCounts
 
     fun count(): Int

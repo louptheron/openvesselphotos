@@ -19,6 +19,18 @@ object VesselsCsvParser {
             "registration" to listOf("extmarking", "externalmarking", "marking", "registration", "immatriculation"),
             "event" to listOf("eventtype", "eventcode"),
             "portCode" to listOf("placeofregistrationcode", "portcode"),
+            "vesselType" to listOf("vesseltype"),
+            "yearBuilt" to listOf("yearofconstruction"),
+            "length" to listOf("loam", "loa"),
+            "enginePower" to listOf("powerofmainenginekw"),
+            "tonnage" to listOf("tonnagegt"),
+            "mainGear" to listOf("mainfishinggear"),
+            "otherGear1" to listOf("subsidiaryfishinggear1"),
+            "otherGear2" to listOf("subsidiaryfishinggear2"),
+            "otherGear3" to listOf("subsidiaryfishinggear3"),
+            "otherGear4" to listOf("subsidiaryfishinggear4"),
+            "otherGear5" to listOf("subsidiaryfishinggear5"),
+            "callSign" to listOf("ircs"),
             "port" to listOf("placeofregistrationname", "portname", "port", "portdimmatriculation"),
         )
 
@@ -53,6 +65,14 @@ object VesselsCsvParser {
                 registration = cell("registration"),
                 port = cell("port"),
                 portCode = cell("portCode"),
+                vesselType = cell("vesselType"),
+                yearBuilt = cell("yearBuilt"),
+                length = cell("length"),
+                enginePower = cell("enginePower"),
+                tonnage = cell("tonnage"),
+                mainGear = cell("mainGear"),
+                otherGears = (1..5).mapNotNull { cell("otherGear$it")?.takeIf { gear -> gear.isNotBlank() } },
+                callSign = cell("callSign"),
                 event = cell("event"),
             )
         }
