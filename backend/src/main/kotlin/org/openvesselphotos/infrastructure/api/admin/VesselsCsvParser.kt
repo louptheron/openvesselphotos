@@ -6,7 +6,8 @@ import org.openvesselphotos.domain.use_cases.admin.VesselImportRow
 
 /**
  * Reads a list of vessels: an export of the EU fleet register (columns "CFR", "MMSI", "Name of Vessel",
- * "External Marking", "Place of Registration Name"…, or "Vessel Name", "Ext. Marking", "Port Name" in older exports) or a simple file with the columns cfr, mmsi, name, registration, port. The separator (";" or ",") and
+ * "External Marking", "Place of Registration Name"…, or "Vessel Name", "Ext. Marking", "Port Name" in older exports) or a simple file with the columns cfr, mmsi, name, registration, port. The register's event tells vessels that
+ * left the fleet. The separator (";" or ",") and
  * the column order come from the header line; unknown columns are ignored.
  */
 object VesselsCsvParser {
@@ -16,6 +17,7 @@ object VesselsCsvParser {
             "mmsi" to listOf("mmsi"),
             "name" to listOf("nameofvessel", "vesselname", "name", "nom", "nomdunavire"),
             "registration" to listOf("extmarking", "externalmarking", "marking", "registration", "immatriculation"),
+            "event" to listOf("eventtype", "eventcode"),
             "port" to listOf("placeofregistrationname", "portname", "port", "portdimmatriculation"),
         )
 
@@ -49,6 +51,7 @@ object VesselsCsvParser {
                 name = cell("name"),
                 registration = cell("registration"),
                 port = cell("port"),
+                event = cell("event"),
             )
         }
     }

@@ -95,7 +95,9 @@ section of `/admin`:
 - a CSV with the columns `cfr`, `mmsi`, `name`, `registration` (hull marking, e.g. `LO 752221`), `port`.
 
 Existing vessels are never overwritten: only their missing name, registration and port are filled in, so an import can
-be run again. Rows without a valid CFR or MMSI are skipped and reported.
+be run again. Rows without a valid CFR or MMSI are skipped and reported. Vessels whose last event in the register is a
+retirement (`RET`), a destruction (`DES`) or an export (`EXP`) are no longer in the fleet and are not imported: use the
+"Latest" export (one line per vessel), not "Full History".
 
 ### Imported photos
 

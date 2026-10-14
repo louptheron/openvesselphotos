@@ -16,6 +16,8 @@ data class VesselImportRow(
     val name: String?,
     val registration: String?,
     val port: String?,
+    /** Event of the EU fleet register (e.g. "MOD", or "RET" for a retired vessel) */
+    val event: String? = null,
 )
 
 data class VesselImportResult(
@@ -24,13 +26,16 @@ data class VesselImportResult(
     val updated: Int,
     val unchanged: Int,
     val skipped: Int,
+    /** Vessels no longer in the fleet (retired, destroyed or exported), not imported */
+    val outOfFleet: Int,
     /** The first errors, for the admin to fix the file */
     val errors: List<String>,
 )
 
 /**
  * Creates the vessels of a fleet list (e.g. the EU fleet register), without photos. Existing vessels are never
- * overwritten: only their missing name, registration and port are filled in.
+ * overwritten: only their missing name, registration and port are filled in. Vessels whose last event is a retirement,
+ * a destruction or an export are no longer in the fleet: they are not imported.
  */
 @UseCase
 class ImportVessels(
@@ -40,7 +45,8 @@ class ImportVessels(
     fun execute(rows: List<VesselImportRow>): VesselImportResult {
         val errors = mutableListOf<String>()
         // Fleet register exports list each vessel's events: the last line of a vessel is its current state
-        val vessels = linkedMapOf<String, Vessel>()
+        // null: the vessel left the fleet
+        val vessels = linkedMapOf<String, Vessel?>()
         rows.forEach { row ->
             try {
                 val cfr = row.cfr?.takeIf { it.isNotBlank() }?.let { VesselKey.of(KeyType.CFR, it).value }
@@ -57,20 +63,23 @@ class ImportVessels(
                         registration = row.registration.clean(20),
                         port = row.port.clean(100),
                     )
-                vessels[cfr ?: "mmsi:$mmsi"] = vessel
+                val hasLeftFleet = row.event?.trim()?.uppercase() in OUT_OF_FLEET_EVENTS
+                vessels[cfr ?: "mmsi:$mmsi"] = vessel.takeUnless { hasLeftFleet }
             } catch (e: BackendUsageException) {
                 errors += "Line ${row.line}: ${e.message}"
             }
         }
 
-        val counts = vesselRepository.importAll(vessels.values.toList())
+        val inFleet = vessels.values.filterNotNull()
+        val counts = vesselRepository.importAll(inFleet)
 
         return VesselImportResult(
             read = rows.size,
             created = counts.created,
             updated = counts.updated,
-            unchanged = vessels.size - counts.created - counts.updated,
+            unchanged = inFleet.size - counts.created - counts.updated,
             skipped = errors.size,
+            outOfFleet = vessels.size - inFleet.size,
             errors = errors.take(MAX_ERRORS),
         )
     }
@@ -84,5 +93,8 @@ class ImportVessels(
 
     companion object {
         const val MAX_ERRORS = 20
+
+        /** Retirement, destruction and export events of the EU fleet register */
+        val OUT_OF_FLEET_EVENTS = setOf("RET", "DES", "EXP")
     }
 }

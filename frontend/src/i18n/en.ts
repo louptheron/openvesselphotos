@@ -371,7 +371,7 @@ export const en = {
     importText1: 'Creates vessels without photos, so that their pages exist and can be found. Accepts an export of the',
     importRegister: 'EU fleet register',
     importText2:
-      '(CSV, current fleet of a country), or a CSV with the columns cfr, mmsi, name, registration, port. Existing vessels are never overwritten: only their missing data is filled in. 15 MB max.',
+      '(CSV, latest state of the vessels of a country: those retired, destroyed or exported are left out), or a CSV with the columns cfr, mmsi, name, registration, port. Existing vessels are never overwritten: only their missing data is filled in. 15 MB max.',
     csvFile: 'CSV file',
     importing: 'Importing…',
     import: 'Import',
@@ -390,8 +390,15 @@ export const en = {
     }) =>
       `${s.done} / ${s.total} photos: ${s.imported} imported, ${s.alreadyImported} already there, ${s.failed} failed. ${s.invalid} invalid lines skipped.`,
     stopImport: 'Stop',
-    importResult: (r: { read: number; created: number; updated: number; unchanged: number; skipped: number }) =>
-      `${r.read} lines read: ${r.created} vessels created, ${r.updated} completed, ${r.unchanged} already up to date, ${r.skipped} skipped.`
+    importResult: (r: {
+      read: number
+      created: number
+      updated: number
+      unchanged: number
+      skipped: number
+      outOfFleet: number
+    }) =>
+      `${r.read} lines read: ${r.created} vessels created, ${r.updated} completed, ${r.unchanged} already up to date, ${r.outOfFleet} no longer in the fleet, ${r.skipped} skipped.`
   },
   stats: {
     pageTitle: 'Statistics',

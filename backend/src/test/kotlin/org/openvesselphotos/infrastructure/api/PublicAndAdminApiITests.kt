@@ -373,7 +373,8 @@ class PublicAndAdminApiITests {
                         .cookie(cookie),
                 ).andExpect(status().isOk)
 
-        // An export of the EU fleet register: extra columns, quoted fields, a vessel's events on several lines
+        // An export of the EU fleet register: extra columns, quoted fields, a vessel's events on several lines, a vessel
+        // that left the fleet
         import(
             """
             Country Code;CFR;Event Code;Registration Nbr;Ext. Marking;Vessel Name;Port Code;Port Name
@@ -381,11 +382,15 @@ class PublicAndAdminApiITests {
             FRA;FRA000752221;MOD;752221;"LO 752221";LES MENHIRS;FRLRT;Lorient
             FRA;FRA000425329;CST;425329;LO 425329;MIREN;FRLRT;Lorient
             FRA;NOT-A-CFR;CST;1;X 1;BAD;;
+            FRA;FRA000111111;CST;111111;LO 111111;OLD BOAT;FRLRT;Lorient
+            FRA;FRA000111111;RET;111111;LO 111111;OLD BOAT;FRLRT;Lorient
             """.trimIndent(),
-        ).andExpect(jsonPath("$.read").value(4))
+        ).andExpect(jsonPath("$.read").value(6))
             .andExpect(jsonPath("$.created").value(2))
+            .andExpect(jsonPath("$.outOfFleet").value(1))
             .andExpect(jsonPath("$.skipped").value(1))
             .andExpect(jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("Line 5")))
+        mockMvc.perform(get("/v1/cfr/FRA000111111")).andExpect(status().isNotFound)
 
         mockMvc
             .perform(get("/v1/cfr/FRA000752221"))

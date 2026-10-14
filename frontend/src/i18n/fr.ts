@@ -372,7 +372,7 @@ export const fr: Messages = {
     importTitle: 'Importer des navires',
     importText1: 'Crée des navires sans photo, pour que leur page existe et puisse être trouvée. Accepte un export du',
     importRegister: 'registre de la flotte de l’UE',
-    importText2: `(CSV, flotte actuelle d’un pays), ou un CSV avec les colonnes cfr, mmsi, name, registration, port. Les navires existants ne sont jamais écrasés${_}: seules leurs données manquantes sont complétées. 15${_}Mo maximum.`,
+    importText2: `(CSV, dernier état des navires d’un pays${_}: ceux sortis de flotte, détruits ou exportés sont écartés), ou un CSV avec les colonnes cfr, mmsi, name, registration, port. Les navires existants ne sont jamais écrasés${_}: seules leurs données manquantes sont complétées. 15${_}Mo maximum.`,
     csvFile: 'Fichier CSV',
     importing: 'Import…',
     import: 'Importer',
@@ -384,7 +384,7 @@ export const fr: Messages = {
       `${s.done} / ${s.total} photos${_}: ${s.imported} importées, ${s.alreadyImported} déjà présentes, ${s.failed} en échec. ${s.invalid} lignes invalides ignorées.`,
     stopImport: 'Arrêter',
     importResult: r =>
-      `${r.read}${_}lignes lues${_}: ${r.created}${_}navires créés, ${r.updated}${_}complétés, ${r.unchanged}${_}déjà à jour, ${r.skipped}${_}ignorés.`
+      `${r.read}${_}lignes lues${_}: ${r.created}${_}navires créés, ${r.updated}${_}complétés, ${r.unchanged}${_}déjà à jour, ${r.outOfFleet}${_}sortis de la flotte, ${r.skipped}${_}ignorés.`
   },
   stats: {
     pageTitle: 'Statistiques',
