@@ -91,6 +91,7 @@ export const fr: Messages = {
     photoAlt: (name: string, credit: string) => `${name}, par ${credit}`
   },
   vessel: {
+    source: 'Source',
     pageTitle: (name: string, keys: string) => `${name} (${keys}) — photos du navire`,
     notFoundPageTitle: (key: string) => `Aucun navire avec le ${key}`,
     notFoundTitle: (key: string) => `Aucun navire avec le ${key} pour l’instant`,
@@ -177,7 +178,8 @@ export const fr: Messages = {
     title: 'Envoyer une photo',
     lead: 'Votre propre photo, une licence libre, et le CFR ou le MMSI du navire. Elle est publiée après vérification par un bénévole.',
     step1: `1 · Quel navire${_}?`,
-    keyType: 'Type d’identifiant',
+    keysHint: 'Remplissez l’un des deux, ou les deux si vous les connaissez.',
+    keysConflict: `Ce CFR et ce MMSI sont ceux de deux navires différents${_}: vérifiez-les.`,
     matches: 'Correspond à',
     anUnnamedVessel: 'un navire sans nom',
     noVesselYet: 'Aucun navire avec cet identifiant pour l’instant — il sera créé quand votre photo sera validée.',
@@ -253,7 +255,7 @@ export const fr: Messages = {
       'Recherche par nom, port, immatriculation, ou début de CFR ou de MMSI. 24 résultats au plus.',
       'Les navires dont les photos ont été publiées le plus récemment. ?limit=12 (48 au plus).',
       `Toutes les données${_}: chaque navire avec les URL, crédits et licences de ses photos.`,
-      `Envoyer une photo (multipart${_}: file, credit, licence, takenOn?, place?, email?, vesselName?), sous l’identifiant que vous connaissez. Publiée après vérification. Nécessite une clé d’API.`,
+      `Envoyer une photo (multipart${_}: file, credit, licence, takenOn?, place?, email?, vesselName?, et mmsi? sous un CFR ou cfr? sous un MMSI), sous l’identifiant que vous connaissez. Publiée après vérification. Nécessite une clé d’API.`,
       'Proposer l’identifiant manquant, ex. {"keyType": "cfr", "key": "FRA000123456"}. Appliqué après vérification. Nécessite une clé d’API.',
       `Signaler une photo${_}: {"reason": "WRONG_VESSEL|COPYRIGHT|PRIVACY|OTHER", "message": "…"}. Nécessite une clé d’API.`,
       `Demander une clé d’API${_}: {"name", "email", "organisation"?, "intendedUse"}. Envoyée par e-mail une fois acceptée.`
@@ -373,6 +375,13 @@ export const fr: Messages = {
     csvFile: 'Fichier CSV',
     importing: 'Import…',
     import: 'Importer',
+    photoImportTitle: 'Importer des photos',
+    photoImportText: `Publie sans relecture des photos sous licence libre, venant par exemple de Wikimedia Commons. Colonnes du CSV${_}: mmsi et/ou cfr, vessel_name, author, licence, file_page (page de la photo d’origine), image_1600_url et, en option, date. Les images sont téléchargées depuis Wikimedia Commons ou Flickr une à une, en arrière-plan${_}: cela peut prendre quelques heures. Les photos déjà importées sont ignorées${_}: le même fichier peut être renvoyé après une interruption.`,
+    photoImportRunning: 'Import en cours…',
+    photoImportFinished: 'Dernier import terminé.',
+    photoImportProgress: s =>
+      `${s.done} / ${s.total} photos${_}: ${s.imported} importées, ${s.alreadyImported} déjà présentes, ${s.failed} en échec. ${s.invalid} lignes invalides ignorées.`,
+    stopImport: 'Arrêter',
     importResult: r =>
       `${r.read}${_}lignes lues${_}: ${r.created}${_}navires créés, ${r.updated}${_}complétés, ${r.unchanged}${_}déjà à jour, ${r.skipped}${_}ignorés.`
   }

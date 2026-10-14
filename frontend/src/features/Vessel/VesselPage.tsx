@@ -124,6 +124,14 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
               <figcaption>
                 <span>
                   © {photo.credit} · {photo.licenceName}
+                  {photo.source && (
+                    <>
+                      {' · '}
+                      <a href={photo.source} rel="noreferrer" target="_blank">
+                        {t.vessel.source}
+                      </a>
+                    </>
+                  )}
                 </span>
                 <span>
                   {t.vessel.photoOf(photo.n, vessel.photos.length)}

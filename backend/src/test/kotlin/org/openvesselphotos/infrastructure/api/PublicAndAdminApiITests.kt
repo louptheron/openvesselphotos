@@ -3,8 +3,11 @@ package org.openvesselphotos.infrastructure.api
 import jakarta.servlet.http.Cookie
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.openvesselphotos.TestImages
 import org.openvesselphotos.config.AdminAuthentication
+import org.openvesselphotos.domain.images.ImageDownloader
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -12,6 +15,7 @@ import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
@@ -43,6 +47,10 @@ class PublicAndAdminApiITests {
 
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    /** Imports would download from Wikimedia Commons */
+    @MockitoBean
+    lateinit var imageDownloader: ImageDownloader
 
     private fun adminCookie(): Cookie {
         val response =
@@ -419,6 +427,114 @@ class PublicAndAdminApiITests {
                 multipart(
                     "/v1/admin/vessels/import",
                 ).file(MockMultipartFile("file", "f.csv", "text/csv", "cfr\n".toByteArray())),
+            ).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `A photo sent with both keys Should give both keys to its vessel, unless they belong to another vessel`() {
+        val cookie = adminCookie()
+
+        fun send(
+            path: String,
+            vararg params: Pair<String, String>,
+        ) = mockMvc.perform(
+            multipart(path)
+                .header("Sec-Fetch-Site", "same-origin")
+                .file(MockMultipartFile("file", "boat.jpg", "image/jpeg", TestImages.create(1200, 800)))
+                .param("credit", "J. Le Bihan")
+                .param("licence", "CC-BY-4.0")
+                .apply { params.forEach { (name, value) -> param(name, value) } },
+        )
+
+        val id =
+            Regex("\"id\":(\\d+)")
+                .find(
+                    send("/v1/cfr/FRA000911288/photos", "mmsi" to "227000911", "vesselName" to "JULIEN COLEOU")
+                        .andExpect(status().isCreated)
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        mockMvc
+            .perform(get("/v1/admin/queue").cookie(cookie))
+            .andExpect(jsonPath("$.photos[?(@.photo.id == $id)].photo.submittedOtherKey").value("227000911"))
+        mockMvc.perform(post("/v1/admin/photos/$id/approve").cookie(cookie)).andExpect(status().isNoContent)
+        mockMvc
+            .perform(get("/v1/mmsi/227000911"))
+            .andExpect(jsonPath("$.cfr").value("FRA000911288"))
+            .andExpect(jsonPath("$.name").value("JULIEN COLEOU"))
+
+        // A mistyped MMSI is refused at once
+        send("/v1/cfr/FRA000911288/photos", "mmsi" to "227000999").andExpect(status().isConflict)
+        send("/v1/mmsi/227000911/photos", "cfr" to "FRA00091128").andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `Imported photos Should be published without review, once`() {
+        val cookie = adminCookie()
+        `when`(imageDownloader.download(anyString())).thenReturn(TestImages.create(1600, 1000))
+
+        fun import(csv: String) =
+            mockMvc
+                .perform(
+                    multipart("/v1/admin/photos/import")
+                        .file(MockMultipartFile("file", "photos.csv", "text/csv", csv.toByteArray()))
+                        .cookie(cookie),
+                ).andExpect(status().isAccepted)
+
+        fun waitForImport(): String {
+            repeat(100) {
+                val status =
+                    mockMvc
+                        .perform(get("/v1/admin/photos/import").cookie(cookie))
+                        .andReturn()
+                        .response.contentAsString
+                if (status.contains("\"isRunning\":false")) {
+                    return status
+                }
+                Thread.sleep(100)
+            }
+            throw AssertionError("The import did not finish.")
+        }
+
+        // A Commons export: extra columns, a quoted description over several lines, licences as labels or SPDX
+        val csv =
+            """
+            mmsi,cfr,vessel_name,ovp_licence,licence,author,file_page,image_1600_url,date,title
+            227000777,,Ar Men,,CC BY-SA 3.0,Jane Doe,https://commons.wikimedia.org/wiki/File:A.jpg,https://upload.wikimedia.org/a.jpg,2012-08-25 14:03:11,"Ar Men
+            in Douarnenez"
+            227000778,FRA000778778,Penn Ar Bed,CC-BY-4.0,CC BY 4.0,"Doe, John",https://commons.wikimedia.org/wiki/File:B.jpg,https://upload.wikimedia.org/b.jpg,,
+            227000779,,No author,,CC0,,https://commons.wikimedia.org/wiki/File:C.jpg,https://upload.wikimedia.org/c.jpg,,
+            """.trimIndent()
+        import(csv)
+            .andExpect(jsonPath("$.total").value(2))
+            .andExpect(jsonPath("$.invalid").value(1))
+            .andExpect(jsonPath("$.errors[0]").value("Line 5: no author."))
+        assertThat(waitForImport()).contains("\"imported\":2")
+
+        mockMvc
+            .perform(get("/v1/mmsi/227000777"))
+            .andExpect(jsonPath("$.name").value("Ar Men"))
+            .andExpect(jsonPath("$.photos[0].licence").value("CC-BY-SA-3.0"))
+            .andExpect(jsonPath("$.photos[0].credit").value("Jane Doe"))
+            .andExpect(jsonPath("$.photos[0].takenOn").value("2012-08-25"))
+            .andExpect(jsonPath("$.photos[0].source").value("https://commons.wikimedia.org/wiki/File:A.jpg"))
+        mockMvc
+            .perform(get("/v1/cfr/FRA000778778"))
+            .andExpect(jsonPath("$.mmsi").value("227000778"))
+            .andExpect(jsonPath("$.photos[0].credit").value("Doe, John"))
+
+        // Running the same file again (e.g. after a restart) does not duplicate the photos
+        import(csv)
+        assertThat(waitForImport()).contains("\"imported\":0").contains("\"alreadyImported\":2")
+        mockMvc.perform(get("/v1/mmsi/227000777")).andExpect(jsonPath("$.photos.length()").value(1))
+
+        // Only the admin can import
+        mockMvc
+            .perform(
+                multipart(
+                    "/v1/admin/photos/import",
+                ).file(MockMultipartFile("file", "f.csv", "text/csv", csv.toByteArray())),
             ).andExpect(status().isUnauthorized)
     }
 }

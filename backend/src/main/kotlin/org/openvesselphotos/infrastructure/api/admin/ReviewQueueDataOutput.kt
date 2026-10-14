@@ -22,6 +22,8 @@ data class AdminPhotoDataOutput(
     val number: Int?,
     val submittedKeyType: String,
     val submittedKey: String,
+    /** The key of the other type, when the contributor gave both */
+    val submittedOtherKey: String?,
     val submittedVesselName: String?,
     val credit: String,
     val licence: String,
@@ -40,6 +42,7 @@ data class AdminPhotoDataOutput(
                 number = photo.number,
                 submittedKeyType = photo.submittedKey.type.pathName,
                 submittedKey = photo.submittedKey.value,
+                submittedOtherKey = photo.submittedOtherKey?.value,
                 submittedVesselName = photo.submittedVesselName,
                 credit = photo.credit,
                 licence = photo.licence.spdx,

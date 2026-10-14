@@ -17,6 +17,8 @@ data class Photo(
     val number: Int? = null,
     val status: PhotoStatus,
     val submittedKey: VesselKey,
+    /** The vessel's key of the other type, when the contributor knows both. */
+    val submittedOtherKey: VesselKey? = null,
     val submittedVesselName: String?,
     val credit: String,
     val licence: Licence,
@@ -30,4 +32,6 @@ data class Photo(
     val rejectReason: String? = null,
     /** The API key the photo was sent with, if any. */
     val apiKeyId: Int? = null,
+    /** Page of the original photo, for an imported photo (Wikimedia Commons, Flickr…). */
+    val sourceUrl: String? = null,
 )
