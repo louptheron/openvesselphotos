@@ -117,6 +117,17 @@ export type ApiKeyRequest = {
   organisation: string
 }
 
+/** How much of the library is photographed. */
+export type Coverage = {
+  /** Vessels with at least one published photo, with a CFR or an MMSI only */
+  photographedVessels: number
+  photos: number
+  /** Of the register's vessels, those with at least one published photo */
+  registerPhotographed: number
+  /** Vessels of the EU fleet register (with a CFR) */
+  registerVessels: number
+}
+
 export type VesselImportResult = {
   created: number
   errors: string[]

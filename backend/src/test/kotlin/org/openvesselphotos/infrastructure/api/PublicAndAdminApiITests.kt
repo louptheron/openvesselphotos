@@ -549,6 +549,56 @@ class PublicAndAdminApiITests {
     }
 
     @Test
+    fun `Coverage Should count the register's vessels and those photographed`() {
+        val cookie = adminCookie()
+
+        fun coverage(field: String) =
+            Regex(""""$field":(\d+)""")
+                .find(
+                    mockMvc
+                        .perform(get("/v1/coverage"))
+                        .andExpect(status().isOk)
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+                .toInt()
+
+        val registerVessels = coverage("registerVessels")
+        val registerPhotographed = coverage("registerPhotographed")
+        val photos = coverage("photos")
+
+        mockMvc
+            .perform(
+                multipart("/v1/admin/vessels/import")
+                    .file(
+                        MockMultipartFile(
+                            "file",
+                            "fleet.csv",
+                            "text/csv",
+                            "cfr;name\nFRA000900001;COVERED\nFRA000900002;NOT YET".toByteArray(),
+                        ),
+                    ).cookie(cookie),
+            ).andExpect(status().isOk)
+        submitPhoto("cfr", "FRA000900001")
+        val queue =
+            mockMvc
+                .perform(get("/v1/admin/queue").cookie(cookie))
+                .andReturn()
+                .response.contentAsString
+        val photoId =
+            Regex(""""id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000900001"""")
+                .find(queue)!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+
+        assertThat(coverage("registerVessels")).isEqualTo(registerVessels + 2)
+        assertThat(coverage("registerPhotographed")).isEqualTo(registerPhotographed + 1)
+        assertThat(coverage("photos")).isEqualTo(photos + 1)
+        assertThat(coverage("photographedVessels")).isGreaterThanOrEqualTo(coverage("registerPhotographed"))
+    }
+
+    @Test
     fun `Usage statistics Should count images by the site showing them, and API calls by key`() {
         val cookie = adminCookie()
         val id =

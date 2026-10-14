@@ -1,5 +1,6 @@
 package org.openvesselphotos.infrastructure.api.outputs
 
+import org.openvesselphotos.domain.entities.Coverage
 import org.openvesselphotos.domain.entities.HistoryEvent
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Photo
@@ -65,6 +66,23 @@ data class PhotoDataOutput(
             height = photo.height,
             source = photo.sourceUrl,
         )
+    }
+}
+
+data class CoverageDataOutput(
+    val registerVessels: Int,
+    val registerPhotographed: Int,
+    val photographedVessels: Int,
+    val photos: Int,
+) {
+    companion object {
+        fun from(coverage: Coverage) =
+            CoverageDataOutput(
+                registerVessels = coverage.registerVessels,
+                registerPhotographed = coverage.registerPhotographed,
+                photographedVessels = coverage.photographedVessels,
+                photos = coverage.photos,
+            )
     }
 }
 
