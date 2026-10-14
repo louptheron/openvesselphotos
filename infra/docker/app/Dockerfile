@@ -5,7 +5,7 @@
 ###########################
 # Build frontend with npm #
 ###########################
-FROM node:24-alpine AS build-front
+FROM node:26-alpine AS build-front
 
 WORKDIR /tmp/frontend
 COPY frontend/package.json frontend/package-lock.json ./
@@ -16,7 +16,7 @@ RUN npm run build
 ###########################
 # Build backend with gradle #
 ###########################
-FROM gradle:9.7.1-jdk21 AS build-back
+FROM gradle:9.8.1-jdk21 AS build-back
 
 WORKDIR /home/gradle/app
 COPY settings.gradle.kts build.gradle.kts ./
