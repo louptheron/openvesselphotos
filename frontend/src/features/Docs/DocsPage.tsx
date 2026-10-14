@@ -143,6 +143,7 @@ export function DocsPage() {
             {t.docs.licenceCc0}
           </li>
         </ul>
+        <p>{t.docs.licenceOlder}</p>
       </Section>
 
       <Section id="self-host">
