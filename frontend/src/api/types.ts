@@ -126,6 +126,37 @@ export type VesselImportResult = {
   updated: number
 }
 
+export type DailyUsage = {
+  apiCalls: number
+  day: string
+  imageViews: number
+  vesselsAdded: number
+}
+
+export type SourceUsage = {
+  count: number
+  /** "website", "direct", "other" or the host of a site */
+  source: string
+}
+
+export type UsageStatistics = {
+  activeApiKeys: number
+  activeApiKeysTotal: number
+  apiCalls: number
+  apiCallsWithKey: number
+  apiKeys: { calls: number; id: number; lastUsedAt: string | null; name: string; organisation: string | null }[]
+  apiSources: SourceUsage[]
+  daily: DailyUsage[]
+  days: number
+  imageSources: SourceUsage[]
+  imageViews: number
+  imageViewsElsewhere: number
+  photoCount: number
+  siteCount: number
+  vesselCount: number
+  vesselsAdded: number
+}
+
 export type PhotoImportStatus = {
   alreadyImported: number
   done: number

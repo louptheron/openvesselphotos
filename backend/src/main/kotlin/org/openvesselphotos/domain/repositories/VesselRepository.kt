@@ -2,6 +2,7 @@ package org.openvesselphotos.domain.repositories
 
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselKey
+import java.time.LocalDate
 
 data class VesselImportCounts(
     val created: Int,
@@ -31,6 +32,9 @@ interface VesselRepository {
     fun importAll(vessels: List<Vessel>): VesselImportCounts
 
     fun count(): Int
+
+    /** Vessels created on each day since [day], imports included (days without any are left out). */
+    fun countCreatedByDay(day: LocalDate): Map<LocalDate, Int>
 
     /** Vessels ordered by id, with or without photos. */
     fun findPage(

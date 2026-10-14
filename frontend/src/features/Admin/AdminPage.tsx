@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import {
@@ -49,9 +50,12 @@ export function AdminPage() {
     <Page>
       <Header>
         <Title as="h1">{t.admin.queueTitle}</Title>
-        <TextButton onClick={() => logout()} type="button">
-          {t.admin.signOut}
-        </TextButton>
+        <HeaderLinks>
+          <Link to="/admin/stats">{t.admin.statistics}</Link>
+          <TextButton onClick={() => logout()} type="button">
+            {t.admin.signOut}
+          </TextButton>
+        </HeaderLinks>
       </Header>
       <ReviewQueuePanel queue={queue} />
       <VesselImport />
@@ -60,7 +64,7 @@ export function AdminPage() {
   )
 }
 
-function LoginForm() {
+export function LoginForm() {
   const [password, setPassword] = useState('')
   const [login, { error, isLoading }] = useLoginMutation()
   const { t } = useTranslation()
@@ -110,6 +114,12 @@ const Header = styled.div`
   h1 {
     font-size: 36px;
   }
+`
+
+const HeaderLinks = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
 `
 
 const LoginCard = styled(Card)`

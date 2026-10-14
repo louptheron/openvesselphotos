@@ -42,6 +42,8 @@ class JpaPhotoRepository(
 
     override fun nextNumber(vesselId: Int): Int = dbPhotoRepository.nextNumber(vesselId)
 
+    override fun countByStatus(status: PhotoStatus): Int = dbPhotoRepository.countByStatus(status).toInt()
+
     override fun existsBySourceUrl(sourceUrl: String): Boolean = dbPhotoRepository.existsBySourceUrl(sourceUrl)
 
     override fun save(photo: Photo): Photo {

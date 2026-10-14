@@ -83,6 +83,8 @@ interface DBPhotoRepository : JpaRepository<PhotoEntity, Int> {
     @Query("SELECT coalesce(max(p.number), 0) + 1 FROM PhotoEntity p WHERE p.vesselId = :vesselId")
     fun nextNumber(vesselId: Int): Int
 
+    fun countByStatus(status: PhotoStatus): Long
+
     fun existsBySourceUrl(sourceUrl: String): Boolean
 }
 

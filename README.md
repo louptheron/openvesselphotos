@@ -105,6 +105,14 @@ its credit), `image_1600_url` and, optionally, `date`. The images are downloaded
 `staticflickr.com` only, one at a time and in the background (under a second per photo); `/admin` shows the progress.
 Photos are recognized by their `file_page`, so a file can be sent again after an interruption without duplicates.
 
+### Statistics
+
+`/admin/stats` shows how the photos and the API are used over the last 7 days to a year: photo views by the site that
+shows them (the host of the `Referer` header sent with an `<img>`), API calls by API key (a key sent with a GET request
+is optional, but identifies the caller), and the API keys used. Counts are aggregated per day, without IP addresses or
+any other personal data, kept in memory and saved every minute. Photos are cached for a day by browsers, so a visitor
+seeing the same photo again that day is not counted twice.
+
 ### API keys
 
 `GET` requests are open. `POST` requests to the public API need an API key in the `x-api-key` header

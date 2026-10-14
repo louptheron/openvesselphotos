@@ -11,7 +11,8 @@ import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 /**
- * POST requests to the public API need an API key in the `x-api-key` header, as in MonitorFish.
+ * POST requests to the public API need an API key in the `x-api-key` header, as in MonitorFish. Reading needs no key,
+ * but a key sent with a GET request is checked too, to count the calls of each key (an invalid one is ignored).
  *
  * Requests from this website's own forms (contribute, report, suggest a key) are sent by the browser from the same
  * origin and pass without a key: a key cannot be hidden in the frontend code.
@@ -25,7 +26,7 @@ class ApiKeyCheckFilter(
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.requestURI.removePrefix(request.contextPath)
 
-        return request.method != "POST" ||
+        return (request.method != "POST" && request.getHeader(API_KEY_HEADER).isNullOrBlank()) ||
             !path.startsWith("/v1/") ||
             path.startsWith("/v1/admin/") ||
             path == API_KEY_REQUESTS_PATH
@@ -52,6 +53,11 @@ class ApiKeyCheckFilter(
         }
 
         val apiKey = authenticateApiKey.execute(key)
+        if (apiKey == null && request.method != "POST") {
+            filterChain.doFilter(request, response)
+
+            return
+        }
         if (apiKey == null) {
             logger.warn("Invalid or revoked API key used from IP: ${request.remoteAddr}.")
             unauthorized(response, "Invalid or revoked API key.")
