@@ -156,7 +156,10 @@ export function PortsMap({ isCompact = false, ports }: { isCompact?: boolean; po
           ))}
         </Regions>
       )}
-      <MapBox ref={containerRef} $hasNames={hasNames} $isCompact={isCompact} />
+      <MapBox $hasNames={hasNames} $isCompact={isCompact}>
+        {/* Leaflet's own element: its classes (overflow: hidden among them) must not be replaced by React's */}
+        <div ref={containerRef} />
+      </MapBox>
       {!isCompact && (
         <Legend>
           <LegendItem>
@@ -286,9 +289,10 @@ const RING = `
 `
 
 const MapBox = styled.div<{ $hasNames: boolean; $isCompact: boolean }>`
-  /* Keeps Leaflet's panes (z-index 400 and more) under the site's header */
+  /* Keeps Leaflet's panes (z-index 400 and more) under the site's header, and inside the box */
   position: relative;
   z-index: 0;
+  overflow: hidden;
   height: ${p => (p.$isCompact ? '260px' : '560px')};
   border-radius: 12px;
   border: 1px solid ${COLORS.border};
@@ -297,6 +301,10 @@ const MapBox = styled.div<{ $hasNames: boolean; $isCompact: boolean }>`
 
   @media (max-width: 600px) {
     height: ${p => (p.$isCompact ? '220px' : '440px')};
+  }
+
+  > div {
+    height: 100%;
   }
 
   .port-marker {
