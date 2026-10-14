@@ -59,8 +59,25 @@ interface DBVesselRepository : JpaRepository<VesselEntity, Int> {
     )
     fun findAllWithApprovedPhotos(): List<VesselEntity>
 
-    @Query(value = "SELECT * FROM vessels ORDER BY id OFFSET :offset LIMIT :limit", nativeQuery = true)
-    fun findPage(
+    @Query(
+        value = """
+            SELECT count(*) FROM vessels v
+            WHERE EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')
+        """,
+        nativeQuery = true,
+    )
+    fun countWithApprovedPhotos(): Long
+
+    @Query(
+        value = """
+            SELECT * FROM vessels v
+            WHERE EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')
+            ORDER BY v.id
+            OFFSET :offset LIMIT :limit
+        """,
+        nativeQuery = true,
+    )
+    fun findPageWithApprovedPhotos(
         offset: Int,
         limit: Int,
     ): List<VesselEntity>

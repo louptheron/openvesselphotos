@@ -407,6 +407,7 @@ class PublicAndAdminApiITests {
         ).contains("<h1>LES MENHIRS</h1>")
             .contains("LO 752221, Lorient")
             .contains("No photo yet")
+            .contains("noindex")
         mockMvc.perform(get("/v1/search").param("q", "lo752221")).andExpect(jsonPath("$[0].cfr").value("FRA000752221"))
         mockMvc.perform(get("/v1/search").param("q", "lorient")).andExpect(jsonPath("$.length()").value(2))
         assertThat(
@@ -414,7 +415,7 @@ class PublicAndAdminApiITests {
                 .perform(get("/sitemap-vessels-1.xml"))
                 .andReturn()
                 .response.contentAsString,
-        ).contains("<loc>http://localhost/vessels/cfr/FRA000752221</loc>")
+        ).doesNotContain("<loc>http://localhost/vessels/cfr/FRA000752221</loc>")
 
         // A second import (simple format) fills in missing data only
         import(

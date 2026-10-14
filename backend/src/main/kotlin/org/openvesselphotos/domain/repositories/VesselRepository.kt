@@ -36,8 +36,10 @@ interface VesselRepository {
     /** Vessels created on each day since [day], imports included (days without any are left out). */
     fun countCreatedByDay(day: LocalDate): Map<LocalDate, Int>
 
-    /** Vessels ordered by id, with or without photos. */
-    fun findPage(
+    fun countWithApprovedPhotos(): Int
+
+    /** Vessels with at least one approved photo, ordered by id. */
+    fun findPageWithApprovedPhotos(
         offset: Int,
         limit: Int,
     ): List<Vessel>
