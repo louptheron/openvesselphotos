@@ -120,6 +120,7 @@ export type ApiKeyRequest = {
 export type VesselImportResult = {
   created: number
   errors: string[]
+  outOfFleet: number
   read: number
   skipped: number
   unchanged: number
