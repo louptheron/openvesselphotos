@@ -18,6 +18,8 @@ openvesselphotos:
     # Header holding the client IP, set by the proxy in front of the app (X-Real-IP on Scalingo).
     # Empty = the TCP address. Never set it without such a proxy: clients could then choose their IP.
     client-ip-header: ${OPENVESSELPHOTOS_CLIENT_IP_HEADER:}
+    # Behind Cloudflare's proxy: the client IP is then CF-Connecting-IP, on requests coming from Cloudflare only.
+    behind-cloudflare: ${OPENVESSELPHOTOS_BEHIND_CLOUDFLARE:false}
     rate-limits:
         # GET /v1/**, per IP
         reads-per-minute: ${OPENVESSELPHOTOS_RATE_LIMIT_READS_PER_MINUTE:600}
