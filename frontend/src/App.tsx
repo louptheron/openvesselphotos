@@ -3,6 +3,7 @@ import { Route, Routes, useLocation } from 'react-router-dom'
 
 import { Layout } from './components/Layout'
 import { AdminPage } from './features/Admin/AdminPage'
+import { StatsPage } from './features/Admin/StatsPage'
 import { ApiKeyPage } from './features/ApiKey/ApiKeyPage'
 import { ContributePage } from './features/Contribute/ContributePage'
 import { DocsPage } from './features/Docs/DocsPage'
@@ -25,6 +26,7 @@ export function App() {
         <Route element={<DocsPage />} path="docs" />
         <Route element={<ApiKeyPage />} path="api-key" />
         <Route element={<AdminPage />} path="admin" />
+        <Route element={<StatsPage />} path="admin/stats" />
         <Route element={<NotFoundPage />} path="*" />
       </Route>
     </Routes>

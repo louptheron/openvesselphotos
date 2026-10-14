@@ -8,6 +8,7 @@ import org.openvesselphotos.domain.use_cases.admin.ApprovePhoto
 import org.openvesselphotos.domain.use_cases.admin.GetActiveApiKeys
 import org.openvesselphotos.domain.use_cases.admin.GetPendingPhotoImage
 import org.openvesselphotos.domain.use_cases.admin.GetReviewQueue
+import org.openvesselphotos.domain.use_cases.admin.GetUsageStatistics
 import org.openvesselphotos.domain.use_cases.admin.ImportPhotos
 import org.openvesselphotos.domain.use_cases.admin.ImportVessels
 import org.openvesselphotos.domain.use_cases.admin.PhotoImportStatus
@@ -16,6 +17,7 @@ import org.openvesselphotos.domain.use_cases.admin.RejectPhoto
 import org.openvesselphotos.domain.use_cases.admin.ResolveReport
 import org.openvesselphotos.domain.use_cases.admin.ReviewKeyLink
 import org.openvesselphotos.domain.use_cases.admin.RevokeApiKey
+import org.openvesselphotos.domain.use_cases.admin.UsageStatistics
 import org.openvesselphotos.domain.use_cases.admin.VesselImportResult
 import org.openvesselphotos.infrastructure.api.inputs.ApprovePhotoDataInput
 import org.openvesselphotos.infrastructure.api.inputs.LoginDataInput
@@ -55,6 +57,7 @@ class AdminController(
     private val revokeApiKey: RevokeApiKey,
     private val importVessels: ImportVessels,
     private val importPhotos: ImportPhotos,
+    private val getUsageStatistics: GetUsageStatistics,
 ) {
     @PostMapping("/login")
     fun login(
@@ -72,6 +75,12 @@ class AdminController(
             .noContent()
             .header(HttpHeaders.SET_COOKIE, adminAuthentication.logoutCookie(request.isSecure).toString())
             .build()
+
+    /** Usage of the photos and of the API over the last [days] days (30 by default, 365 at most). */
+    @GetMapping("/usage")
+    fun usage(
+        @RequestParam(required = false, defaultValue = "30") days: Int,
+    ): UsageStatistics = getUsageStatistics.execute(days)
 
     @GetMapping("/queue")
     fun queue(): ReviewQueueDataOutput = ReviewQueueDataOutput.from(getReviewQueue.execute())

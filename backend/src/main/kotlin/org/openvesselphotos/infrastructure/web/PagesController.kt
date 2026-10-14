@@ -207,7 +207,7 @@ class PagesController(
             ),
         )
 
-    @GetMapping("/admin")
+    @GetMapping("/admin", "/admin/stats")
     fun admin(): ResponseEntity<String> =
         htmlPageRenderer.render(
             HtmlPage(

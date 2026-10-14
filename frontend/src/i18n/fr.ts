@@ -290,6 +290,7 @@ export const fr: Messages = {
   admin: {
     pageTitle: 'Modération',
     queueTitle: 'File de modération',
+    statistics: 'Statistiques',
     signOut: 'Se déconnecter',
     loginTitle: 'Modération',
     loginText: 'Connectez-vous avec le mot de passe d’administration pour vérifier les contributions.',
@@ -384,5 +385,37 @@ export const fr: Messages = {
     stopImport: 'Arrêter',
     importResult: r =>
       `${r.read}${_}lignes lues${_}: ${r.created}${_}navires créés, ${r.updated}${_}complétés, ${r.unchanged}${_}déjà à jour, ${r.skipped}${_}ignorés.`
+  },
+  stats: {
+    pageTitle: 'Statistiques',
+    title: 'Statistiques',
+    backToQueue: '← File de relecture',
+    period: 'Période',
+    lastDays: days => (days === 365 ? 'Dernière année' : `${days}${_}derniers jours`),
+    imageViews: 'Vues des photos',
+    imageViewsElsewhere: (count, sites) =>
+      `${count} sur ${sites} autre${sites > 1 ? 's' : ''} site${sites > 1 ? 's' : ''}`,
+    apiCalls: 'Appels à l’API',
+    apiCallsWithKey: count => `${count} avec une clé d’API`,
+    activeKeys: 'Clés d’API actives',
+    activeKeysHint: 'Utilisées sur la période / toutes les clés actives',
+    photos: 'Photos publiées',
+    vessels: count => `${count}${_}navires`,
+    imageViewsPerDay: 'Vues des photos par jour',
+    apiCallsPerDay: 'Appels à l’API par jour',
+    imageSources: 'Sites qui affichent les photos',
+    apiSources: 'Appels à l’API par site',
+    apiKeys: 'Appels à l’API par clé',
+    noKeyCalls: 'Aucun appel avec une clé d’API pour l’instant.',
+    noData: 'Rien de compté pour l’instant.',
+    site: 'Site',
+    count: 'Nombre',
+    key: 'Clé',
+    calls: 'Appels',
+    lastUsed: 'Dernière utilisation',
+    website: 'Ce site',
+    direct: 'Applications et scripts (sans référent)',
+    other: 'Autres sites',
+    note: `Compté sans donnée personnelle${_}: les images par le site qui les affiche (en-tête Referer), les appels à l’API par clé. Un navigateur garde une photo un jour${_}: elle est comptée au plus une fois par jour et par visiteur${_}; la dernière minute n’est pas encore comptée.`
   }
 }

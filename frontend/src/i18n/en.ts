@@ -288,6 +288,7 @@ export const en = {
   admin: {
     pageTitle: 'Review',
     queueTitle: 'Review queue',
+    statistics: 'Statistics',
     signOut: 'Sign out',
     loginTitle: 'Review',
     loginText: 'Sign in with the admin password to review contributions.',
@@ -391,6 +392,37 @@ export const en = {
     stopImport: 'Stop',
     importResult: (r: { read: number; created: number; updated: number; unchanged: number; skipped: number }) =>
       `${r.read} lines read: ${r.created} vessels created, ${r.updated} completed, ${r.unchanged} already up to date, ${r.skipped} skipped.`
+  },
+  stats: {
+    pageTitle: 'Statistics',
+    title: 'Statistics',
+    backToQueue: '← Review queue',
+    period: 'Period',
+    lastDays: (days: number) => (days === 365 ? 'Last year' : `Last ${days} days`),
+    imageViews: 'Photo views',
+    imageViewsElsewhere: (count: string, sites: number) => `${count} on ${sites} other site${sites > 1 ? 's' : ''}`,
+    apiCalls: 'API calls',
+    apiCallsWithKey: (count: string) => `${count} with an API key`,
+    activeKeys: 'Active API keys',
+    activeKeysHint: 'Used during the period / all active keys',
+    photos: 'Published photos',
+    vessels: (count: string) => `${count} vessels`,
+    imageViewsPerDay: 'Photo views per day',
+    apiCallsPerDay: 'API calls per day',
+    imageSources: 'Sites showing the photos',
+    apiSources: 'API calls by site',
+    apiKeys: 'API calls by key',
+    noKeyCalls: 'No call with an API key yet.',
+    noData: 'Nothing counted yet.',
+    site: 'Site',
+    count: 'Count',
+    key: 'Key',
+    calls: 'Calls',
+    lastUsed: 'Last used',
+    website: 'This website',
+    direct: 'Apps and scripts (no referrer)',
+    other: 'Other sites',
+    note: 'Counted without personal data: images by the site that shows them (Referer header), API calls by key. A browser keeps a photo for a day, so it is counted once a day per visitor at most; the last minute is not counted yet.'
   }
 }
 

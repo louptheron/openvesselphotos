@@ -8,6 +8,7 @@ import org.mockito.Mockito.`when`
 import org.openvesselphotos.TestImages
 import org.openvesselphotos.config.AdminAuthentication
 import org.openvesselphotos.domain.images.ImageDownloader
+import org.openvesselphotos.domain.use_cases.public_api.RecordUsage
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -51,6 +52,9 @@ class PublicAndAdminApiITests {
     /** Imports would download from Wikimedia Commons */
     @MockitoBean
     lateinit var imageDownloader: ImageDownloader
+
+    @Autowired
+    lateinit var recordUsage: RecordUsage
 
     private fun adminCookie(): Cookie {
         val response =
@@ -536,5 +540,79 @@ class PublicAndAdminApiITests {
                     "/v1/admin/photos/import",
                 ).file(MockMultipartFile("file", "f.csv", "text/csv", csv.toByteArray())),
             ).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `Usage statistics Should count images by the site showing them, and API calls by key`() {
+        val cookie = adminCookie()
+        val id =
+            Regex("\"id\":(\\d+)")
+                .find(
+                    mockMvc
+                        .perform(
+                            multipart("/v1/mmsi/227000555/photos")
+                                .header("Sec-Fetch-Site", "same-origin")
+                                .file(MockMultipartFile("file", "boat.jpg", "image/jpeg", TestImages.create(800, 600)))
+                                .param("credit", "J. Le Bihan")
+                                .param("licence", "CC-BY-4.0"),
+                        ).andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$id/approve").cookie(cookie)).andExpect(status().isNoContent)
+        mockMvc.perform(
+            post("/v1/api-key-requests")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """{"name":"Stats app","email":"stats@example.org","intendedUse":"Count the calls of this key"}""",
+                ),
+        )
+        val requestId =
+            Regex(""""id":(\d+),"name":"Stats app"""")
+                .find(
+                    mockMvc
+                        .perform(get("/v1/admin/queue").cookie(cookie))
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        val key =
+            Regex(""""key":"(ovp_[A-Za-z0-9_-]+)"""")
+                .find(
+                    mockMvc
+                        .perform(post("/v1/admin/api-keys/$requestId/approve").cookie(cookie))
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+
+        // An <img> on another site (twice), on this site, a call with the key, one with an invalid key, a 404
+        repeat(2) {
+            mockMvc
+                .perform(get("/v1/mmsi/227000555.jpg").header("Referer", "https://www.stats-test.example/fleet"))
+                .andExpect(status().isOk)
+        }
+        mockMvc.perform(get("/v1/mmsi/227000555.jpg").header("Referer", "http://localhost/vessels/mmsi/227000555"))
+        mockMvc.perform(get("/v1/mmsi/227000555").header("x-api-key", key)).andExpect(status().isOk)
+        mockMvc.perform(get("/v1/mmsi/227000555").header("x-api-key", "ovp_wrong")).andExpect(status().isOk)
+        mockMvc.perform(get("/v1/mmsi/227000000.jpg").header("Referer", "https://not-counted.example/"))
+        recordUsage.flush()
+
+        mockMvc
+            .perform(get("/v1/admin/usage").cookie(cookie))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.days").value(30))
+            .andExpect(jsonPath("$.daily.length()").value(30))
+            .andExpect(jsonPath("$.imageSources[?(@.source == 'stats-test.example')].count").value(2))
+            .andExpect(jsonPath("$.imageSources[?(@.source == 'not-counted.example')]").isEmpty)
+            .andExpect(jsonPath("$.apiKeys[?(@.name == 'Stats app')].calls").value(1))
+        assertThat(
+            mockMvc
+                .perform(get("/v1/admin/usage").cookie(cookie))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("\"source\":\"website\"")
+
+        mockMvc.perform(get("/v1/admin/usage")).andExpect(status().isUnauthorized)
     }
 }

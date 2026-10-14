@@ -12,6 +12,7 @@ import type {
   ReviewQueue,
   VesselImportResult,
   Submission,
+  UsageStatistics,
   Vessel,
   VesselSummary
 } from './types'
@@ -91,6 +92,9 @@ export const api = createApi({
       invalidatesTags: ['PhotoImport', 'Vessels'],
       query: form => ({ body: form, method: 'POST', url: '/admin/photos/import' })
     }),
+    getUsage: builder.query<UsageStatistics, number>({
+      query: days => ({ params: { days }, url: '/admin/usage' })
+    }),
     getReviewQueue: builder.query<ReviewQueue, void>({
       providesTags: ['Queue'],
       query: () => '/admin/queue'
@@ -116,6 +120,7 @@ export const {
   useGetPhotoImportQuery,
   useGetRecentVesselsQuery,
   useGetReviewQueueQuery,
+  useGetUsageQuery,
   useGetVesselQuery,
   useImportPhotosMutation,
   useImportVesselsMutation,
