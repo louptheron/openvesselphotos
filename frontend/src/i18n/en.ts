@@ -79,6 +79,13 @@ export const en = {
     datasetText: 'Full dataset export of vessels, photo URLs, credits and licences, always up to date.',
     datasetLink: 'Open data (JSON) →'
   },
+  coverage: {
+    barLabel: 'Vessels of the EU fleet register with a photo',
+    register: (photographed: string, total: string, count: number) =>
+      `${photographed} of ${total} vessels of the EU fleet register ${count === 1 ? 'has' : 'have'} a photo.`,
+    library: (photos: string, vessels: string) => `${photos} photos of ${vessels} vessels in all.`,
+    help: 'Help photograph the others →'
+  },
   chart: {
     commons: 'Commons',
     creditsIntro: 'Photos on the chart:',
@@ -251,6 +258,7 @@ export const en = {
       'A specific photo; the same n under either key is the same file. Same ?size parameter.',
       'Search by name, port, registration, or the beginning of a CFR or MMSI. Up to 24 results.',
       'Vessels with the most recently published photos. ?limit=12 (max 48).',
+      'How much of the library is photographed: vessels of the EU fleet register (with a CFR) and those with a photo, all the vessels with a photo, and the number of photos.',
       'The whole dataset: every vessel with its photo URLs, credits and licences.',
       'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, vesselName?, plus mmsi? under a CFR or cfr? under an MMSI), under whichever key you know. Published after review. Needs an API key.',
       'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review. Needs an API key.',

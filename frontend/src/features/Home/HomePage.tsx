@@ -2,8 +2,9 @@ import { type FormEvent, useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { useGetRecentVesselsQuery, useSearchVesselsQuery } from '../../api/api'
+import { useGetCoverageQuery, useGetRecentVesselsQuery, useSearchVesselsQuery } from '../../api/api'
 import { ChartCard, ChartSection, WaveDivider } from '../../components/Chart'
+import { CoverageBar } from '../../components/CoverageBar'
 import { VesselCard } from '../../components/VesselCard'
 import { Chip, Container, Muted, PrimaryButton, SectionTitle } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
@@ -19,7 +20,8 @@ export function HomePage() {
   const [input, setInput] = useState(query)
   const navigate = useNavigate()
   const isNarrow = useIsNarrow()
-  const { t } = useTranslation()
+  const { formatNumber, t } = useTranslation()
+  const { data: coverage } = useGetCoverageQuery()
 
   const isSearching = query.trim().length >= 2
   const searchResult = useSearchVesselsQuery(query, { skip: !isSearching })
@@ -92,6 +94,23 @@ export function HomePage() {
                 Ker Avel
               </ExampleButton>
             </Muted>
+            {coverage && coverage.registerVessels > 0 && (
+              <Coverage>
+                <CoverageBar
+                  label={t.coverage.register(
+                    formatNumber(coverage.registerPhotographed),
+                    formatNumber(coverage.registerVessels),
+                    coverage.registerPhotographed
+                  )}
+                  photographed={coverage.registerPhotographed}
+                  total={coverage.registerVessels}
+                />
+                <Muted>
+                  {t.coverage.library(formatNumber(coverage.photos), formatNumber(coverage.photographedVessels))}{' '}
+                  <Link to="/contribute">{t.coverage.help}</Link>
+                </Muted>
+              </Coverage>
+            )}
           </HeroCard>
         </Hero>
         {!recentResult.isLoading && <ChartCredits libraryVesselCount={recentResult.data?.length ?? 0} />}
@@ -262,6 +281,14 @@ const SearchForm = styled.form`
     padding: 0 26px;
     font-size: 16px;
   }
+`
+
+const Coverage = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px dashed ${CHART_COLORS.cardBorder};
 `
 
 const ExampleButton = styled.button`

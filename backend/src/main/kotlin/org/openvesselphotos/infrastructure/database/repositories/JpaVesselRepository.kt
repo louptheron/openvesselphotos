@@ -3,6 +3,7 @@ package org.openvesselphotos.infrastructure.database.repositories
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselKey
+import org.openvesselphotos.domain.repositories.VesselCoverageCounts
 import org.openvesselphotos.domain.repositories.VesselImportCounts
 import org.openvesselphotos.domain.repositories.VesselRepository
 import org.openvesselphotos.infrastructure.database.entities.VesselEntity
@@ -63,6 +64,25 @@ class JpaVesselRepository(
             ).toMap()
 
     override fun countWithApprovedPhotos(): Int = dbVesselRepository.countWithApprovedPhotos().toInt()
+
+    override fun countCoverage(): VesselCoverageCounts =
+        jdbcTemplate.queryForObject(
+            """
+            SELECT count(*) FILTER (WHERE cfr IS NOT NULL) AS register_vessels,
+                   count(*) FILTER (WHERE cfr IS NOT NULL AND photographed) AS register_photographed,
+                   count(*) FILTER (WHERE photographed) AS photographed_vessels
+            FROM (
+                SELECT cfr, EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED') AS photographed
+                FROM vessels v
+            ) counted
+            """.trimIndent(),
+        ) { row, _ ->
+            VesselCoverageCounts(
+                registerVessels = row.getInt("register_vessels"),
+                registerPhotographed = row.getInt("register_photographed"),
+                photographedVessels = row.getInt("photographed_vessels"),
+            )
+        }!!
 
     override fun findPageWithApprovedPhotos(
         offset: Int,

@@ -6,6 +6,7 @@ import type {
   ApiKey,
   ApiKeyRequest,
   ApprovedApiKey,
+  Coverage,
   KeyType,
   PhotoImportStatus,
   ReportReason,
@@ -23,6 +24,10 @@ export const api = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: '/v1' }),
   endpoints: builder => ({
     // Public
+    getCoverage: builder.query<Coverage, void>({
+      providesTags: ['Vessels'],
+      query: () => '/coverage'
+    }),
     getRecentVessels: builder.query<VesselSummary[], void>({
       providesTags: ['Vessels'],
       query: () => '/vessels/recent'
@@ -117,6 +122,7 @@ export const {
   useApproveApiKeyMutation,
   useCancelPhotoImportMutation,
   useGetActiveApiKeysQuery,
+  useGetCoverageQuery,
   useGetPhotoImportQuery,
   useGetRecentVesselsQuery,
   useGetReviewQueueQuery,

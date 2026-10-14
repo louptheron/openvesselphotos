@@ -81,6 +81,15 @@ export const fr: Messages = {
     datasetText: 'Export complet des navires, des URL des photos, des crédits et des licences, toujours à jour.',
     datasetLink: 'Données ouvertes (JSON) →'
   },
+  coverage: {
+    barLabel: 'Navires du registre de la flotte de l’UE ayant une photo',
+    register: (photographed, total, count) =>
+      count > 1
+        ? `${photographed}${_}navires sur ${total} du registre de la flotte de l’UE ont une photo.`
+        : `${photographed}${_}navire sur ${total} du registre de la flotte de l’UE a une photo.`,
+    library: (photos, vessels) => `${photos}${_}photos de ${vessels}${_}navires en tout.`,
+    help: 'Aidez à photographier les autres →'
+  },
   chart: {
     commons: 'Commons',
     creditsIntro: `Photos sur la carte${_}:`,
@@ -254,6 +263,7 @@ export const fr: Messages = {
       `Une photo précise${_}; le même n sous l’un ou l’autre identifiant est le même fichier. Même paramètre ?size.`,
       'Recherche par nom, port, immatriculation, ou début de CFR ou de MMSI. 24 résultats au plus.',
       'Les navires dont les photos ont été publiées le plus récemment. ?limit=12 (48 au plus).',
+      `La part de la bibliothèque photographiée${_}: navires du registre de la flotte de l’UE (avec un CFR) et ceux qui ont une photo, tous les navires avec une photo, et le nombre de photos.`,
       `Toutes les données${_}: chaque navire avec les URL, crédits et licences de ses photos.`,
       `Envoyer une photo (multipart${_}: file, credit, licence, takenOn?, place?, email?, vesselName?, et mmsi? sous un CFR ou cfr? sous un MMSI), sous l’identifiant que vous connaissez. Publiée après vérification. Nécessite une clé d’API.`,
       'Proposer l’identifiant manquant, ex. {"keyType": "cfr", "key": "FRA000123456"}. Appliqué après vérification. Nécessite une clé d’API.',

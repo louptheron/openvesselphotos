@@ -8,6 +8,7 @@ import org.openvesselphotos.domain.entities.VesselKey
 import org.openvesselphotos.domain.exceptions.BackendUsageErrorCode
 import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.use_cases.public_api.ExportDataset
+import org.openvesselphotos.domain.use_cases.public_api.GetCoverage
 import org.openvesselphotos.domain.use_cases.public_api.GetPhotoImage
 import org.openvesselphotos.domain.use_cases.public_api.GetRecentVessels
 import org.openvesselphotos.domain.use_cases.public_api.GetVessel
@@ -20,6 +21,7 @@ import org.openvesselphotos.domain.use_cases.public_api.SuggestKeyLink
 import org.openvesselphotos.infrastructure.api.inputs.ApiKeyRequestDataInput
 import org.openvesselphotos.infrastructure.api.inputs.KeyLinkDataInput
 import org.openvesselphotos.infrastructure.api.inputs.ReportDataInput
+import org.openvesselphotos.infrastructure.api.outputs.CoverageDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.ExportedVesselDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.PhotoDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.SubmissionDataOutput
@@ -58,6 +60,7 @@ class PublicVesselController(
     private val reportPhoto: ReportPhoto,
     private val exportDataset: ExportDataset,
     private val requestApiKey: RequestApiKey,
+    private val getCoverage: GetCoverage,
 ) {
     @GetMapping("/search")
     fun search(
@@ -69,6 +72,14 @@ class PublicVesselController(
         @RequestParam(defaultValue = "12") limit: Int,
     ): List<VesselSummaryDataOutput> =
         getRecentVessels.execute(limit).map { VesselSummaryDataOutput.from(baseUrl(), it) }
+
+    /** How much of the library is photographed. Cached a few minutes: the home page shows it on each visit. */
+    @GetMapping("/coverage")
+    fun coverage(): ResponseEntity<CoverageDataOutput> =
+        ResponseEntity
+            .ok()
+            .cacheControl(CacheControl.maxAge(Duration.ofMinutes(5)).cachePublic())
+            .body(CoverageDataOutput.from(getCoverage.execute()))
 
     @GetMapping("/export.json")
     fun export(): List<ExportedVesselDataOutput> {

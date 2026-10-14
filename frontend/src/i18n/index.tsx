@@ -30,6 +30,7 @@ function detectLanguage(): Language {
 
 type I18n = {
   formatDate: (value: string | null | undefined) => string
+  formatNumber: (value: number) => string
   language: Language
   setLanguage: (language: Language) => void
   t: Messages
@@ -52,6 +53,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const value = useMemo<I18n>(
     () => ({
       formatDate: date => (date ? new Date(date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-GB') : '—'),
+      formatNumber: number => number.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-GB'),
       language,
       setLanguage,
       t: MESSAGES[language]
