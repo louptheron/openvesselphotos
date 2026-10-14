@@ -1,6 +1,7 @@
 package org.openvesselphotos.infrastructure.web
 
 import org.openvesselphotos.domain.entities.ImageSize
+import org.openvesselphotos.domain.use_cases.public_api.GetPorts
 import org.openvesselphotos.domain.use_cases.public_api.GetVesselsPage
 import org.springframework.http.CacheControl
 import org.springframework.http.MediaType
@@ -14,6 +15,7 @@ import java.time.Duration
 class CrawlersController(
     private val publicUrl: PublicUrl,
     private val getVesselsPage: GetVesselsPage,
+    private val getPorts: GetPorts,
 ) {
     @GetMapping("/robots.txt", produces = [MediaType.TEXT_PLAIN_VALUE])
     fun robots(): String =
@@ -28,7 +30,7 @@ class CrawlersController(
         |
         """.trimMargin()
 
-    /** Sitemap index: the static pages, then every vessel page with photos by files of [VESSELS_PER_SITEMAP]. */
+    /** Sitemap index: the static and port pages, then every vessel page with photos by files of [VESSELS_PER_SITEMAP]. */
     @GetMapping("/sitemap.xml")
     fun sitemapIndex(): ResponseEntity<String> {
         val baseUrl = publicUrl.get()
@@ -54,7 +56,9 @@ class CrawlersController(
                     "/docs",
                     "/contribute",
                     "/api-key",
-                ).joinToString("") { "<url><loc>$baseUrl$it</loc></url>" } +
+                    "/ports",
+                ).plus(getPorts.execute().map { "/ports/${it.code}" })
+                    .joinToString("") { "<url><loc>$baseUrl$it</loc></url>" } +
                 "</urlset>",
         )
     }

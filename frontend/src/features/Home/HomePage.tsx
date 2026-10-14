@@ -1,8 +1,8 @@
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, Suspense, useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { useGetCoverageQuery, useGetRecentVesselsQuery, useSearchVesselsQuery } from '../../api/api'
+import { useGetCoverageQuery, useGetPortsQuery, useGetRecentVesselsQuery, useSearchVesselsQuery } from '../../api/api'
 import { ChartCard, ChartSection, WaveDivider } from '../../components/Chart'
 import { CoverageBar } from '../../components/CoverageBar'
 import { VesselCard } from '../../components/VesselCard'
@@ -11,6 +11,7 @@ import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
 import { CHART_COLORS, COLORS, FONTS } from '../../theme'
 import { detectKey } from '../../utils/vesselKey'
+import { MapPlaceholder, PortsMap } from '../Ports/PortsPage'
 import { ChartCredits } from './ChartCredits'
 import { ChartVessels } from './ChartVessels'
 
@@ -22,6 +23,7 @@ export function HomePage() {
   const isNarrow = useIsNarrow()
   const { formatNumber, t } = useTranslation()
   const { data: coverage } = useGetCoverageQuery()
+  const { data: ports } = useGetPortsQuery()
 
   const isSearching = query.trim().length >= 2
   const searchResult = useSearchVesselsQuery(query, { skip: !isSearching })
@@ -107,7 +109,7 @@ export function HomePage() {
                 />
                 <Muted>
                   {t.coverage.library(formatNumber(coverage.photos), formatNumber(coverage.photographedVessels))}{' '}
-                  <Link to="/contribute">{t.coverage.help}</Link>
+                  <Link to="/ports">{t.coverage.help}</Link>
                 </Muted>
               </Coverage>
             )}
@@ -153,6 +155,17 @@ export function HomePage() {
           </Grid>
         )}
       </Results>
+
+      {ports && ports.length > 0 && (
+        <PortsSection aria-labelledby="ports-title">
+          <SectionTitle id="ports-title">{t.ports.homeTitle}</SectionTitle>
+          <Muted>{t.ports.homeLead}</Muted>
+          <Suspense fallback={<MapPlaceholder />}>
+            <PortsMap ports={ports} />
+          </Suspense>
+          <Link to="/ports">{t.ports.allPorts}</Link>
+        </PortsSection>
+      )}
 
       <WaveDivider />
       <ApiBand>
@@ -307,6 +320,18 @@ const Results = styled(Container).attrs({ as: 'section' })`
   display: flex;
   flex-direction: column;
   gap: 16px;
+`
+
+const PortsSection = styled(Container).attrs({ as: 'section' })`
+  padding-bottom: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  > a {
+    align-self: flex-start;
+    font-weight: 500;
+  }
 `
 
 const ResultsHeader = styled.div`

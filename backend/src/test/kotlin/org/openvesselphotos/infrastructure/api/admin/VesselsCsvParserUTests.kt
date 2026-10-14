@@ -20,5 +20,7 @@ class VesselsCsvParserUTests {
         assertThat(rows.first().name).isEqualTo("L' AUTHENTIK II")
         assertThat(rows.first().registration).isEqualTo("BR284793")
         assertThat(rows.first().port).isEqualTo("Brest")
+        assertThat(rows.first().portCode).isEqualTo("FRBES")
+        assertThat(rows.first().event).isEqualTo("MOD")
     }
 }

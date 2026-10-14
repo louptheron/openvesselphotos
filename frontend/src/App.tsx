@@ -9,6 +9,8 @@ import { ContributePage } from './features/Contribute/ContributePage'
 import { DocsPage } from './features/Docs/DocsPage'
 import { HomePage } from './features/Home/HomePage'
 import { NotFoundPage } from './features/NotFound/NotFoundPage'
+import { PortPage } from './features/Ports/PortPage'
+import { PortsPage } from './features/Ports/PortsPage'
 import { VesselPage } from './features/Vessel/VesselPage'
 
 export function App() {
@@ -22,6 +24,8 @@ export function App() {
       <Route element={<Layout />}>
         <Route element={<HomePage />} index />
         <Route element={<VesselPage />} path="vessels/:keyType/:key" />
+        <Route element={<PortsPage />} path="ports" />
+        <Route element={<PortPage />} path="ports/:code" />
         <Route element={<ContributePage />} path="contribute" />
         <Route element={<DocsPage />} path="docs" />
         <Route element={<ApiKeyPage />} path="api-key" />

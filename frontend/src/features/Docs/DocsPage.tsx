@@ -15,6 +15,8 @@ const ENDPOINTS = [
   { method: 'GET', path: '/v1/search?q=ker avel' },
   { method: 'GET', path: '/v1/vessels/recent' },
   { method: 'GET', path: '/v1/coverage' },
+  { method: 'GET', path: '/v1/ports' },
+  { method: 'GET', path: '/v1/ports/{code}/vessels?photographed=false' },
   { method: 'GET', path: '/v1/export.json' },
   { method: 'POST', path: '/v1/{cfr|mmsi}/{key}/photos' },
   { method: 'POST', path: '/v1/{cfr|mmsi}/{key}/link' },

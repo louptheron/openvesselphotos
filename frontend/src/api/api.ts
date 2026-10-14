@@ -7,6 +7,7 @@ import type {
   ApiKeyRequest,
   ApprovedApiKey,
   Coverage,
+  Port,
   KeyType,
   PhotoImportStatus,
   ReportReason,
@@ -27,6 +28,21 @@ export const api = createApi({
     getCoverage: builder.query<Coverage, void>({
       providesTags: ['Vessels'],
       query: () => '/coverage'
+    }),
+    getPort: builder.query<Port, string>({
+      providesTags: ['Vessels'],
+      query: code => `/ports/${encodeURIComponent(code)}`
+    }),
+    getPorts: builder.query<Port[], void>({
+      providesTags: ['Vessels'],
+      query: () => '/ports'
+    }),
+    getPortVessels: builder.query<VesselSummary[], { code: string; page: number; photographed: boolean }>({
+      providesTags: ['Vessels'],
+      query: ({ code, page, photographed }) => ({
+        params: { page, photographed },
+        url: `/ports/${encodeURIComponent(code)}/vessels`
+      })
     }),
     getRecentVessels: builder.query<VesselSummary[], void>({
       providesTags: ['Vessels'],
@@ -123,6 +139,9 @@ export const {
   useCancelPhotoImportMutation,
   useGetActiveApiKeysQuery,
   useGetCoverageQuery,
+  useGetPortQuery,
+  useGetPortVesselsQuery,
+  useGetPortsQuery,
   useGetPhotoImportQuery,
   useGetRecentVesselsQuery,
   useGetReviewQueueQuery,

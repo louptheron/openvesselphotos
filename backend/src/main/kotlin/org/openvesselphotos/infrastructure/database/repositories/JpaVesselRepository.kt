@@ -3,6 +3,7 @@ package org.openvesselphotos.infrastructure.database.repositories
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselKey
+import org.openvesselphotos.domain.repositories.PortVesselCounts
 import org.openvesselphotos.domain.repositories.VesselCoverageCounts
 import org.openvesselphotos.domain.repositories.VesselImportCounts
 import org.openvesselphotos.domain.repositories.VesselRepository
@@ -84,6 +85,40 @@ class JpaVesselRepository(
             )
         }!!
 
+    override fun countByPort(code: String?): List<PortVesselCounts> =
+        jdbcTemplate.query(
+            """
+            SELECT port_code,
+                   mode() WITHIN GROUP (ORDER BY port) AS name,
+                   count(*) AS vessels,
+                   count(*) FILTER (WHERE photographed) AS photographed
+            FROM (
+                SELECT port_code, port,
+                       EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED') AS photographed
+                FROM vessels v
+                WHERE port_code IS NOT NULL AND (CAST(? AS VARCHAR) IS NULL OR port_code = ?)
+            ) counted
+            GROUP BY port_code
+            """.trimIndent(),
+            { row, _ ->
+                PortVesselCounts(
+                    code = row.getString("port_code"),
+                    name = row.getString("name"),
+                    vessels = row.getInt("vessels"),
+                    photographed = row.getInt("photographed"),
+                )
+            },
+            code,
+            code,
+        )
+
+    override fun findByPortCode(
+        code: String,
+        isPhotographed: Boolean,
+        offset: Int,
+        limit: Int,
+    ): List<Vessel> = dbVesselRepository.findByPortCode(code, isPhotographed, offset, limit).map { it.toVessel() }
+
     override fun findPageWithApprovedPhotos(
         offset: Int,
         limit: Int,
@@ -97,8 +132,9 @@ class JpaVesselRepository(
             // Any unique key already taken (CFR or MMSI) means the vessel exists
             val inserted =
                 jdbcTemplate.batchUpdate(
-                    "INSERT INTO vessels (cfr, mmsi, name, registration, port) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
-                    batch.map { arrayOf(it.cfr, it.mmsi, it.name, it.registration, it.port) },
+                    "INSERT INTO vessels (cfr, mmsi, name, registration, port, port_code) VALUES (?, ?, ?, ?, ?, ?) " +
+                        "ON CONFLICT DO NOTHING",
+                    batch.map { arrayOf(it.cfr, it.mmsi, it.name, it.registration, it.port, it.portCode) },
                 )
             created += inserted.count { it > 0 }
 
@@ -108,23 +144,27 @@ class JpaVesselRepository(
                     jdbcTemplate.batchUpdate(
                         """
                         UPDATE vessels
-                        SET name = coalesce(name, ?), registration = coalesce(registration, ?), port = coalesce(port, ?)
+                        SET name = coalesce(name, ?), registration = coalesce(registration, ?), port = coalesce(port, ?),
+                            port_code = coalesce(port_code, ?)
                         WHERE (cfr = ? OR (CAST(? AS VARCHAR) IS NULL AND mmsi = ?))
                           AND ((name IS NULL AND CAST(? AS VARCHAR) IS NOT NULL)
                             OR (registration IS NULL AND CAST(? AS VARCHAR) IS NOT NULL)
-                            OR (port IS NULL AND CAST(? AS VARCHAR) IS NOT NULL))
+                            OR (port IS NULL AND CAST(? AS VARCHAR) IS NOT NULL)
+                            OR (port_code IS NULL AND CAST(? AS VARCHAR) IS NOT NULL))
                         """.trimIndent(),
                         existing.map {
                             arrayOf(
                                 it.name,
                                 it.registration,
                                 it.port,
+                                it.portCode,
                                 it.cfr,
                                 it.cfr,
                                 it.mmsi,
                                 it.name,
                                 it.registration,
                                 it.port,
+                                it.portCode,
                             )
                         },
                     )

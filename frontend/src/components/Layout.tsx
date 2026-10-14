@@ -20,6 +20,7 @@ export function Layout() {
           <NavItem end to="/">
             {t.layout.search}
           </NavItem>
+          <NavItem to="/ports">{t.layout.ports}</NavItem>
           <NavItem to="/docs">{t.layout.api}</NavItem>
           <NavItem to="/contribute">{t.layout.contribute}</NavItem>
           {/* A plain link: as a NavLink, it would be highlighted together with "API" on /docs */}
