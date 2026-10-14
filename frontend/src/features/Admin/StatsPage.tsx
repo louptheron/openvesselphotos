@@ -79,6 +79,12 @@ export function StatsPage() {
           <Charts>
             <DailyChart color={COLORS.accent} daily={stats.daily} title={t.stats.imageViewsPerDay} value="imageViews" />
             <DailyChart color={COLORS.link} daily={stats.daily} title={t.stats.apiCallsPerDay} value="apiCalls" />
+            <DailyChart
+              color={COLORS.ink}
+              daily={stats.daily}
+              title={t.stats.vesselsAddedPerDay(format(stats.vesselsAdded))}
+              value="vesselsAdded"
+            />
           </Charts>
 
           <Tables>
@@ -141,7 +147,7 @@ function DailyChart({
   color: string
   daily: DailyUsage[]
   title: string
-  value: 'apiCalls' | 'imageViews'
+  value: 'apiCalls' | 'imageViews' | 'vesselsAdded'
 }) {
   const { formatDate } = useTranslation()
   const max = Math.max(1, ...daily.map(day => day[value]))

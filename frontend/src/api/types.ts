@@ -130,6 +130,7 @@ export type DailyUsage = {
   apiCalls: number
   day: string
   imageViews: number
+  vesselsAdded: number
 }
 
 export type SourceUsage = {
@@ -153,6 +154,7 @@ export type UsageStatistics = {
   photoCount: number
   siteCount: number
   vesselCount: number
+  vesselsAdded: number
 }
 
 export type PhotoImportStatus = {

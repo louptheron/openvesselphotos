@@ -9,6 +9,7 @@ import org.openvesselphotos.infrastructure.database.entities.VesselEntity
 import org.openvesselphotos.infrastructure.database.repositories.interfaces.DBVesselRepository
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 
 @Repository
 class JpaVesselRepository(
@@ -52,6 +53,14 @@ class JpaVesselRepository(
     }
 
     override fun count(): Int = dbVesselRepository.count().toInt()
+
+    override fun countCreatedByDay(day: LocalDate): Map<LocalDate, Int> =
+        jdbcTemplate
+            .query(
+                "SELECT created_at::date AS day, count(*) AS count FROM vessels WHERE created_at >= ? GROUP BY 1",
+                { row, _ -> row.getDate("day").toLocalDate() to row.getInt("count") },
+                java.sql.Date.valueOf(day),
+            ).toMap()
 
     override fun findPage(
         offset: Int,

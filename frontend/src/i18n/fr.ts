@@ -403,6 +403,7 @@ export const fr: Messages = {
     vessels: count => `${count}${_}navires`,
     imageViewsPerDay: 'Vues des photos par jour',
     apiCallsPerDay: 'Appels à l’API par jour',
+    vesselsAddedPerDay: total => `Navires ajoutés par jour (${total} au total, imports compris)`,
     imageSources: 'Sites qui affichent les photos',
     apiSources: 'Appels à l’API par site',
     apiKeys: 'Appels à l’API par clé',

@@ -409,6 +409,7 @@ export const en = {
     vessels: (count: string) => `${count} vessels`,
     imageViewsPerDay: 'Photo views per day',
     apiCallsPerDay: 'API calls per day',
+    vesselsAddedPerDay: (total: string) => `Vessels added per day (${total} in all, imports included)`,
     imageSources: 'Sites showing the photos',
     apiSources: 'API calls by site',
     apiKeys: 'API calls by key',

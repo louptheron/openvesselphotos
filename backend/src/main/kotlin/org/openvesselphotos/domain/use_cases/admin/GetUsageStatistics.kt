@@ -17,6 +17,8 @@ data class DailyUsage(
     val day: LocalDate,
     val imageViews: Long,
     val apiCalls: Long,
+    /** Vessels created that day, by a first photo or an import */
+    val vesselsAdded: Int,
 )
 
 data class SourceUsage(
@@ -36,6 +38,8 @@ data class ApiKeyUsage(
 data class UsageStatistics(
     val days: Int,
     val vesselCount: Int,
+    /** Vessels created during the period */
+    val vesselsAdded: Int,
     val photoCount: Int,
     val imageViews: Long,
     /** Image views on other sites than this one */
@@ -66,6 +70,7 @@ class GetUsageStatistics(
         val period = days.coerceIn(1, MAX_DAYS)
         val firstDay = LocalDate.now().minusDays(period - 1L)
         val counts = usageRepository.findSince(firstDay)
+        val vesselsByDay = vesselRepository.countCreatedByDay(firstDay)
         val images = counts.filter { it.key.kind == UsageKind.IMAGE }
         val calls = counts.filter { it.key.kind == UsageKind.API }
 
@@ -80,6 +85,7 @@ class GetUsageStatistics(
         return UsageStatistics(
             days = period,
             vesselCount = vesselRepository.count(),
+            vesselsAdded = vesselsByDay.values.sum(),
             photoCount = photoRepository.countByStatus(PhotoStatus.APPROVED),
             imageViews = images.sumOf { it.count },
             imageViewsElsewhere = elsewhere.sumOf { it.count },
@@ -100,6 +106,7 @@ class GetUsageStatistics(
                         day = day,
                         imageViews = images.filter { it.key.day == day }.sumOf { it.count },
                         apiCalls = calls.filter { it.key.day == day }.sumOf { it.count },
+                        vesselsAdded = vesselsByDay[day] ?: 0,
                     )
                 },
             imageSources = topSources(images),

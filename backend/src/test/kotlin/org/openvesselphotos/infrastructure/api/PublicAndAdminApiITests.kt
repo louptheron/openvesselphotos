@@ -603,6 +603,9 @@ class PublicAndAdminApiITests {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.days").value(30))
             .andExpect(jsonPath("$.daily.length()").value(30))
+            // At least the vessel of this test's photo, created today
+            .andExpect(jsonPath("$.daily[29].vesselsAdded").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+            .andExpect(jsonPath("$.vesselsAdded").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
             .andExpect(jsonPath("$.imageSources[?(@.source == 'stats-test.example')].count").value(2))
             .andExpect(jsonPath("$.imageSources[?(@.source == 'not-counted.example')]").isEmpty)
             .andExpect(jsonPath("$.apiKeys[?(@.name == 'Stats app')].calls").value(1))
