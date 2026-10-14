@@ -20,6 +20,7 @@ import { useTranslation } from '../../i18n'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../../theme'
 import { getPhotoUrl, normalizeKey } from '../../utils/vesselKey'
 import { KeyLinkForm } from './KeyLinkForm'
+import { RegisterFacts } from './RegisterFacts'
 import { ReportForm } from './ReportForm'
 
 /** Licences under which crediting the author is welcome but not required */
@@ -215,6 +216,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
             </Card>
           </Keys>
           {(!vessel.cfr || !vessel.mmsi) && <KeyLinkForm vessel={vessel} vesselKey={vesselKey} />}
+          <RegisterFacts vessel={vessel} />
 
           {photo && (
             <UsePanel>

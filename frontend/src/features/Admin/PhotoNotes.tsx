@@ -27,7 +27,12 @@ export function PhotoNotes() {
       <Muted>{t.admin.photoNotesText}</Muted>
       <Form as="form" onSubmit={submit}>
         <label htmlFor="notes-file">{t.admin.csvFile}</label>
-        <input accept=".csv,text/csv" id="notes-file" onChange={event => setFile(event.target.files?.[0])} type="file" />
+        <input
+          accept=".csv,text/csv"
+          id="notes-file"
+          onChange={event => setFile(event.target.files?.[0])}
+          type="file"
+        />
         <SecondaryButton disabled={!file || isLoading} type="submit">
           {isLoading ? t.admin.importing : t.admin.setNotes}
         </SecondaryButton>

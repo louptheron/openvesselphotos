@@ -46,6 +46,21 @@ export type HistoryEvent = {
   type: 'KEY_LINKED' | 'PHOTO_PUBLISHED' | 'VESSEL_ADDED'
 }
 
+/** Technical data of a vessel, from the EU fleet register. */
+export type RegisterData = {
+  /** International radio call sign (IRCS) */
+  callSign: string | null
+  enginePowerKw: number | null
+  lengthMeters: number | null
+  /** FAO code (ISSCFG), e.g. OTB for bottom otter trawls */
+  mainGear: string | null
+  otherGears: string[]
+  tonnageGt: number | null
+  /** FAO code (ISSCFV), e.g. TO for a trawler; FX when not specified */
+  vesselType: string | null
+  yearBuilt: number | null
+}
+
 export type Vessel = {
   cfr: string | null
   flag: string | null
@@ -54,6 +69,7 @@ export type Vessel = {
   name: string | null
   photos: Photo[]
   port: string | null
+  register: RegisterData | null
   registration: string | null
 }
 

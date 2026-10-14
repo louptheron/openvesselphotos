@@ -73,12 +73,43 @@ class JpaVesselRepository(
     override fun importAll(vessels: List<Vessel>): VesselImportCounts {
         var created = 0
         var updated = 0
+        val columns = IMPORTED_COLUMNS.joinToString(", ") { it.name }
+        // Fills in the missing values, replaces the register's data, and only counts the vessels that changed
+        val updateSql =
+            """
+            UPDATE vessels
+            SET ${IMPORTED_COLUMNS.joinToString(", ") {
+                if (it.isReplaced) {
+                    "${it.name} = coalesce(CAST(? AS ${it.type}), ${it.name})"
+                } else {
+                    "${it.name} = coalesce(${it.name}, ?)"
+                }
+            }}
+            WHERE (cfr = ? OR (CAST(? AS VARCHAR) IS NULL AND mmsi = ?))
+              AND (${IMPORTED_COLUMNS.joinToString(" OR ") {
+                if (it.isReplaced) {
+                    "(CAST(? AS ${it.type}) IS NOT NULL AND ${it.name} IS DISTINCT FROM CAST(? AS ${it.type}))"
+                } else {
+                    "(${it.name} IS NULL AND CAST(? AS ${it.type}) IS NOT NULL)"
+                }
+            }})
+            """.trimIndent()
         vessels.chunked(BATCH_SIZE).forEach { batch ->
             // Any unique key already taken (CFR or MMSI) means the vessel exists
             val inserted =
                 jdbcTemplate.batchUpdate(
-                    "INSERT INTO vessels (cfr, mmsi, name, registration, port) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
-                    batch.map { arrayOf(it.cfr, it.mmsi, it.name, it.registration, it.port) },
+                    "INSERT INTO vessels (cfr, mmsi, $columns) " +
+                        "VALUES (?, ?, ${IMPORTED_COLUMNS.joinToString(", ") { "?" }}) ON CONFLICT DO NOTHING",
+                    batch.map {
+                        arrayOf(
+                            it.cfr,
+                            it.mmsi,
+                            *IMPORTED_COLUMNS
+                                .map { column ->
+                                    column.value(it)
+                                }.toTypedArray(),
+                        )
+                    },
                 )
             created += inserted.count { it > 0 }
 
@@ -86,26 +117,22 @@ class JpaVesselRepository(
             if (existing.isNotEmpty()) {
                 val results =
                     jdbcTemplate.batchUpdate(
-                        """
-                        UPDATE vessels
-                        SET name = coalesce(name, ?), registration = coalesce(registration, ?), port = coalesce(port, ?)
-                        WHERE (cfr = ? OR (CAST(? AS VARCHAR) IS NULL AND mmsi = ?))
-                          AND ((name IS NULL AND CAST(? AS VARCHAR) IS NOT NULL)
-                            OR (registration IS NULL AND CAST(? AS VARCHAR) IS NOT NULL)
-                            OR (port IS NULL AND CAST(? AS VARCHAR) IS NOT NULL))
-                        """.trimIndent(),
-                        existing.map {
-                            arrayOf(
-                                it.name,
-                                it.registration,
-                                it.port,
-                                it.cfr,
-                                it.cfr,
-                                it.mmsi,
-                                it.name,
-                                it.registration,
-                                it.port,
-                            )
+                        updateSql,
+                        existing.map { vessel ->
+                            val values = IMPORTED_COLUMNS.map { it.value(vessel) }
+                            val conditions =
+                                IMPORTED_COLUMNS.flatMap {
+                                    if (it.isReplaced) {
+                                        listOf(
+                                            it.value(vessel),
+                                            it.value(vessel),
+                                        )
+                                    } else {
+                                        listOf(it.value(vessel))
+                                    }
+                                }
+
+                            (values + listOf(vessel.cfr, vessel.cfr, vessel.mmsi) + conditions).toTypedArray()
                         },
                     )
                 updated += results.count { it > 0 }
@@ -115,7 +142,38 @@ class JpaVesselRepository(
         return VesselImportCounts(created = created, updated = updated)
     }
 
+    /** A column set by imports: filled in when missing, or replaced by the register's latest value. */
+    private class ImportedColumn(
+        val name: String,
+        val type: String,
+        val isReplaced: Boolean,
+        val value: (Vessel) -> Any?,
+    )
+
     companion object {
         const val BATCH_SIZE = 1000
+
+        private val IMPORTED_COLUMNS =
+            listOf(
+                ImportedColumn("name", "VARCHAR", false) { it.name },
+                ImportedColumn("registration", "VARCHAR", false) { it.registration },
+                ImportedColumn("port", "VARCHAR", false) { it.port },
+                ImportedColumn("vessel_type", "VARCHAR", true) { it.register.vesselType },
+                ImportedColumn("year_built", "INTEGER", true) { it.register.yearBuilt },
+                ImportedColumn("length_m", "NUMERIC", true) { it.register.lengthMeters?.toBigDecimal() },
+                ImportedColumn("engine_power_kw", "NUMERIC", true) { it.register.enginePowerKw?.toBigDecimal() },
+                ImportedColumn("tonnage_gt", "NUMERIC", true) { it.register.tonnageGt?.toBigDecimal() },
+                ImportedColumn("main_gear", "VARCHAR", true) { it.register.mainGear },
+                ImportedColumn(
+                    "other_gears",
+                    "VARCHAR",
+                    true,
+                ) {
+                    it.register.otherGears
+                        .joinToString(",")
+                        .ifEmpty { null }
+                },
+                ImportedColumn("call_sign", "VARCHAR", true) { it.register.callSign },
+            )
     }
 }

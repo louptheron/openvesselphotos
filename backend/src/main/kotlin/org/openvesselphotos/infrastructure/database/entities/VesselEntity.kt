@@ -6,7 +6,9 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.openvesselphotos.domain.entities.RegisterData
 import org.openvesselphotos.domain.entities.Vessel
+import java.math.BigDecimal
 import java.time.ZonedDateTime
 
 @Entity
@@ -20,6 +22,23 @@ class VesselEntity(
     val name: String?,
     val registration: String?,
     val port: String?,
+    @Column(name = "vessel_type")
+    val vesselType: String? = null,
+    @Column(name = "year_built")
+    val yearBuilt: Int? = null,
+    @Column(name = "length_m")
+    val lengthMeters: BigDecimal? = null,
+    @Column(name = "engine_power_kw")
+    val enginePowerKw: BigDecimal? = null,
+    @Column(name = "tonnage_gt")
+    val tonnageGt: BigDecimal? = null,
+    @Column(name = "main_gear")
+    val mainGear: String? = null,
+    /** Comma-separated */
+    @Column(name = "other_gears")
+    val otherGears: String? = null,
+    @Column(name = "call_sign")
+    val callSign: String? = null,
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: ZonedDateTime? = null,
 ) {
@@ -31,6 +50,17 @@ class VesselEntity(
             name = name,
             registration = registration,
             port = port,
+            register =
+                RegisterData(
+                    vesselType = vesselType,
+                    yearBuilt = yearBuilt,
+                    lengthMeters = lengthMeters?.toDouble(),
+                    enginePowerKw = enginePowerKw?.toDouble(),
+                    tonnageGt = tonnageGt?.toDouble(),
+                    mainGear = mainGear,
+                    otherGears = otherGears?.split(",")?.filter { it.isNotBlank() }.orEmpty(),
+                    callSign = callSign,
+                ),
             createdAt = createdAt,
         )
 
@@ -43,6 +73,17 @@ class VesselEntity(
                 name = vessel.name,
                 registration = vessel.registration,
                 port = vessel.port,
+                vesselType = vessel.register.vesselType,
+                yearBuilt = vessel.register.yearBuilt,
+                lengthMeters = vessel.register.lengthMeters?.toBigDecimal(),
+                enginePowerKw = vessel.register.enginePowerKw?.toBigDecimal(),
+                tonnageGt = vessel.register.tonnageGt?.toBigDecimal(),
+                mainGear = vessel.register.mainGear,
+                otherGears =
+                    vessel.register.otherGears
+                        .joinToString(",")
+                        .ifEmpty { null },
+                callSign = vessel.register.callSign,
                 createdAt = vessel.createdAt,
             )
     }
