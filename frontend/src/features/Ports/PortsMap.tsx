@@ -1,515 +1,391 @@
-import { Link } from 'react-router-dom'
+import 'leaflet/dist/leaflet.css'
+
+import L from 'leaflet'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { Port } from '../../api/types'
+import { Pill } from '../../components/ui'
 import { useTranslation } from '../../i18n'
-import { CHART_COLORS, COLORS, FONTS } from '../../theme'
+import { COLORS, FONTS } from '../../theme'
 import { COVERAGE_LEGEND, getCoverageColor } from './coverageColors'
-import { FRAMES, getFrameId, getViewBox, INSET_FRAMES, project } from './projection'
-
-type PlacedPort = Port & { point: [number, number] }
-
-/** Colours of the nautical chart of the home page (src/assets/chart.svg). */
-const CHART = {
-  coast: '#7E745A',
-  graticule: '#C3D5DF',
-  land: '#EFE4BF',
-  magenta: '#B0408A',
-  sea: '#F8FBFC',
-  // From the open sea to the coast, as the depth bands of the chart
-  shallows: ['#E6F0F5', '#D4E6EF', '#BFD8E6']
-}
+import { getShare } from './portsTable'
+import { type Bounds, getBounds, getRegionId, OVERSEAS_REGIONS, type OverseasRegionId } from './regions'
 
 /**
- * The ports of registration on a nautical chart: a circle per port, sized by its number of vessels and coloured by the
- * share of them with a photo. Mainland Europe, with the overseas regions in insets. Each port links to its page; the
- * table of the ports page gives the same data without the map.
+ * CARTO's light basemap (Positron) with the key set at build time (VITE_CARTO_BASEMAP_KEY), else OpenStreetMap's
+ * standard tiles, e.g. in development. Both draw OpenStreetMap data.
  */
-export function PortsMap({ ports }: { ports: Port[] }) {
-  const { t } = useTranslation()
-  const placed: PlacedPort[] = ports.flatMap(port =>
-    port.latitude !== null && port.longitude !== null
-      ? [{ ...port, point: project(port.longitude, port.latitude) }]
-      : []
-  )
+const CARTO_KEY: string | undefined = import.meta.env.VITE_CARTO_BASEMAP_KEY || undefined
+const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+const TILES = CARTO_KEY
+  ? {
+      attribution: `${OSM_ATTRIBUTION} &copy; <a href="https://carto.com/attributions">CARTO</a>`,
+      url: `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(CARTO_KEY)}`
+    }
+  : { attribution: OSM_ATTRIBUTION, url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' }
+
+/** From this zoom level, the names of the ports show under their circle. */
+const NAMES_ZOOM = 7.5
+
+/** Below this size, a circle shows no number (its tooltip does). */
+const MIN_SIZE_WITH_COUNT = 24
+
+/** Smaller circles when zoomed out, where nearby ports overlap: 60% at the zoom of France, full size from 8. */
+function getMarkerScale(zoom: number): number {
+  return Math.min(1, Math.max(0.5, 0.6 + (zoom - 5) * 0.14))
+}
+
+const PADDING: L.PointExpression = [40, 40]
+
+type PlacedPort = Port & { latitude: number; longitude: number }
+
+/**
+ * The ports on a map: a circle per port, sized by its number of vessels (written inside), coloured by the share of
+ * them with a photo and ringed with that share. Each port links to its page. The table of the ports page gives the
+ * same data without the map.
+ */
+export function PortsMap({ isCompact = false, ports }: { isCompact?: boolean; ports: Port[] }) {
+  const { formatNumber, language, t } = useTranslation()
+  const navigate = useNavigate()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<L.Map>()
+  const [hasNames, setHasNames] = useState(isCompact)
+  const [markerScale, setMarkerScale] = useState(1)
+  const placed = ports.filter((port): port is PlacedPort => port.latitude !== null && port.longitude !== null)
+  const byRegion = groupByRegion(placed)
+  const mainlandBounds = getBounds(byRegion.get('mainland')?.map(toPoint) ?? [])
+  const firstBounds = mainlandBounds ?? getBounds(placed.map(toPoint))
+  const overseas = OVERSEAS_REGIONS.filter(region => byRegion.has(region.id))
   const maxVessels = Math.max(1, ...placed.map(port => port.vessels))
-  const byFrame = new Map<string, PlacedPort[]>()
-  placed.forEach(port => {
-    const frameId = getFrameId(port.point)
-    byFrame.set(frameId, [...(byFrame.get(frameId) ?? []), port])
-  })
-  const mainland = byFrame.get('europe') ?? []
-  const insets = INSET_FRAMES.filter(id => byFrame.has(id))
+  // Rebuilds the markers when the data or the language changes, not on every render
+  const markersKey = JSON.stringify([placed, language, markerScale])
+
+  useEffect(() => {
+    if (!containerRef.current) {
+      return undefined
+    }
+    const map = L.map(containerRef.current, {
+      // The page scrolls over the map: zoom with the buttons, a double click or a pinch
+      scrollWheelZoom: false,
+      zoomSnap: 0.5
+    })
+    L.tileLayer(TILES.url, { attribution: TILES.attribution, maxZoom: 18, subdomains: 'abcd' }).addTo(map)
+    // One port: centred on it; several: the mainland ones (the overseas ones have their buttons)
+    if (!firstBounds) {
+      map.setView([46.5, 2.5], 5)
+    } else if (placed.length === 1) {
+      map.setView(toLatLng(firstBounds[0]), 9)
+    } else {
+      map.fitBounds(toLatLngBounds(firstBounds), { padding: PADDING })
+    }
+    mapRef.current = map
+    const updateZoom = () => {
+      setHasNames(isCompact || map.getZoom() >= NAMES_ZOOM)
+      setMarkerScale(isCompact ? 1 : getMarkerScale(map.getZoom()))
+    }
+    map.on('zoomend', updateZoom)
+    updateZoom()
+
+    return () => {
+      map.remove()
+      mapRef.current = undefined
+    }
+    // oxlint-disable-next-line react/exhaustive-deps -- the map is created once; the markers follow the data
+  }, [])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) {
+      return undefined
+    }
+    const layer = L.layerGroup()
+    // Largest first, so that the small ports are drawn over the large ones (a copy: toSorted() is not in ES2022)
+    // oxlint-disable-next-line unicorn/no-array-sort
+    const sorted = [...placed].sort((a, b) => b.vessels - a.vessels)
+    sorted.forEach((port, index) => {
+      const share = getShare(port)
+      const size = Math.round(((isCompact ? 36 : 24) + 34 * Math.sqrt(port.vessels / maxVessels)) * markerScale)
+      const summary = t.ports.markerSummary(formatNumber(port.vessels), formatNumber(port.photographed))
+      const marker = L.marker(toLatLng(toPoint(port)), {
+        icon: L.divIcon({
+          className: 'port-marker',
+          html: createMarkerContent(port, size, share),
+          iconAnchor: [size / 2, size / 2],
+          iconSize: [size, size]
+        }),
+        keyboard: !isCompact,
+        riseOnHover: true,
+        title: `${port.name}: ${summary}`,
+        zIndexOffset: index
+      })
+      marker.bindTooltip(createTooltipContent(port.name, summary, t.ports.shareWithPhoto(Math.round(share * 100))), {
+        direction: 'top',
+        offset: [0, -size / 2]
+      })
+      if (!isCompact) {
+        marker.on('click', () => navigate(`/ports/${port.code}`))
+      }
+      layer.addLayer(marker)
+    })
+    layer.addTo(map)
+
+    return () => {
+      layer.remove()
+    }
+    // oxlint-disable-next-line react/exhaustive-deps -- markersKey stands for the ports, the language and the zoom
+  }, [markersKey])
+
+  const show = (bounds: Bounds) =>
+    mapRef.current?.flyToBounds(toLatLngBounds(bounds), { duration: 0.8, maxZoom: 9, padding: PADDING })
 
   return (
     <Figure>
-      <Maps $hasInsets={insets.length > 0}>
-        {mainland.length > 0 && (
-          <MapFrame frameId="europe" isMain maxVessels={maxVessels} ports={mainland} title={t.ports.mainland} />
-        )}
-        {insets.length > 0 && (
-          <Insets>
-            {insets.map(id => (
-              <MapFrame
-                key={id}
-                frameId={id}
-                maxVessels={maxVessels}
-                ports={byFrame.get(id) ?? []}
-                title={t.ports.regions[id]}
-              />
-            ))}
-          </Insets>
-        )}
-      </Maps>
-      <Legend>
-        <span>{t.ports.legendCoverage}</span>
-        <Gradient
-          style={{
-            background: `linear-gradient(to right, ${COVERAGE_LEGEND.map(
-              (stop, index) => `${getCoverageColor(stop)} ${(index / (COVERAGE_LEGEND.length - 1)) * 100}%`
-            ).join(', ')})`
-          }}
-        />
-        <Ticks>
-          {COVERAGE_LEGEND.map((stop, index) => (
-            <span key={stop} style={{ left: `${(index / (COVERAGE_LEGEND.length - 1)) * 100}%` }}>
-              {Math.round(stop * 100)}%
-            </span>
+      {!isCompact && overseas.length > 0 && (
+        <Regions aria-label={t.ports.regionsLabel} role="toolbar">
+          {mainlandBounds && (
+            <Pill $active={false} onClick={() => show(mainlandBounds)} type="button">
+              {t.ports.mainland} · {formatNumber(countVessels(byRegion.get('mainland')))}
+            </Pill>
+          )}
+          {overseas.map(region => (
+            <Pill key={region.id} $active={false} onClick={() => show(region.bounds)} type="button">
+              {t.ports.regions[region.id]} · {formatNumber(countVessels(byRegion.get(region.id)))}
+            </Pill>
           ))}
-        </Ticks>
-        <span>{t.ports.legendSize}</span>
-        <Credits>
-          {t.ports.credits}{' '}
-          <a href="https://www.naturalearthdata.com" rel="noreferrer" target="_blank">
-            Natural Earth
-          </a>
-          , UN/LOCODE
-        </Credits>
-      </Legend>
+        </Regions>
+      )}
+      <MapBox ref={containerRef} $hasNames={hasNames} $isCompact={isCompact} />
+      {!isCompact && (
+        <Legend>
+          <LegendItem>
+            <SampleRing aria-hidden="true">
+              <span>12</span>
+            </SampleRing>
+            {t.ports.legendCircle}
+          </LegendItem>
+          <LegendItem>
+            <Gradient
+              aria-hidden="true"
+              style={{
+                background: `linear-gradient(to right, ${COVERAGE_LEGEND.map(
+                  (stop, index) => `${getCoverageColor(stop)} ${(index / (COVERAGE_LEGEND.length - 1)) * 100}%`
+                ).join(', ')})`
+              }}
+            />
+            <span>
+              {t.ports.legendColor} ({COVERAGE_LEGEND.map(stop => `${Math.round(stop * 100)}%`).join(' → ')})
+            </span>
+          </LegendItem>
+        </Legend>
+      )}
     </Figure>
   )
 }
 
-function MapFrame({
-  frameId,
-  isMain = false,
-  maxVessels,
-  ports,
-  title
-}: {
-  frameId: string
-  isMain?: boolean
-  maxVessels: number
-  ports: PlacedPort[]
-  title: string
-}) {
-  const { formatNumber, t } = useTranslation()
-  const frame = FRAMES[frameId]
-  const [x0, y0, width, height] = getViewBox(
-    ports.map(port => port.point),
-    frameId
-  )
-  const step = isMain ? (width > 12 ? 4 : 2) : width > 2 ? 1 : 0.25
-  const longitudes = range(Math.ceil(x0 / step) * step, x0 + width, step)
-  const latitudes = range(-80, 80, step)
-    .map(latitude => ({ latitude, y: project(0, latitude)[1] }))
-    .filter(({ y }) => y > y0 && y < y0 + height)
-  // Largest first, so that the small ports are drawn on top (a copy: toSorted() is not in ES2022)
-  // oxlint-disable-next-line unicorn/no-array-sort
-  const sorted = [...ports].sort((a, b) => b.vessels - a.vessels)
-  const getSize = (port: PlacedPort) => Math.round((isMain ? 10 : 12) + 26 * Math.sqrt(port.vessels / maxVessels))
-  // Pixels at the usual width of the frame: labels are placed for it, and stay readable when narrower
-  const pixelWidth = isMain ? 860 : 170
-  const scale = pixelWidth / width
-  const labelled = getLabelledPorts(sorted, getSize, ([x, y]) => [(x - x0) * scale, (y - y0) * scale], [
-    0,
-    0,
-    pixelWidth,
-    height * scale
-  ])
-  const toPercent = ([x, y]: [number, number]) => ({
-    left: `${((x - x0) / width) * 100}%`,
-    top: `${((y - y0) / height) * 100}%`
+/** The ring with the number of vessels, and the name (shown when zoomed in). Leaflet positions the icon itself. */
+function createMarkerContent(port: PlacedPort, size: number, share: number): HTMLElement {
+  const content = document.createElement('span')
+  content.className = 'port-marker__content'
+  content.style.setProperty('--size', `${size}px`)
+  content.style.setProperty('--share', `${(share * 100).toFixed(1)}%`)
+  content.style.setProperty('--color', getCoverageColor(share))
+  const ring = document.createElement('span')
+  ring.className = 'port-marker__ring'
+  const count = document.createElement('span')
+  count.textContent = size >= MIN_SIZE_WITH_COUNT ? formatCount(port.vessels) : ''
+  ring.append(count)
+  const name = document.createElement('span')
+  name.className = 'port-marker__name'
+  name.textContent = port.name
+  content.append(ring, name)
+
+  return content
+}
+
+function createTooltipContent(name: string, summary: string, share: string): HTMLElement {
+  const content = document.createElement('div')
+  const title = document.createElement('strong')
+  title.textContent = name
+  content.append(title, document.createElement('br'), summary, document.createElement('br'), share)
+
+  return content
+}
+
+/** [longitude, latitude] */
+function toPoint(port: PlacedPort): [number, number] {
+  return [port.longitude, port.latitude]
+}
+
+/** Leaflet takes [latitude, longitude] */
+function toLatLng([longitude, latitude]: [number, number]): L.LatLngTuple {
+  return [latitude, longitude]
+}
+
+function toLatLngBounds([southWest, northEast]: Bounds): L.LatLngBoundsExpression {
+  return [toLatLng(southWest), toLatLng(northEast)]
+}
+
+function groupByRegion(ports: PlacedPort[]): Map<OverseasRegionId | 'mainland', PlacedPort[]> {
+  const groups = new Map<OverseasRegionId | 'mainland', PlacedPort[]>()
+  ports.forEach(port => {
+    const id = getRegionId(port.latitude, port.longitude)
+    groups.set(id, [...(groups.get(id) ?? []), port])
   })
 
-  return (
-    <Frame>
-      {!isMain && <FrameTitle>{title}</FrameTitle>}
-      <Chart style={{ aspectRatio: `${width} / ${height}` }}>
-        <Land aria-hidden="true" preserveAspectRatio="none" viewBox={`${x0} ${y0} ${width} ${height}`}>
-          <rect fill={CHART.sea} height={height} width={width} x={x0} y={y0} />
-          {longitudes.map(x => (
-            <line
-              key={`x${x}`}
-              stroke={CHART.graticule}
-              vectorEffect="non-scaling-stroke"
-              x1={x}
-              x2={x}
-              y1={y0}
-              y2={y0 + height}
-            />
-          ))}
-          {latitudes.map(({ latitude, y }) => (
-            <line
-              key={`y${latitude}`}
-              stroke={CHART.graticule}
-              vectorEffect="non-scaling-stroke"
-              x1={x0}
-              x2={x0 + width}
-              y1={y}
-              y2={y}
-            />
-          ))}
-          {CHART.shallows.map((color, index) => (
-            <path
-              key={color}
-              d={frame?.land}
-              fill="none"
-              stroke={color}
-              strokeLinejoin="round"
-              strokeWidth={[22, 12, 5][index]}
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-          <path
-            d={frame?.land}
-            fill={CHART.land}
-            fillRule="evenodd"
-            stroke={CHART.coast}
-            strokeWidth="0.8"
-            vectorEffect="non-scaling-stroke"
-          />
-        </Land>
-        {isMain && (
-          <>
-            {longitudes.map(x => (
-              <Graduation key={`x${x}`} style={{ left: `${((x - x0) / width) * 100}%`, top: 4 }}>
-                {formatDegrees(x, 'E', 'W')}
-              </Graduation>
-            ))}
-            {latitudes.map(({ latitude, y }) => (
-              <Graduation key={`y${latitude}`} style={{ left: 4, top: `${((y - y0) / height) * 100}%` }}>
-                {formatDegrees(latitude, 'N', 'S')}
-              </Graduation>
-            ))}
-            <CompassRose />
-          </>
-        )}
-        {sorted.map(port => {
-          const share = port.vessels > 0 ? port.photographed / port.vessels : 0
-          const size = getSize(port)
-          const summary = t.ports.markerSummary(formatNumber(port.vessels), formatNumber(port.photographed))
-
-          return (
-            <Marker
-              key={port.code}
-              aria-label={`${port.name}: ${summary}`}
-              style={{
-                ...toPercent(port.point),
-                ['--color' as string]: getCoverageColor(share),
-                ['--size' as string]: `${size}px`
-              }}
-              to={`/ports/${port.code}`}
-            >
-              <Dot />
-              {labelled.has(port.code) && (
-                <Name $side={labelled.get(port.code) ?? 'right'} aria-hidden="true">
-                  {port.name}
-                </Name>
-              )}
-              <Tip aria-hidden="true">
-                <strong>{port.name}</strong>
-                <span>{summary}</span>
-              </Tip>
-            </Marker>
-          )
-        })}
-      </Chart>
-    </Frame>
-  )
+  return groups
 }
 
-type Box = [number, number, number, number]
-
-type LabelSide = 'left' | 'right'
-
-/** The side of each port to label, largest first: on the right, else on the left, if it covers no label nor port. */
-function getLabelledPorts(
-  ports: PlacedPort[],
-  getSize: (port: PlacedPort) => number,
-  toPixels: (point: [number, number]) => [number, number],
-  [frameLeft, frameTop, frameRight, frameBottom]: Box
-): Map<string, LabelSide> {
-  const dots: Box[] = ports.map(port => {
-    const [x, y] = toPixels(port.point)
-    const radius = getSize(port) / 2
-
-    return [x - radius, y - radius, x + radius, y + radius]
-  })
-  const overlaps = ([left, top, right, bottom]: Box, [otherLeft, otherTop, otherRight, otherBottom]: Box) =>
-    left < otherRight && right > otherLeft && top < otherBottom && bottom > otherTop
-  const labels: Box[] = []
-  const labelled = new Map<string, LabelSide>()
-  ports.forEach((port, index) => {
-    const [x, y] = toPixels(port.point)
-    const gap = getSize(port) / 2 + 3
-    // About 6.5 px per character at 11 px
-    const labelWidth = port.name.length * 6.5
-    const candidates: [LabelSide, Box][] = [
-      ['right', [x + gap, y - 8, x + gap + labelWidth, y + 8]],
-      ['left', [x - gap - labelWidth, y - 8, x - gap, y + 8]]
-    ]
-    const free = candidates.find(
-      ([, label]) =>
-        label[0] >= frameLeft &&
-        label[2] <= frameRight &&
-        label[1] >= frameTop &&
-        label[3] <= frameBottom &&
-        labels.every(other => !overlaps(label, other)) &&
-        dots.every((dot, dotIndex) => dotIndex === index || !overlaps(label, dot))
-    )
-    if (free) {
-      labels.push(free[1])
-      labelled.set(port.code, free[0])
-    }
-  })
-
-  return labelled
+function countVessels(ports: PlacedPort[] | undefined): number {
+  return (ports ?? []).reduce((sum, port) => sum + port.vessels, 0)
 }
 
-function range(from: number, to: number, step: number): number[] {
-  const values: number[] = []
-  for (let value = from; value <= to; value += step) {
-    values.push(Math.round(value * 100) / 100)
-  }
-
-  return values
-}
-
-/** 4 -> "4°E", -4.5 -> "4°30′W" */
-function formatDegrees(value: number, positive: string, negative: string): string {
-  const absolute = Math.abs(value)
-  const degrees = Math.floor(absolute)
-  const minutes = Math.round((absolute - degrees) * 60)
-
-  return `${degrees}°${minutes ? `${minutes}′` : ''}${value === 0 ? '' : value > 0 ? positive : negative}`
-}
-
-/** A compass rose, as on the chart (magnetic north in magenta). */
-function CompassRose() {
-  return (
-    <Rose aria-hidden="true" viewBox="-50 -50 100 100">
-      <circle fill="none" r="44" stroke={CHART.magenta} strokeWidth="1" />
-      <circle fill="none" r="36" stroke={CHART.magenta} strokeDasharray="1 3" strokeWidth="3" />
-      <path d="M0 -46 L6 0 L0 46 L-6 0 Z M-46 0 L0 -6 L46 0 L0 6 Z" fill={CHART.magenta} opacity="0.85" />
-      <path d="M0 -46 L6 0 L0 0 Z M46 0 L0 6 L0 0 Z M0 46 L-6 0 L0 0 Z M-46 0 L0 -6 L0 0 Z" fill={COLORS.white} />
-      <text fill={CHART.magenta} fontFamily={FONTS.sans} fontSize="13" fontWeight="600" textAnchor="middle" y="-29">
-        N
-      </text>
-    </Rose>
-  )
+/** 431 -> "431", 1234 -> "1.2k": fits in the smallest circles */
+function formatCount(value: number): string {
+  return value < 1000 ? String(value) : `${(value / 1000).toFixed(1).replace(/\.0$/, '')}k`
 }
 
 const Figure = styled.figure`
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-`
-
-const Maps = styled.div<{ $hasInsets: boolean }>`
-  display: grid;
-  grid-template-columns: ${p => (p.$hasInsets ? 'minmax(0, 3fr) minmax(0, 1.3fr)' : 'minmax(0, 1fr)')};
-  gap: 14px;
-  align-items: start;
-
-  @media (max-width: 760px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-`
-
-const Insets = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 `
 
-const Frame = styled.div`
+const Regions = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
 `
 
-const FrameTitle = styled.span`
-  font-size: 12px;
-  font-weight: 600;
-  color: ${CHART_COLORS.textMuted};
-`
-
-const Chart = styled.div`
-  /* Smaller circles on phones, where the map is narrow */
-  --marker-scale: 1;
+/** A ring showing the share of vessels with a photo (--share, in green), around a disc coloured by it (--color). */
+const RING = `
   position: relative;
-
-  @media (max-width: 600px) {
-    --marker-scale: 0.6;
-  }
-
-  width: 100%;
-  border: 1px solid ${CHART_COLORS.cardBorder};
-  border-radius: 10px;
-  overflow: hidden;
-  background: ${CHART.sea};
-`
-
-const Land = styled.svg`
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-`
-
-const Graduation = styled.span`
-  position: absolute;
-  font-family: ${FONTS.mono};
-  font-size: 10px;
-  color: ${CHART_COLORS.textMuted};
-  pointer-events: none;
-  white-space: nowrap;
-`
-
-const Rose = styled.svg`
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  width: 64px;
-  height: 64px;
-  pointer-events: none;
-
-  @media (max-width: 600px) {
-    width: 44px;
-    height: 44px;
-  }
-`
-
-const Dot = styled.span`
-  display: block;
-  width: calc(var(--size) * var(--marker-scale));
-  height: calc(var(--size) * var(--marker-scale));
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  background: var(--color);
-  border: 1.5px solid ${COLORS.ink};
-  opacity: 0.88;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
-  transition: transform 0.15s ease-out;
-`
+  background: conic-gradient(${COLORS.approve} var(--share), rgba(255, 255, 255, 0.95) 0);
+  box-shadow: 0 1px 4px rgba(11, 34, 51, 0.35);
 
-const Name = styled.span<{ $side: LabelSide }>`
-  position: absolute;
-  /* Offset from the opposite edge: "left" places a label on the right of its circle */
-  ${p => (p.$side === 'right' ? 'left' : 'right')}: calc(var(--size) * var(--marker-scale) / 2 + 4px);
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 11px;
-  font-style: italic;
-  font-weight: 600;
-  color: ${CHART.magenta};
-  white-space: nowrap;
-  text-shadow:
-    0 0 3px ${CHART.sea},
-    0 0 3px ${CHART.sea};
-  pointer-events: none;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: max(2px, min(4px, calc(var(--size, 30px) * 0.12)));
+    border-radius: 50%;
+    background: var(--color);
+  }
 
-  @media (max-width: 600px) {
-    display: none;
+  > span {
+    position: relative;
+    font-weight: 700;
+    color: ${COLORS.white};
+    text-shadow: 0 1px 2px rgba(11, 34, 51, 0.6);
   }
 `
 
-const Tip = styled.span`
-  position: absolute;
-  bottom: calc(var(--size) * var(--marker-scale) / 2 + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  display: none;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: ${COLORS.ink};
-  color: ${COLORS.white};
-  font-size: 12px;
-  white-space: nowrap;
-  pointer-events: none;
-`
+const MapBox = styled.div<{ $hasNames: boolean; $isCompact: boolean }>`
+  /* Keeps Leaflet's panes (z-index 400 and more) under the site's header */
+  position: relative;
+  z-index: 0;
+  height: ${p => (p.$isCompact ? '260px' : '560px')};
+  border-radius: 12px;
+  border: 1px solid ${COLORS.border};
+  background: #f2f3f0;
+  font-family: ${FONTS.sans};
 
-const Marker = styled(Link)`
-  position: absolute;
-  transform: translate(-50%, -50%);
-  text-decoration: none;
+  @media (max-width: 600px) {
+    height: ${p => (p.$isCompact ? '220px' : '440px')};
+  }
 
-  &:hover,
-  &:focus-visible {
-    z-index: 2;
+  .port-marker {
+    background: none;
+    border: none;
+    cursor: ${p => (p.$isCompact ? 'default' : 'pointer')};
 
-    ${Dot} {
-      transform: scale(1.15);
-      opacity: 1;
+    &:focus-visible {
+      outline: none;
     }
+  }
 
-    ${Tip} {
-      display: flex;
-    }
+  .port-marker__content {
+    display: block;
+    width: var(--size);
+    height: var(--size);
+  }
+
+  .port-marker__ring {
+    ${RING}
+    width: 100%;
+    height: 100%;
+    font-size: max(9px, calc(var(--size) * 0.32));
+    transition: transform 0.15s ease-out;
+  }
+
+  .port-marker:hover .port-marker__ring,
+  .port-marker:focus-visible .port-marker__ring {
+    transform: scale(1.12);
+  }
+
+  .port-marker:focus-visible .port-marker__ring {
+    outline: 3px solid ${COLORS.ink};
+    outline-offset: 2px;
+  }
+
+  .port-marker__name {
+    display: ${p => (p.$hasNames ? 'block' : 'none')};
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 600;
+    color: ${COLORS.ink};
+    white-space: nowrap;
+    text-shadow:
+      0 0 3px ${COLORS.white},
+      0 0 3px ${COLORS.white},
+      0 0 3px ${COLORS.white};
+    pointer-events: none;
+  }
+
+  .leaflet-tooltip {
+    font-family: ${FONTS.sans};
+    font-size: 13px;
+    line-height: 1.45;
   }
 `
 
 const Legend = styled.figcaption`
-  display: grid;
-  grid-template-columns: auto minmax(120px, 220px) 1fr;
-  grid-template-rows: auto auto;
-  align-items: center;
-  gap: 2px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
   font-size: 13px;
   color: ${COLORS.text};
+`
 
-  > span:first-child {
-    grid-row: 1;
-  }
+const LegendItem = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+`
 
-  @media (max-width: 600px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
+const SampleRing = styled.span`
+  ${RING}
+  --share: 30%;
+  --color: ${getCoverageColor(0.3)};
+  flex: none;
+  width: 30px;
+  height: 30px;
+  font-size: 10px;
 `
 
 const Gradient = styled.span`
   display: block;
+  flex: none;
+  width: 120px;
   height: 10px;
   border-radius: 5px;
   border: 1px solid ${COLORS.ink};
-`
-
-const Ticks = styled.span`
-  position: relative;
-  grid-column: 2;
-  grid-row: 2;
-  height: 14px;
-  font-family: ${FONTS.mono};
-  font-size: 10px;
-  color: ${COLORS.muted};
-
-  > span {
-    position: absolute;
-    transform: translateX(-50%);
-  }
-
-  @media (max-width: 600px) {
-    grid-column: 1;
-    grid-row: auto;
-  }
-`
-
-const Credits = styled.span`
-  grid-column: 1 / -1;
-  font-size: 12px;
-  color: ${COLORS.muted};
 `
