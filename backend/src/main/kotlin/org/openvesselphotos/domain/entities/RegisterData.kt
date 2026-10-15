@@ -1,5 +1,7 @@
 package org.openvesselphotos.domain.entities
 
+import java.time.LocalDate
+
 /** Technical data of a vessel, from the EU fleet register. */
 data class RegisterData(
     /** FAO code (ISSCFV), e.g. TO for a trawler; FX when not specified */
@@ -15,6 +17,8 @@ data class RegisterData(
     val otherGears: List<String> = emptyList(),
     /** International radio call sign (IRCS) */
     val callSign: String? = null,
+    /** Day of the last import of the register that gave this data */
+    val importedOn: LocalDate? = null,
 ) {
-    val isEmpty: Boolean get() = this == RegisterData()
+    val isEmpty: Boolean get() = copy(importedOn = null) == RegisterData()
 }

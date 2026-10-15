@@ -51,6 +51,8 @@ export type RegisterData = {
   /** International radio call sign (IRCS) */
   callSign: string | null
   enginePowerKw: number | null
+  /** Day of the last import of the register that gave this data */
+  importedOn: string | null
   lengthMeters: number | null
   /** FAO code (ISSCFG), e.g. OTB for bottom otter trawls */
   mainGear: string | null

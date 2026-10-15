@@ -137,6 +137,16 @@ class JpaVesselRepository(
                     )
                 updated += results.count { it > 0 }
             }
+
+            // The day of this import, for the vessels it gives technical data to: not counted as an update
+            val fromRegister = batch.filterNot { it.register.isEmpty }
+            if (fromRegister.isNotEmpty()) {
+                jdbcTemplate.batchUpdate(
+                    "UPDATE vessels SET register_imported_on = CURRENT_DATE " +
+                        "WHERE cfr = ? OR (CAST(? AS VARCHAR) IS NULL AND mmsi = ?)",
+                    fromRegister.map { arrayOf(it.cfr, it.cfr, it.mmsi) },
+                )
+            }
         }
 
         return VesselImportCounts(created = created, updated = updated)

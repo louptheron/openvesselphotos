@@ -98,7 +98,8 @@ export const en = {
     horsepowerPerKilowatt: 1.341,
     grossTonnage: (value: string) => `${value} GT`,
     yearAndAge: (year: number, age: number) => `${year} (${age} years ago)`,
-    source: 'Source: EU fleet register, as last imported.',
+    source: (date: string | null) =>
+      date ? `Source: EU fleet register, last imported on ${date}.` : 'Source: EU fleet register, as last imported.',
     gears: {
       DRB: 'Boat dredges',
       DRH: 'Hand dredges',

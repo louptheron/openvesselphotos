@@ -9,6 +9,7 @@ import jakarta.persistence.Table
 import org.openvesselphotos.domain.entities.RegisterData
 import org.openvesselphotos.domain.entities.Vessel
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.ZonedDateTime
 
 @Entity
@@ -39,6 +40,8 @@ class VesselEntity(
     val otherGears: String? = null,
     @Column(name = "call_sign")
     val callSign: String? = null,
+    @Column(name = "register_imported_on")
+    val registerImportedOn: LocalDate? = null,
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: ZonedDateTime? = null,
 ) {
@@ -60,6 +63,7 @@ class VesselEntity(
                     mainGear = mainGear,
                     otherGears = otherGears?.split(",")?.filter { it.isNotBlank() }.orEmpty(),
                     callSign = callSign,
+                    importedOn = registerImportedOn,
                 ),
             createdAt = createdAt,
         )
@@ -84,6 +88,7 @@ class VesselEntity(
                         .joinToString(",")
                         .ifEmpty { null },
                 callSign = vessel.register.callSign,
+                registerImportedOn = vessel.register.importedOn,
                 createdAt = vessel.createdAt,
             )
     }

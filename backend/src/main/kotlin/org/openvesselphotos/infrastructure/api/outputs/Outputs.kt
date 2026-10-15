@@ -84,6 +84,8 @@ data class RegisterDataOutput(
     val otherGears: List<String>,
     /** International radio call sign (IRCS) */
     val callSign: String?,
+    /** Day of the last import of the register that gave this data */
+    val importedOn: LocalDate?,
 ) {
     companion object {
         fun from(register: RegisterData): RegisterDataOutput? =
@@ -99,6 +101,7 @@ data class RegisterDataOutput(
                     mainGear = register.mainGear,
                     otherGears = register.otherGears,
                     callSign = register.callSign,
+                    importedOn = register.importedOn,
                 )
             }
     }

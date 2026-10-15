@@ -100,7 +100,10 @@ export const fr: Messages = {
     horsepowerPerKilowatt: 1.36,
     grossTonnage: value => `${value}${_}UMS`,
     yearAndAge: (year, age) => `${year} (il y a ${age}${_}ans)`,
-    source: `Source${_}: registre de la flotte de l’UE, au dernier import.`,
+    source: date =>
+      date
+        ? `Source${_}: registre de la flotte de l’UE, dernier import le ${date}.`
+        : `Source${_}: registre de la flotte de l’UE, au dernier import.`,
     gears: {
       DRB: 'Dragues remorquées',
       DRH: 'Dragues à main',

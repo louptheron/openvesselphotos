@@ -8,7 +8,7 @@ import { COLORS, FONTS } from '../../theme'
 
 /** The vessel's technical data from the EU fleet register, when imported. */
 export function RegisterFacts({ vessel }: { vessel: Vessel }) {
-  const { formatNumber, t } = useTranslation()
+  const { formatDate, formatNumber, t } = useTranslation()
   const [currentYear] = useState(() => new Date().getFullYear())
   const register = vessel.register
   if (!register) {
@@ -59,7 +59,7 @@ export function RegisterFacts({ vessel }: { vessel: Vessel }) {
           </div>
         ))}
       </dl>
-      <small>{t.register.source}</small>
+      <small>{t.register.source(register.importedOn ? formatDate(register.importedOn) : null)}</small>
     </Panel>
   )
 }

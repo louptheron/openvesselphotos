@@ -617,6 +617,13 @@ class PublicAndAdminApiITests {
             .andExpect(jsonPath("$.register.mainGear").value("OTB"))
             .andExpect(jsonPath("$.register.otherGears[*]").value(org.hamcrest.Matchers.contains("GNS")))
             .andExpect(jsonPath("$.register.callSign").value("FHZV"))
+            .andExpect(
+                jsonPath("$.register.importedOn").value(
+                    java.time.LocalDate
+                        .now()
+                        .toString(),
+                ),
+            )
 
         // Same data: nothing to update
         import("LES MENHIRS", "22.00").andExpect(jsonPath("$.updated").value(0))
