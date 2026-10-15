@@ -47,7 +47,7 @@ export const en = {
   home: {
     pageTitle: 'Open Vessel Photos — free photos of any vessel, by CFR or MMSI',
     searchPageTitle: (query: string) => `Search: ${query}`,
-    chips: ['Free for everyone', 'Open-source code', 'Openly licensed photos'],
+    chips: ['Free', 'Open-source code', 'Openly licensed photos'],
     title: 'The open library of vessel photos.',
     lead: 'Search by name, CFR or MMSI. Every photo is openly licensed and free to reuse, with its credit.',
     searchFormLabel: 'Search vessels',

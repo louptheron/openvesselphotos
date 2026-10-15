@@ -80,16 +80,16 @@ export function HomePage() {
             </SearchForm>
             <Muted>
               {t.home.try}{' '}
-              <ExampleButton onClick={() => showExample('FRA000123456')} type="button">
-                FRA000123456
+              <ExampleButton onClick={() => showExample('FRA000864281')} type="button">
+                FRA000864281
               </ExampleButton>{' '}
               ·{' '}
-              <ExampleButton onClick={() => showExample('227000101')} type="button">
-                227000101
+              <ExampleButton onClick={() => showExample('226335000')} type="button">
+                226335000
               </ExampleButton>{' '}
               ·{' '}
-              <ExampleButton onClick={() => showExample('Ker Avel')} type="button">
-                Ker Avel
+              <ExampleButton onClick={() => showExample('Danielle Casanova')} type="button">
+                Danielle Casanova
               </ExampleButton>
             </Muted>
           </HeroCard>

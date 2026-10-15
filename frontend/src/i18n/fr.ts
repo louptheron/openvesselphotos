@@ -48,7 +48,7 @@ export const fr: Messages = {
   home: {
     pageTitle: 'Open Vessel Photos — photos libres de n’importe quel navire, par CFR ou MMSI',
     searchPageTitle: (query: string) => `Recherche${_}: ${query}`,
-    chips: ['Gratuit pour tous', 'Code open source', 'Photos sous licence libre'],
+    chips: ['Gratuit', 'Code open source', 'Photos sous licence libre'],
     title: 'La photothèque libre des navires.',
     lead: 'Cherchez par nom, CFR ou MMSI. Chaque photo est sous licence libre et réutilisable, avec son crédit.',
     searchFormLabel: 'Rechercher un navire',
