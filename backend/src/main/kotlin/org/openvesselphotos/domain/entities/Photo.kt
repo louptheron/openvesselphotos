@@ -34,4 +34,6 @@ data class Photo(
     val apiKeyId: Int? = null,
     /** Page of the original photo, for an imported photo (Wikimedia Commons, Flickr…). */
     val sourceUrl: String? = null,
+    /** Shown with the photo, e.g. "Photographed under its former name LE CRI DES FLOTS". */
+    val note: String? = null,
 )

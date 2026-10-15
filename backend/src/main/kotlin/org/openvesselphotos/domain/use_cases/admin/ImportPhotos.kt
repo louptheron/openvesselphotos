@@ -23,6 +23,7 @@ data class PhotoImportRow(
     val takenOn: String?,
     val sourceUrl: String?,
     val imageUrl: String?,
+    val note: String? = null,
 )
 
 data class PhotoImportStatus(
@@ -145,6 +146,10 @@ class ImportPhotos(
             throw invalid("the source page URL is too long.")
         }
         val imageUrl = row.imageUrl.clean()?.takeIf { it.isHttpUrl() } ?: throw invalid("no image URL.")
+        val note = row.note.clean()
+        if (note != null && note.length > SetPhotoNotes.MAX_NOTE_LENGTH) {
+            throw invalid("the note is longer than ${SetPhotoNotes.MAX_NOTE_LENGTH} characters.")
+        }
         // Commons dates can be "2012-08-25 14:03:11" or free text: only a leading ISO date is kept
         val takenOn =
             row.takenOn
@@ -161,6 +166,7 @@ class ImportPhotos(
             takenOn = takenOn,
             sourceUrl = sourceUrl,
             imageUrl = imageUrl,
+            note = note,
         )
     }
 

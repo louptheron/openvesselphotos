@@ -510,10 +510,10 @@ class PublicAndAdminApiITests {
         // A Commons export: extra columns, a quoted description over several lines, licences as labels or SPDX
         val csv =
             """
-            mmsi,cfr,vessel_name,ovp_licence,licence,author,file_page,image_1600_url,date,title
+            mmsi,cfr,vessel_name,ovp_licence,licence,author,file_page,image_1600_url,date,title,note
             227000777,,Ar Men,,CC BY-SA 3.0,Jane Doe,https://commons.wikimedia.org/wiki/File:A.jpg,https://upload.wikimedia.org/a.jpg,2012-08-25 14:03:11,"Ar Men
             in Douarnenez"
-            227000778,FRA000778778,Penn Ar Bed,CC-BY-4.0,CC BY 4.0,"Doe, John",https://commons.wikimedia.org/wiki/File:B.jpg,https://upload.wikimedia.org/b.jpg,,
+            227000778,FRA000778778,Penn Ar Bed,CC-BY-4.0,CC BY 4.0,"Doe, John",https://commons.wikimedia.org/wiki/File:B.jpg,https://upload.wikimedia.org/b.jpg,,,Under a former name
             227000779,,No author,,CC0,,https://commons.wikimedia.org/wiki/File:C.jpg,https://upload.wikimedia.org/c.jpg,,
             """.trimIndent()
         import(csv)
@@ -533,6 +533,7 @@ class PublicAndAdminApiITests {
             .perform(get("/v1/cfr/FRA000778778"))
             .andExpect(jsonPath("$.mmsi").value("227000778"))
             .andExpect(jsonPath("$.photos[0].credit").value("Doe, John"))
+            .andExpect(jsonPath("$.photos[0].note").value("Under a former name"))
 
         // Running the same file again (e.g. after a restart) does not duplicate the photos
         import(csv)
@@ -546,6 +547,98 @@ class PublicAndAdminApiITests {
                     "/v1/admin/photos/import",
                 ).file(MockMultipartFile("file", "f.csv", "text/csv", csv.toByteArray())),
             ).andExpect(status().isUnauthorized)
+
+        // Notes are set on published photos, or removed by an empty note
+        val notes =
+            """
+            cfr,mmsi,n,note
+            ,227000777,1,"Photographed under its former name AR MEN II"
+            FRA000778778,,1,
+            FRA000000001,,1,Unknown photo
+            """.trimIndent()
+        mockMvc
+            .perform(
+                multipart("/v1/admin/photos/notes")
+                    .file(MockMultipartFile("file", "notes.csv", "text/csv", notes.toByteArray()))
+                    .cookie(cookie),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.updated").value(2))
+            .andExpect(jsonPath("$.errors[0]").value("Line 4: no photo 1 for CFR FRA000000001."))
+        mockMvc
+            .perform(get("/v1/mmsi/227000777"))
+            .andExpect(jsonPath("$.photos[0].note").value("Photographed under its former name AR MEN II"))
+        mockMvc.perform(get("/v1/cfr/FRA000778778")).andExpect(jsonPath("$.photos[0].note").isEmpty)
+        assertThat(
+            mockMvc
+                .perform(get("/vessels/mmsi/227000777"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("Photographed under its former name AR MEN II")
+        mockMvc
+            .perform(
+                multipart("/v1/admin/photos/notes")
+                    .file(MockMultipartFile("file", "notes.csv", "text/csv", notes.toByteArray())),
+            ).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `Register data Should be imported, then replaced by a newer export without overwriting the name`() {
+        val cookie = adminCookie()
+
+        fun import(
+            name: String,
+            length: String,
+        ) = mockMvc
+            .perform(
+                multipart("/v1/admin/vessels/import")
+                    .file(
+                        MockMultipartFile(
+                            "file",
+                            "fleet.csv",
+                            "text/csv",
+                            (
+                                "CFR;Name of Vessel;Vessel Type;Year of Construction;LOA (m);" +
+                                    "Power of Main Engine (kW);Tonnage GT;Main Fishing Gear;" +
+                                    "Subsidiary Fishing Gear 1;Subsidiary Fishing Gear 2;IRCS\n" +
+                                    "FRA000700001;$name;TO;1998;$length;331.00;139.46;OTB;NO;GNS;FHZV\n"
+                            ).toByteArray(),
+                        ),
+                    ).cookie(cookie),
+            ).andExpect(status().isOk)
+
+        import("LES MENHIRS", "22.00").andExpect(jsonPath("$.created").value(1))
+        mockMvc
+            .perform(get("/v1/cfr/FRA000700001"))
+            .andExpect(jsonPath("$.register.vesselType").value("TO"))
+            .andExpect(jsonPath("$.register.yearBuilt").value(1998))
+            .andExpect(jsonPath("$.register.lengthMeters").value(22.0))
+            .andExpect(jsonPath("$.register.enginePowerKw").value(331.0))
+            .andExpect(jsonPath("$.register.tonnageGt").value(139.46))
+            .andExpect(jsonPath("$.register.mainGear").value("OTB"))
+            .andExpect(jsonPath("$.register.otherGears[*]").value(org.hamcrest.Matchers.contains("GNS")))
+            .andExpect(jsonPath("$.register.callSign").value("FHZV"))
+            .andExpect(
+                jsonPath("$.register.importedOn").value(
+                    java.time.LocalDate
+                        .now()
+                        .toString(),
+                ),
+            )
+
+        // Same data: nothing to update
+        import("LES MENHIRS", "22.00").andExpect(jsonPath("$.updated").value(0))
+        // Lengthened, and renamed in the file: the length is replaced, the name kept
+        import("OTHER NAME", "24.50").andExpect(jsonPath("$.updated").value(1))
+        mockMvc
+            .perform(get("/v1/cfr/FRA000700001"))
+            .andExpect(jsonPath("$.name").value("LES MENHIRS"))
+            .andExpect(jsonPath("$.register.lengthMeters").value(24.5))
+        assertThat(
+            mockMvc
+                .perform(get("/vessels/cfr/FRA000700001"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("Built in 1998 · 24.5 m · 331 kW · 139.46 GT · main gear OTB · call sign FHZV")
     }
 
     @Test

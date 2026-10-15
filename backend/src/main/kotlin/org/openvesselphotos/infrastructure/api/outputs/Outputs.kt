@@ -3,6 +3,7 @@ package org.openvesselphotos.infrastructure.api.outputs
 import org.openvesselphotos.domain.entities.HistoryEvent
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Photo
+import org.openvesselphotos.domain.entities.RegisterData
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselDetails
 import org.openvesselphotos.domain.entities.VesselWithPhotos
@@ -41,6 +42,8 @@ data class PhotoDataOutput(
     val height: Int,
     /** Page of the original photo, for a photo imported from Wikimedia Commons or Flickr */
     val source: String?,
+    /** e.g. "Photographed under its former name LE CRI DES FLOTS" */
+    val note: String?,
 ) {
     companion object {
         fun from(
@@ -64,7 +67,43 @@ data class PhotoDataOutput(
             width = photo.width,
             height = photo.height,
             source = photo.sourceUrl,
+            note = photo.note,
         )
+    }
+}
+
+data class RegisterDataOutput(
+    /** FAO code (ISSCFV), e.g. TO for a trawler; FX when not specified */
+    val vesselType: String?,
+    val yearBuilt: Int?,
+    val lengthMeters: Double?,
+    val enginePowerKw: Double?,
+    val tonnageGt: Double?,
+    /** FAO code (ISSCFG), e.g. OTB for bottom otter trawls */
+    val mainGear: String?,
+    val otherGears: List<String>,
+    /** International radio call sign (IRCS) */
+    val callSign: String?,
+    /** Day of the last import of the register that gave this data */
+    val importedOn: LocalDate?,
+) {
+    companion object {
+        fun from(register: RegisterData): RegisterDataOutput? =
+            if (register.isEmpty) {
+                null
+            } else {
+                RegisterDataOutput(
+                    vesselType = register.vesselType,
+                    yearBuilt = register.yearBuilt,
+                    lengthMeters = register.lengthMeters,
+                    enginePowerKw = register.enginePowerKw,
+                    tonnageGt = register.tonnageGt,
+                    mainGear = register.mainGear,
+                    otherGears = register.otherGears,
+                    callSign = register.callSign,
+                    importedOn = register.importedOn,
+                )
+            }
     }
 }
 
@@ -132,6 +171,8 @@ data class VesselDataOutput(
     val registration: String?,
     val port: String?,
     val flag: String?,
+    /** Technical data from the EU fleet register, if imported */
+    val register: RegisterDataOutput?,
     val photos: List<PhotoDataOutput>,
     val history: List<HistoryEventDataOutput>,
 ) {
@@ -146,6 +187,7 @@ data class VesselDataOutput(
             registration = details.vessel.registration,
             port = details.vessel.port,
             flag = details.vessel.flag,
+            register = RegisterDataOutput.from(details.vessel.register),
             photos = details.photos.map { PhotoDataOutput.from(baseUrl, details.vessel, it) },
             history = details.history.map { HistoryEventDataOutput.from(it) },
         )

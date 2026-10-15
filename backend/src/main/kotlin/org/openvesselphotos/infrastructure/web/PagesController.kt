@@ -110,7 +110,7 @@ class PagesController(
                         " · ${escapeHtml(
                             it,
                         )}"
-                    } ?: ""}</figcaption></figure>"""
+                    } ?: ""}${photo.note?.let { "<br>${escapeHtml(it)}" } ?: ""}</figcaption></figure>"""
             }
 
         return htmlPageRenderer.render(
@@ -156,6 +156,7 @@ class PagesController(
                     """<main><p><a href="/">Search</a> › ${escapeHtml(name)}</p><h1>${escapeHtml(name)}</h1>""" +
                         """<p>${escapeHtml(keys)}${registration?.let { " · ${escapeHtml(it)}" } ?: ""}""" +
                         """${vessel.flag?.let { " · Flag ${escapeHtml(it)}" } ?: ""}</p>""" +
+                        registerFacts(vessel)?.let { """<p>${escapeHtml(it)}</p>""" }.orEmpty() +
                         """<p>${escapeHtml(description)}</p>$figures""" +
                         """<p><a href="/contribute?${if (vessel.cfr != null) "cfr=${vessel.cfr}" else "mmsi=${vessel.mmsi}"}">Add a photo</a></p></main>""",
             ),
@@ -223,6 +224,24 @@ class PagesController(
     /** Any other single-segment path: the React app shows its "not found" page, with a real 404 status. */
     @GetMapping("/{path:[a-zA-Z0-9_-]+}")
     fun other(): ResponseEntity<String> = notFound("Page not found")
+
+    /** e.g. "Built in 1975 · 9.7 m · 73 kW · 5.77 GT · main gear DRB · call sign FO9789 (EU fleet register)" */
+    private fun registerFacts(vessel: Vessel): String? {
+        val register = vessel.register
+        val facts =
+            listOfNotNull(
+                register.yearBuilt?.let { "Built in $it" },
+                register.lengthMeters?.let { "${formatNumber(it)} m" },
+                register.enginePowerKw?.let { "${formatNumber(it)} kW" },
+                register.tonnageGt?.let { "${formatNumber(it)} GT" },
+                register.mainGear?.let { "main gear $it" },
+                register.callSign?.let { "call sign $it" },
+            )
+
+        return facts.takeIf { it.isNotEmpty() }?.joinToString(" · ", postfix = " (EU fleet register)")
+    }
+
+    private fun formatNumber(value: Double): String = value.toBigDecimal().stripTrailingZeros().toPlainString()
 
     private fun notFound(title: String): ResponseEntity<String> =
         htmlPageRenderer.render(

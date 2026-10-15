@@ -12,6 +12,8 @@ export type Photo = {
   licence: string
   licenceName: string
   n: number
+  /** e.g. "Photographed under its former name LE CRI DES FLOTS" */
+  note: string | null
   place: string | null
   /** Page of the original photo, for a photo imported from Wikimedia Commons or Flickr */
   source: string | null
@@ -44,6 +46,23 @@ export type HistoryEvent = {
   type: 'KEY_LINKED' | 'PHOTO_PUBLISHED' | 'VESSEL_ADDED'
 }
 
+/** Technical data of a vessel, from the EU fleet register. */
+export type RegisterData = {
+  /** International radio call sign (IRCS) */
+  callSign: string | null
+  enginePowerKw: number | null
+  /** Day of the last import of the register that gave this data */
+  importedOn: string | null
+  lengthMeters: number | null
+  /** FAO code (ISSCFG), e.g. OTB for bottom otter trawls */
+  mainGear: string | null
+  otherGears: string[]
+  tonnageGt: number | null
+  /** FAO code (ISSCFV), e.g. TO for a trawler; FX when not specified */
+  vesselType: string | null
+  yearBuilt: number | null
+}
+
 export type Vessel = {
   cfr: string | null
   flag: string | null
@@ -52,6 +71,7 @@ export type Vessel = {
   name: string | null
   photos: Photo[]
   port: string | null
+  register: RegisterData | null
   registration: string | null
 }
 
@@ -123,6 +143,13 @@ export type VesselImportResult = {
   outOfFleet: number
   read: number
   skipped: number
+  unchanged: number
+  updated: number
+}
+
+export type PhotoNotesResult = {
+  errors: string[]
+  read: number
   unchanged: number
   updated: number
 }
