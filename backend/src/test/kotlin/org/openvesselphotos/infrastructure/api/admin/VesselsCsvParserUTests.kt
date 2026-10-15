@@ -20,5 +20,15 @@ class VesselsCsvParserUTests {
         assertThat(rows.first().name).isEqualTo("L' AUTHENTIK II")
         assertThat(rows.first().registration).isEqualTo("BR284793")
         assertThat(rows.first().port).isEqualTo("Brest")
+        assertThat(rows.first().portCode).isEqualTo("FRBES")
+        assertThat(rows.first().event).isEqualTo("MOD")
+        assertThat(rows.first().vesselType).isEqualTo("FX")
+        assertThat(rows.first().yearBuilt).isEqualTo("1975")
+        assertThat(rows.first().length).isEqualTo("9.70")
+        assertThat(rows.first().enginePower).isEqualTo("73.00")
+        assertThat(rows.first().tonnage).isEqualTo("5.77")
+        assertThat(rows.first().mainGear).isEqualTo("DRB")
+        assertThat(rows.first().otherGears).containsExactly("LVT", "GTN", "FPO")
+        assertThat(rows.first().callSign).isEqualTo("FO9789")
     }
 }

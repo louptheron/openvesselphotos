@@ -5,7 +5,10 @@ import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Photo
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselKey
+import org.openvesselphotos.domain.entities.VesselWithPhotos
 import org.openvesselphotos.domain.exceptions.BackendUsageException
+import org.openvesselphotos.domain.use_cases.public_api.GetPortVessels
+import org.openvesselphotos.domain.use_cases.public_api.GetPorts
 import org.openvesselphotos.domain.use_cases.public_api.GetRecentVessels
 import org.openvesselphotos.domain.use_cases.public_api.GetVessel
 import org.openvesselphotos.infrastructure.web.HtmlPageRenderer.Companion.SITE_NAME
@@ -26,6 +29,8 @@ class PagesController(
     private val publicUrl: PublicUrl,
     private val getVessel: GetVessel,
     private val getRecentVessels: GetRecentVessels,
+    private val getPorts: GetPorts,
+    private val getPortVessels: GetPortVessels,
 ) {
     @GetMapping("/")
     fun home(
@@ -156,8 +161,68 @@ class PagesController(
                     """<main><p><a href="/">Search</a> › ${escapeHtml(name)}</p><h1>${escapeHtml(name)}</h1>""" +
                         """<p>${escapeHtml(keys)}${registration?.let { " · ${escapeHtml(it)}" } ?: ""}""" +
                         """${vessel.flag?.let { " · Flag ${escapeHtml(it)}" } ?: ""}</p>""" +
+                        registerFacts(vessel)?.let { """<p>${escapeHtml(it)}</p>""" }.orEmpty() +
                         """<p>${escapeHtml(description)}</p>$figures""" +
                         """<p><a href="/contribute?${if (vessel.cfr != null) "cfr=${vessel.cfr}" else "mmsi=${vessel.mmsi}"}">Add a photo</a></p></main>""",
+            ),
+        )
+    }
+
+    @GetMapping("/ports")
+    fun ports(): ResponseEntity<String> {
+        val ports = getPorts.execute()
+        val description =
+            "Ports of registration of the EU fleet register on a map, with how many of their vessels have a photo. " +
+                "Find the vessels still waiting for one near you."
+        val items =
+            ports.joinToString("") {
+                """<li><a href="/ports/${it.code}">${escapeHtml(it.name)}</a>: """ +
+                    """${it.photographed} of ${it.vessels} vessels photographed</li>"""
+            }
+
+        return htmlPageRenderer.render(
+            HtmlPage(
+                title = "Ports and their vessels | $SITE_NAME",
+                description = description,
+                canonicalPath = "/ports",
+                body = """<main><h1>Ports</h1><p>${escapeHtml(description)}</p><ul>$items</ul></main>""",
+            ),
+        )
+    }
+
+    @GetMapping("/ports/{code}")
+    fun port(
+        @PathVariable code: String,
+    ): ResponseEntity<String> {
+        val port =
+            try {
+                getPorts.execute(code)
+            } catch (e: BackendUsageException) {
+                return notFound("No port $code")
+            }
+        val photographed = getPortVessels.execute(port.code, isPhotographed = true, page = 0)
+        val wanted = getPortVessels.execute(port.code, isPhotographed = false, page = 0)
+        val name = escapeHtml(port.name)
+        val description =
+            "${port.vessels} vessels registered in ${port.name}, ${port.photographed} with a photo. " +
+                "Photos are openly licensed; contribute one of the vessels still missing."
+
+        fun links(vessels: List<VesselWithPhotos>) =
+            vessels.joinToString("") { (vessel, _) ->
+                """<li><a href="${vesselPath(vessel)}">${escapeHtml(vesselName(vessel))}</a>""" +
+                    """${vessel.registration?.let { " (${escapeHtml(it)})" } ?: ""}</li>"""
+            }
+
+        return htmlPageRenderer.render(
+            HtmlPage(
+                title = "Vessels of ${port.name} (${port.code}) | $SITE_NAME",
+                description = description,
+                canonicalPath = "/ports/${port.code}",
+                body =
+                    """<main><p><a href="/ports">Ports</a> › $name</p><h1>$name</h1>""" +
+                        """<p>${escapeHtml(description)}</p>""" +
+                        """<h2>Photographed</h2><ul>${links(photographed)}</ul>""" +
+                        """<h2>Waiting for a photo</h2><ul>${links(wanted)}</ul></main>""",
             ),
         )
     }
@@ -223,6 +288,24 @@ class PagesController(
     /** Any other single-segment path: the React app shows its "not found" page, with a real 404 status. */
     @GetMapping("/{path:[a-zA-Z0-9_-]+}")
     fun other(): ResponseEntity<String> = notFound("Page not found")
+
+    /** e.g. "Built in 1975 · 9.7 m · 73 kW · 5.77 GT · main gear DRB · call sign FO9789 (EU fleet register)" */
+    private fun registerFacts(vessel: Vessel): String? {
+        val register = vessel.register
+        val facts =
+            listOfNotNull(
+                register.yearBuilt?.let { "Built in $it" },
+                register.lengthMeters?.let { "${formatNumber(it)} m" },
+                register.enginePowerKw?.let { "${formatNumber(it)} kW" },
+                register.tonnageGt?.let { "${formatNumber(it)} GT" },
+                register.mainGear?.let { "main gear $it" },
+                register.callSign?.let { "call sign $it" },
+            )
+
+        return facts.takeIf { it.isNotEmpty() }?.joinToString(" · ", postfix = " (EU fleet register)")
+    }
+
+    private fun formatNumber(value: Double): String = value.toBigDecimal().stripTrailingZeros().toPlainString()
 
     private fun notFound(title: String): ResponseEntity<String> =
         htmlPageRenderer.render(

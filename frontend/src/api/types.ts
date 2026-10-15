@@ -28,6 +28,8 @@ export type VesselSummary = {
   name: string | null
   photoCount: number
   port: string | null
+  /** UN/LOCODE of the port, e.g. FRBES */
+  portCode: string | null
   /** Marking painted on the hull, e.g. "LO 752221" */
   registration: string | null
 }
@@ -44,6 +46,21 @@ export type HistoryEvent = {
   type: 'KEY_LINKED' | 'PHOTO_PUBLISHED' | 'VESSEL_ADDED'
 }
 
+/** Technical data of a vessel, from the EU fleet register. */
+export type RegisterData = {
+  /** International radio call sign (IRCS) */
+  callSign: string | null
+  enginePowerKw: number | null
+  lengthMeters: number | null
+  /** FAO code (ISSCFG), e.g. OTB for bottom otter trawls */
+  mainGear: string | null
+  otherGears: string[]
+  tonnageGt: number | null
+  /** FAO code (ISSCFV), e.g. TO for a trawler; FX when not specified */
+  vesselType: string | null
+  yearBuilt: number | null
+}
+
 export type Vessel = {
   cfr: string | null
   flag: string | null
@@ -52,6 +69,9 @@ export type Vessel = {
   name: string | null
   photos: Photo[]
   port: string | null
+  /** UN/LOCODE of the port, e.g. FRBES */
+  portCode: string | null
+  register: RegisterData | null
   registration: string | null
 }
 
@@ -115,6 +135,32 @@ export type ApiKeyRequest = {
   intendedUse: string
   name: string
   organisation: string
+}
+
+/** A port of registration of the EU fleet register. */
+export type Port = {
+  /** UN/LOCODE, e.g. FRBES */
+  code: string
+  /** ISO 3166-1 alpha-2, e.g. FR, or MQ for Martinique */
+  country: string
+  /** Unknown for the few codes missing from UN/LOCODE */
+  latitude: number | null
+  longitude: number | null
+  name: string
+  /** Vessels with at least one published photo */
+  photographed: number
+  vessels: number
+}
+
+/** How much of the library is photographed. */
+export type Coverage = {
+  /** Vessels with at least one published photo, with a CFR or an MMSI only */
+  photographedVessels: number
+  photos: number
+  /** Of the register's vessels, those with at least one published photo */
+  registerPhotographed: number
+  /** Vessels of the EU fleet register (with a CFR) */
+  registerVessels: number
 }
 
 export type VesselImportResult = {

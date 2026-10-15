@@ -71,6 +71,23 @@ interface DBVesselRepository : JpaRepository<VesselEntity, Int> {
     @Query(
         value = """
             SELECT * FROM vessels v
+            WHERE v.port_code = :code
+              AND EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED') = :isPhotographed
+            ORDER BY v.name NULLS LAST, v.id
+            OFFSET :offset LIMIT :limit
+        """,
+        nativeQuery = true,
+    )
+    fun findByPortCode(
+        code: String,
+        isPhotographed: Boolean,
+        offset: Int,
+        limit: Int,
+    ): List<VesselEntity>
+
+    @Query(
+        value = """
+            SELECT * FROM vessels v
             WHERE EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')
             ORDER BY v.id
             OFFSET :offset LIMIT :limit

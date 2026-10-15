@@ -3,6 +3,8 @@ package org.openvesselphotos.infrastructure.database.repositories
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselKey
+import org.openvesselphotos.domain.repositories.PortVesselCounts
+import org.openvesselphotos.domain.repositories.VesselCoverageCounts
 import org.openvesselphotos.domain.repositories.VesselImportCounts
 import org.openvesselphotos.domain.repositories.VesselRepository
 import org.openvesselphotos.infrastructure.database.entities.VesselEntity
@@ -64,6 +66,59 @@ class JpaVesselRepository(
 
     override fun countWithApprovedPhotos(): Int = dbVesselRepository.countWithApprovedPhotos().toInt()
 
+    override fun countCoverage(): VesselCoverageCounts =
+        jdbcTemplate.queryForObject(
+            """
+            SELECT count(*) FILTER (WHERE cfr IS NOT NULL) AS register_vessels,
+                   count(*) FILTER (WHERE cfr IS NOT NULL AND photographed) AS register_photographed,
+                   count(*) FILTER (WHERE photographed) AS photographed_vessels
+            FROM (
+                SELECT cfr, EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED') AS photographed
+                FROM vessels v
+            ) counted
+            """.trimIndent(),
+        ) { row, _ ->
+            VesselCoverageCounts(
+                registerVessels = row.getInt("register_vessels"),
+                registerPhotographed = row.getInt("register_photographed"),
+                photographedVessels = row.getInt("photographed_vessels"),
+            )
+        }!!
+
+    override fun countByPort(code: String?): List<PortVesselCounts> =
+        jdbcTemplate.query(
+            """
+            SELECT port_code,
+                   mode() WITHIN GROUP (ORDER BY port) AS name,
+                   count(*) AS vessels,
+                   count(*) FILTER (WHERE photographed) AS photographed
+            FROM (
+                SELECT port_code, port,
+                       EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED') AS photographed
+                FROM vessels v
+                WHERE port_code IS NOT NULL AND (CAST(? AS VARCHAR) IS NULL OR port_code = ?)
+            ) counted
+            GROUP BY port_code
+            """.trimIndent(),
+            { row, _ ->
+                PortVesselCounts(
+                    code = row.getString("port_code"),
+                    name = row.getString("name"),
+                    vessels = row.getInt("vessels"),
+                    photographed = row.getInt("photographed"),
+                )
+            },
+            code,
+            code,
+        )
+
+    override fun findByPortCode(
+        code: String,
+        isPhotographed: Boolean,
+        offset: Int,
+        limit: Int,
+    ): List<Vessel> = dbVesselRepository.findByPortCode(code, isPhotographed, offset, limit).map { it.toVessel() }
+
     override fun findPageWithApprovedPhotos(
         offset: Int,
         limit: Int,
@@ -73,12 +128,43 @@ class JpaVesselRepository(
     override fun importAll(vessels: List<Vessel>): VesselImportCounts {
         var created = 0
         var updated = 0
+        val columns = IMPORTED_COLUMNS.joinToString(", ") { it.name }
+        // Fills in the missing values, replaces the register's data, and only counts the vessels that changed
+        val updateSql =
+            """
+            UPDATE vessels
+            SET ${IMPORTED_COLUMNS.joinToString(", ") {
+                if (it.isReplaced) {
+                    "${it.name} = coalesce(CAST(? AS ${it.type}), ${it.name})"
+                } else {
+                    "${it.name} = coalesce(${it.name}, ?)"
+                }
+            }}
+            WHERE (cfr = ? OR (CAST(? AS VARCHAR) IS NULL AND mmsi = ?))
+              AND (${IMPORTED_COLUMNS.joinToString(" OR ") {
+                if (it.isReplaced) {
+                    "(CAST(? AS ${it.type}) IS NOT NULL AND ${it.name} IS DISTINCT FROM CAST(? AS ${it.type}))"
+                } else {
+                    "(${it.name} IS NULL AND CAST(? AS ${it.type}) IS NOT NULL)"
+                }
+            }})
+            """.trimIndent()
         vessels.chunked(BATCH_SIZE).forEach { batch ->
             // Any unique key already taken (CFR or MMSI) means the vessel exists
             val inserted =
                 jdbcTemplate.batchUpdate(
-                    "INSERT INTO vessels (cfr, mmsi, name, registration, port) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
-                    batch.map { arrayOf(it.cfr, it.mmsi, it.name, it.registration, it.port) },
+                    "INSERT INTO vessels (cfr, mmsi, $columns) " +
+                        "VALUES (?, ?, ${IMPORTED_COLUMNS.joinToString(", ") { "?" }}) ON CONFLICT DO NOTHING",
+                    batch.map {
+                        arrayOf(
+                            it.cfr,
+                            it.mmsi,
+                            *IMPORTED_COLUMNS
+                                .map { column ->
+                                    column.value(it)
+                                }.toTypedArray(),
+                        )
+                    },
                 )
             created += inserted.count { it > 0 }
 
@@ -86,26 +172,22 @@ class JpaVesselRepository(
             if (existing.isNotEmpty()) {
                 val results =
                     jdbcTemplate.batchUpdate(
-                        """
-                        UPDATE vessels
-                        SET name = coalesce(name, ?), registration = coalesce(registration, ?), port = coalesce(port, ?)
-                        WHERE (cfr = ? OR (CAST(? AS VARCHAR) IS NULL AND mmsi = ?))
-                          AND ((name IS NULL AND CAST(? AS VARCHAR) IS NOT NULL)
-                            OR (registration IS NULL AND CAST(? AS VARCHAR) IS NOT NULL)
-                            OR (port IS NULL AND CAST(? AS VARCHAR) IS NOT NULL))
-                        """.trimIndent(),
-                        existing.map {
-                            arrayOf(
-                                it.name,
-                                it.registration,
-                                it.port,
-                                it.cfr,
-                                it.cfr,
-                                it.mmsi,
-                                it.name,
-                                it.registration,
-                                it.port,
-                            )
+                        updateSql,
+                        existing.map { vessel ->
+                            val values = IMPORTED_COLUMNS.map { it.value(vessel) }
+                            val conditions =
+                                IMPORTED_COLUMNS.flatMap {
+                                    if (it.isReplaced) {
+                                        listOf(
+                                            it.value(vessel),
+                                            it.value(vessel),
+                                        )
+                                    } else {
+                                        listOf(it.value(vessel))
+                                    }
+                                }
+
+                            (values + listOf(vessel.cfr, vessel.cfr, vessel.mmsi) + conditions).toTypedArray()
                         },
                     )
                 updated += results.count { it > 0 }
@@ -115,7 +197,39 @@ class JpaVesselRepository(
         return VesselImportCounts(created = created, updated = updated)
     }
 
+    /** A column set by imports: filled in when missing, or replaced by the register's latest value. */
+    private class ImportedColumn(
+        val name: String,
+        val type: String,
+        val isReplaced: Boolean,
+        val value: (Vessel) -> Any?,
+    )
+
     companion object {
         const val BATCH_SIZE = 1000
+
+        private val IMPORTED_COLUMNS =
+            listOf(
+                ImportedColumn("name", "VARCHAR", false) { it.name },
+                ImportedColumn("registration", "VARCHAR", false) { it.registration },
+                ImportedColumn("port", "VARCHAR", false) { it.port },
+                ImportedColumn("port_code", "VARCHAR", false) { it.portCode },
+                ImportedColumn("vessel_type", "VARCHAR", true) { it.register.vesselType },
+                ImportedColumn("year_built", "INTEGER", true) { it.register.yearBuilt },
+                ImportedColumn("length_m", "NUMERIC", true) { it.register.lengthMeters?.toBigDecimal() },
+                ImportedColumn("engine_power_kw", "NUMERIC", true) { it.register.enginePowerKw?.toBigDecimal() },
+                ImportedColumn("tonnage_gt", "NUMERIC", true) { it.register.tonnageGt?.toBigDecimal() },
+                ImportedColumn("main_gear", "VARCHAR", true) { it.register.mainGear },
+                ImportedColumn(
+                    "other_gears",
+                    "VARCHAR",
+                    true,
+                ) {
+                    it.register.otherGears
+                        .joinToString(",")
+                        .ifEmpty { null }
+                },
+                ImportedColumn("call_sign", "VARCHAR", true) { it.register.callSign },
+            )
     }
 }

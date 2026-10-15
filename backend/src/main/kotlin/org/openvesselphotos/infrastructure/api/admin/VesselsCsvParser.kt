@@ -6,7 +6,7 @@ import org.openvesselphotos.domain.use_cases.admin.VesselImportRow
 
 /**
  * Reads a list of vessels: an export of the EU fleet register (columns "CFR", "MMSI", "Name of Vessel",
- * "External Marking", "Place of Registration Name"…, or "Vessel Name", "Ext. Marking", "Port Name" in older exports) or a simple file with the columns cfr, mmsi, name, registration, port. The register's event tells vessels that
+ * "External Marking", "Place of Registration Name"…, or "Vessel Name", "Ext. Marking", "Port Name" in older exports) or a simple file with the columns cfr, mmsi, name, registration, port, port_code. The register's event tells vessels that
  * left the fleet. The separator (";" or ",") and
  * the column order come from the header line; unknown columns are ignored.
  */
@@ -18,6 +18,19 @@ object VesselsCsvParser {
             "name" to listOf("nameofvessel", "vesselname", "name", "nom", "nomdunavire"),
             "registration" to listOf("extmarking", "externalmarking", "marking", "registration", "immatriculation"),
             "event" to listOf("eventtype", "eventcode"),
+            "portCode" to listOf("placeofregistrationcode", "portcode"),
+            "vesselType" to listOf("vesseltype"),
+            "yearBuilt" to listOf("yearofconstruction"),
+            "length" to listOf("loam", "loa"),
+            "enginePower" to listOf("powerofmainenginekw"),
+            "tonnage" to listOf("tonnagegt"),
+            "mainGear" to listOf("mainfishinggear"),
+            "otherGear1" to listOf("subsidiaryfishinggear1"),
+            "otherGear2" to listOf("subsidiaryfishinggear2"),
+            "otherGear3" to listOf("subsidiaryfishinggear3"),
+            "otherGear4" to listOf("subsidiaryfishinggear4"),
+            "otherGear5" to listOf("subsidiaryfishinggear5"),
+            "callSign" to listOf("ircs"),
             "port" to listOf("placeofregistrationname", "portname", "port", "portdimmatriculation"),
         )
 
@@ -51,6 +64,15 @@ object VesselsCsvParser {
                 name = cell("name"),
                 registration = cell("registration"),
                 port = cell("port"),
+                portCode = cell("portCode"),
+                vesselType = cell("vesselType"),
+                yearBuilt = cell("yearBuilt"),
+                length = cell("length"),
+                enginePower = cell("enginePower"),
+                tonnage = cell("tonnage"),
+                mainGear = cell("mainGear"),
+                otherGears = (1..5).mapNotNull { cell("otherGear$it")?.takeIf { gear -> gear.isNotBlank() } },
+                callSign = cell("callSign"),
                 event = cell("event"),
             )
         }

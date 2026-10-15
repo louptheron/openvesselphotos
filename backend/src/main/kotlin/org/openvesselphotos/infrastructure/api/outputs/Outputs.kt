@@ -1,8 +1,11 @@
 package org.openvesselphotos.infrastructure.api.outputs
 
+import org.openvesselphotos.domain.entities.Coverage
 import org.openvesselphotos.domain.entities.HistoryEvent
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Photo
+import org.openvesselphotos.domain.entities.Port
+import org.openvesselphotos.domain.entities.RegisterData
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselDetails
 import org.openvesselphotos.domain.entities.VesselWithPhotos
@@ -68,12 +71,89 @@ data class PhotoDataOutput(
     }
 }
 
+data class RegisterDataOutput(
+    /** FAO code (ISSCFV), e.g. TO for a trawler; FX when not specified */
+    val vesselType: String?,
+    val yearBuilt: Int?,
+    val lengthMeters: Double?,
+    val enginePowerKw: Double?,
+    val tonnageGt: Double?,
+    /** FAO code (ISSCFG), e.g. OTB for bottom otter trawls */
+    val mainGear: String?,
+    val otherGears: List<String>,
+    /** International radio call sign (IRCS) */
+    val callSign: String?,
+) {
+    companion object {
+        fun from(register: RegisterData): RegisterDataOutput? =
+            if (register.isEmpty) {
+                null
+            } else {
+                RegisterDataOutput(
+                    vesselType = register.vesselType,
+                    yearBuilt = register.yearBuilt,
+                    lengthMeters = register.lengthMeters,
+                    enginePowerKw = register.enginePowerKw,
+                    tonnageGt = register.tonnageGt,
+                    mainGear = register.mainGear,
+                    otherGears = register.otherGears,
+                    callSign = register.callSign,
+                )
+            }
+    }
+}
+
+data class PortDataOutput(
+    /** UN/LOCODE, e.g. FRBES */
+    val code: String,
+    val name: String,
+    /** ISO 3166-1 alpha-2, e.g. FR, or MQ for Martinique */
+    val country: String,
+    val latitude: Double?,
+    val longitude: Double?,
+    val vessels: Int,
+    /** Vessels with at least one published photo */
+    val photographed: Int,
+) {
+    companion object {
+        fun from(port: Port) =
+            PortDataOutput(
+                code = port.code,
+                name = port.name,
+                country = port.country,
+                latitude = port.location?.latitude,
+                longitude = port.location?.longitude,
+                vessels = port.vessels,
+                photographed = port.photographed,
+            )
+    }
+}
+
+data class CoverageDataOutput(
+    val registerVessels: Int,
+    val registerPhotographed: Int,
+    val photographedVessels: Int,
+    val photos: Int,
+) {
+    companion object {
+        fun from(coverage: Coverage) =
+            CoverageDataOutput(
+                registerVessels = coverage.registerVessels,
+                registerPhotographed = coverage.registerPhotographed,
+                photographedVessels = coverage.photographedVessels,
+                photos = coverage.photos,
+            )
+    }
+}
+
 data class VesselSummaryDataOutput(
     val cfr: String?,
     val mmsi: String?,
     val name: String?,
     val registration: String?,
     val port: String?,
+    /** UN/LOCODE of the port, e.g. FRBES: /v1/ports/{portCode} */
+    val portCode: String?,
     val flag: String?,
     val photoCount: Int,
     val mainPhoto: PhotoDataOutput?,
@@ -91,6 +171,7 @@ data class VesselSummaryDataOutput(
                 name = vessel.name,
                 registration = vessel.registration,
                 port = vessel.port,
+                portCode = vessel.portCode,
                 flag = vessel.flag,
                 photoCount = vesselWithPhotos.photos.size,
                 mainPhoto = vesselWithPhotos.photos.firstOrNull()?.let { PhotoDataOutput.from(baseUrl, vessel, it) },
@@ -131,7 +212,11 @@ data class VesselDataOutput(
     val name: String?,
     val registration: String?,
     val port: String?,
+    /** UN/LOCODE of the port, e.g. FRBES: /v1/ports/{portCode} */
+    val portCode: String?,
     val flag: String?,
+    /** Technical data from the EU fleet register, if imported */
+    val register: RegisterDataOutput?,
     val photos: List<PhotoDataOutput>,
     val history: List<HistoryEventDataOutput>,
 ) {
@@ -145,7 +230,9 @@ data class VesselDataOutput(
             name = details.vessel.name,
             registration = details.vessel.registration,
             port = details.vessel.port,
+            portCode = details.vessel.portCode,
             flag = details.vessel.flag,
+            register = RegisterDataOutput.from(details.vessel.register),
             photos = details.photos.map { PhotoDataOutput.from(baseUrl, details.vessel, it) },
             history = details.history.map { HistoryEventDataOutput.from(it) },
         )
