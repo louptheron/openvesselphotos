@@ -20,7 +20,6 @@ export const en = {
     search: 'Search',
     api: 'API',
     contribute: 'Contribute',
-    licences: 'Licences',
     footerCode: 'code',
     footerUnder: 'under',
     footerPhotos: 'photos under their own open licences',

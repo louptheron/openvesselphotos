@@ -14,7 +14,6 @@ export const fr: Messages = {
     search: 'Recherche',
     api: 'API',
     contribute: 'Contribuer',
-    licences: 'Licences',
     footerCode: 'code',
     footerUnder: 'sous',
     footerPhotos: 'photos sous leurs propres licences libres',

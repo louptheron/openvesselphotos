@@ -22,19 +22,15 @@ export function Layout() {
           </NavItem>
           <NavItem to="/docs">{t.layout.api}</NavItem>
           <NavItem to="/contribute">{t.layout.contribute}</NavItem>
-          {/* A plain link: as a NavLink, it would be highlighted together with "API" on /docs */}
-          <NavItem as={Link} to="/docs#licences">
-            {t.layout.licences}
-          </NavItem>
-          <LanguageButton
-            aria-label={t.language.switchLabel}
-            lang={language === 'en' ? 'fr' : 'en'}
-            onClick={() => setLanguage(language === 'en' ? 'fr' : 'en')}
-            type="button"
-          >
-            {t.language.switchText}
-          </LanguageButton>
         </Nav>
+        <LanguageButton
+          aria-label={t.language.switchLabel}
+          lang={language === 'en' ? 'fr' : 'en'}
+          onClick={() => setLanguage(language === 'en' ? 'fr' : 'en')}
+          type="button"
+        >
+          {t.language.switchText}
+        </LanguageButton>
       </Header>
       <main>
         <Outlet />
@@ -62,6 +58,9 @@ export function Layout() {
   )
 }
 
+/** The widest screen where the logo, the links and the language button don't fit on one row */
+const NARROW_HEADER_MAX_WIDTH = 679
+
 const Header = styled(Container).attrs({ as: 'header' })`
   padding-top: 18px;
   padding-bottom: 18px;
@@ -81,7 +80,8 @@ const Brand = styled(Link)`
   color: ${COLORS.ink};
   font-family: ${FONTS.display};
   font-weight: 700;
-  font-size: 22px;
+  /* Smaller on the narrowest phones, to keep the language button on the same row */
+  font-size: clamp(18px, 5.6vw, 22px);
 
   &:hover {
     color: ${COLORS.ink};
@@ -89,17 +89,30 @@ const Brand = styled(Link)`
 `
 
 const Nav = styled.nav`
+  margin-left: auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
   font-size: 15px;
+
+  /* Below the width where everything fits on one row, the links go under the logo and the language button */
+  @media (max-width: ${NARROW_HEADER_MAX_WIDTH}px) {
+    order: 1;
+    width: 100%;
+    margin-left: -8px;
+    gap: 0;
+  }
 `
 
 const NavItem = styled(NavLink)`
   text-decoration: none;
   color: ${COLORS.ink};
   padding: 12px;
+
+  @media (max-width: ${NARROW_HEADER_MAX_WIDTH}px) {
+    padding: 12px 8px;
+  }
 
   &.active {
     font-weight: 600;
@@ -110,7 +123,6 @@ const NavItem = styled(NavLink)`
 const LanguageButton = styled.button`
   min-width: 44px;
   min-height: 44px;
-  margin-left: 4px;
   padding: 0 10px;
   border: 1px solid ${COLORS.inputBorder};
   border-radius: 22px;
@@ -120,6 +132,10 @@ const LanguageButton = styled.button`
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+
+  @media (max-width: ${NARROW_HEADER_MAX_WIDTH}px) {
+    margin-left: auto;
+  }
 `
 
 const Footer = styled.footer`
