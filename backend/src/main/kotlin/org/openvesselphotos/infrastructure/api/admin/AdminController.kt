@@ -12,11 +12,13 @@ import org.openvesselphotos.domain.use_cases.admin.GetUsageStatistics
 import org.openvesselphotos.domain.use_cases.admin.ImportPhotos
 import org.openvesselphotos.domain.use_cases.admin.ImportVessels
 import org.openvesselphotos.domain.use_cases.admin.PhotoImportStatus
+import org.openvesselphotos.domain.use_cases.admin.PhotoNotesResult
 import org.openvesselphotos.domain.use_cases.admin.RejectApiKeyRequest
 import org.openvesselphotos.domain.use_cases.admin.RejectPhoto
 import org.openvesselphotos.domain.use_cases.admin.ResolveReport
 import org.openvesselphotos.domain.use_cases.admin.ReviewKeyLink
 import org.openvesselphotos.domain.use_cases.admin.RevokeApiKey
+import org.openvesselphotos.domain.use_cases.admin.SetPhotoNotes
 import org.openvesselphotos.domain.use_cases.admin.UsageStatistics
 import org.openvesselphotos.domain.use_cases.admin.VesselImportResult
 import org.openvesselphotos.infrastructure.api.inputs.ApprovePhotoDataInput
@@ -57,6 +59,7 @@ class AdminController(
     private val revokeApiKey: RevokeApiKey,
     private val importVessels: ImportVessels,
     private val importPhotos: ImportPhotos,
+    private val setPhotoNotes: SetPhotoNotes,
     private val getUsageStatistics: GetUsageStatistics,
 ) {
     @PostMapping("/login")
@@ -190,6 +193,12 @@ class AdminController(
     fun importPhotosFromCsv(
         @RequestPart file: MultipartFile,
     ): PhotoImportStatus = importPhotos.start(PhotosCsvParser.parse(String(file.bytes, Charsets.UTF_8)))
+
+    /** Sets the notes shown with published photos, e.g. "Photographed under its former name LE CRI DES FLOTS". */
+    @PostMapping("/photos/notes", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun setPhotoNotesFromCsv(
+        @RequestPart file: MultipartFile,
+    ): PhotoNotesResult = setPhotoNotes.execute(PhotosCsvParser.parseNotes(String(file.bytes, Charsets.UTF_8)))
 
     @GetMapping("/photos/import")
     fun photoImportStatus(): PhotoImportStatus = importPhotos.status()

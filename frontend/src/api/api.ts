@@ -8,6 +8,7 @@ import type {
   ApprovedApiKey,
   KeyType,
   PhotoImportStatus,
+  PhotoNotesResult,
   ReportReason,
   ReviewQueue,
   VesselImportResult,
@@ -92,6 +93,10 @@ export const api = createApi({
       invalidatesTags: ['PhotoImport', 'Vessels'],
       query: form => ({ body: form, method: 'POST', url: '/admin/photos/import' })
     }),
+    setPhotoNotes: builder.mutation<PhotoNotesResult, FormData>({
+      invalidatesTags: ['Vessels'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/photos/notes' })
+    }),
     getUsage: builder.query<UsageStatistics, number>({
       query: days => ({ params: { days }, url: '/admin/usage' })
     }),
@@ -130,6 +135,7 @@ export const {
   useReportPhotoMutation,
   useRequestApiKeyMutation,
   useSearchVesselsQuery,
+  useSetPhotoNotesMutation,
   useSubmitPhotoMutation,
   useSuggestKeyLinkMutation
 } = api

@@ -24,6 +24,7 @@ data class PhotoImport(
     val takenOn: LocalDate?,
     val sourceUrl: String,
     val imageUrl: String,
+    val note: String? = null,
 )
 
 /** Publishes an imported photo without review, creating its vessel when the key is new. */
@@ -61,6 +62,7 @@ class PublishImportedPhoto(
                     height = image.height,
                     reviewedAt = ZonedDateTime.now(),
                     sourceUrl = photo.sourceUrl,
+                    note = photo.note,
                 ),
             )
         image.files.forEach { (size, content) -> photoRepository.saveFile(requireNotNull(saved.id), size, content) }

@@ -110,7 +110,7 @@ class PagesController(
                         " · ${escapeHtml(
                             it,
                         )}"
-                    } ?: ""}</figcaption></figure>"""
+                    } ?: ""}${photo.note?.let { "<br>${escapeHtml(it)}" } ?: ""}</figcaption></figure>"""
             }
 
         return htmlPageRenderer.render(

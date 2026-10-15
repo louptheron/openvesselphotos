@@ -138,6 +138,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
                   {photo.takenOn && ` · ${t.vessel.taken(formatDate(photo.takenOn))}`}
                   {photo.place && ` · ${photo.place}`}
                 </span>
+                {photo.note && <span>{photo.note}</span>}
               </figcaption>
             </Figure>
           ) : (

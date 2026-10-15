@@ -12,6 +12,8 @@ export type Photo = {
   licence: string
   licenceName: string
   n: number
+  /** e.g. "Photographed under its former name LE CRI DES FLOTS" */
+  note: string | null
   place: string | null
   /** Page of the original photo, for a photo imported from Wikimedia Commons or Flickr */
   source: string | null
@@ -123,6 +125,13 @@ export type VesselImportResult = {
   outOfFleet: number
   read: number
   skipped: number
+  unchanged: number
+  updated: number
+}
+
+export type PhotoNotesResult = {
+  errors: string[]
+  read: number
   unchanged: number
   updated: number
 }

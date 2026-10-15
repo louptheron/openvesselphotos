@@ -510,10 +510,10 @@ class PublicAndAdminApiITests {
         // A Commons export: extra columns, a quoted description over several lines, licences as labels or SPDX
         val csv =
             """
-            mmsi,cfr,vessel_name,ovp_licence,licence,author,file_page,image_1600_url,date,title
+            mmsi,cfr,vessel_name,ovp_licence,licence,author,file_page,image_1600_url,date,title,note
             227000777,,Ar Men,,CC BY-SA 3.0,Jane Doe,https://commons.wikimedia.org/wiki/File:A.jpg,https://upload.wikimedia.org/a.jpg,2012-08-25 14:03:11,"Ar Men
             in Douarnenez"
-            227000778,FRA000778778,Penn Ar Bed,CC-BY-4.0,CC BY 4.0,"Doe, John",https://commons.wikimedia.org/wiki/File:B.jpg,https://upload.wikimedia.org/b.jpg,,
+            227000778,FRA000778778,Penn Ar Bed,CC-BY-4.0,CC BY 4.0,"Doe, John",https://commons.wikimedia.org/wiki/File:B.jpg,https://upload.wikimedia.org/b.jpg,,,Under a former name
             227000779,,No author,,CC0,,https://commons.wikimedia.org/wiki/File:C.jpg,https://upload.wikimedia.org/c.jpg,,
             """.trimIndent()
         import(csv)
@@ -533,6 +533,7 @@ class PublicAndAdminApiITests {
             .perform(get("/v1/cfr/FRA000778778"))
             .andExpect(jsonPath("$.mmsi").value("227000778"))
             .andExpect(jsonPath("$.photos[0].credit").value("Doe, John"))
+            .andExpect(jsonPath("$.photos[0].note").value("Under a former name"))
 
         // Running the same file again (e.g. after a restart) does not duplicate the photos
         import(csv)
@@ -545,6 +546,38 @@ class PublicAndAdminApiITests {
                 multipart(
                     "/v1/admin/photos/import",
                 ).file(MockMultipartFile("file", "f.csv", "text/csv", csv.toByteArray())),
+            ).andExpect(status().isUnauthorized)
+
+        // Notes are set on published photos, or removed by an empty note
+        val notes =
+            """
+            cfr,mmsi,n,note
+            ,227000777,1,"Photographed under its former name AR MEN II"
+            FRA000778778,,1,
+            FRA000000001,,1,Unknown photo
+            """.trimIndent()
+        mockMvc
+            .perform(
+                multipart("/v1/admin/photos/notes")
+                    .file(MockMultipartFile("file", "notes.csv", "text/csv", notes.toByteArray()))
+                    .cookie(cookie),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.updated").value(2))
+            .andExpect(jsonPath("$.errors[0]").value("Line 4: no photo 1 for CFR FRA000000001."))
+        mockMvc
+            .perform(get("/v1/mmsi/227000777"))
+            .andExpect(jsonPath("$.photos[0].note").value("Photographed under its former name AR MEN II"))
+        mockMvc.perform(get("/v1/cfr/FRA000778778")).andExpect(jsonPath("$.photos[0].note").isEmpty)
+        assertThat(
+            mockMvc
+                .perform(get("/vessels/mmsi/227000777"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("Photographed under its former name AR MEN II")
+        mockMvc
+            .perform(
+                multipart("/v1/admin/photos/notes")
+                    .file(MockMultipartFile("file", "notes.csv", "text/csv", notes.toByteArray())),
             ).andExpect(status().isUnauthorized)
     }
 

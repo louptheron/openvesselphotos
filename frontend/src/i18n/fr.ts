@@ -377,12 +377,17 @@ export const fr: Messages = {
     importing: 'Import…',
     import: 'Importer',
     photoImportTitle: 'Importer des photos',
-    photoImportText: `Publie sans relecture des photos sous licence libre, venant par exemple de Wikimedia Commons. Colonnes du CSV${_}: mmsi et/ou cfr, vessel_name, author, licence, file_page (page de la photo d’origine), image_1600_url et, en option, date. Les images sont téléchargées depuis Wikimedia Commons ou Flickr une à une, en arrière-plan${_}: cela peut prendre quelques heures. Les photos déjà importées sont ignorées${_}: le même fichier peut être renvoyé après une interruption.`,
+    photoImportText: `Publie sans relecture des photos sous licence libre, venant par exemple de Wikimedia Commons. Colonnes du CSV${_}: mmsi et/ou cfr, vessel_name, author, licence, file_page (page de la photo d’origine), image_1600_url et, en option, date et note (affichée avec la photo). Les images sont téléchargées depuis Wikimedia Commons ou Flickr une à une, en arrière-plan${_}: cela peut prendre quelques heures. Les photos déjà importées sont ignorées${_}: le même fichier peut être renvoyé après une interruption.`,
     photoImportRunning: 'Import en cours…',
     photoImportFinished: 'Dernier import terminé.',
     photoImportProgress: s =>
       `${s.done} / ${s.total} photos${_}: ${s.imported} importées, ${s.alreadyImported} déjà présentes, ${s.failed} en échec. ${s.invalid} lignes invalides ignorées.`,
     stopImport: 'Arrêter',
+    photoNotesTitle: 'Notes des photos',
+    photoNotesText: `Définit les notes affichées avec les photos publiées, par exemple «${_}Photographié sous son ancien nom LE CRI DES FLOTS${_}». Colonnes du CSV${_}: cfr (ou mmsi), n (le numéro de la photo) et note. Une note vide la supprime.`,
+    setNotes: 'Définir les notes',
+    photoNotesResult: r =>
+      `${r.read}${_}lignes lues${_}: ${r.updated}${_}notes définies, ${r.unchanged}${_}déjà à jour, ${r.errors.length}${_}erreurs.`,
     importResult: r =>
       `${r.read}${_}lignes lues${_}: ${r.created}${_}navires créés, ${r.updated}${_}complétés, ${r.unchanged}${_}déjà à jour, ${r.outOfFleet}${_}sortis de la flotte, ${r.skipped}${_}ignorés.`
   },

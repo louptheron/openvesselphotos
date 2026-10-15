@@ -3,11 +3,12 @@ package org.openvesselphotos.infrastructure.api.admin
 import org.openvesselphotos.domain.exceptions.BackendUsageErrorCode
 import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.use_cases.admin.PhotoImportRow
+import org.openvesselphotos.domain.use_cases.admin.PhotoNoteRow
 
 /**
  * Reads a list of photos to import, one per line, with the columns mmsi (or cfr), vessel_name, author, licence (SPDX
  * identifier or label, e.g. "CC-BY-SA-3.0" or "CC BY-SA 3.0"), file_page (the page of the original photo),
- * image_1600_url (or image_url) and, optionally, date. Unknown columns are ignored; fields may span several lines
+ * image_1600_url (or image_url) and, optionally, date and note (shown with the photo). Unknown columns are ignored; fields may span several lines
  * when quoted.
  */
 object PhotosCsvParser {
@@ -22,10 +23,19 @@ object PhotosCsvParser {
             "takenOn" to listOf("date", "takenon"),
             "sourceUrl" to listOf("filepage", "sourceurl", "source"),
             "imageUrl" to listOf("image1600url", "imageurl"),
+            "note" to listOf("note"),
+        )
+
+    private val NOTE_COLUMNS =
+        mapOf(
+            "cfr" to listOf("cfr"),
+            "mmsi" to listOf("mmsi"),
+            "number" to listOf("n", "number", "photo"),
+            "note" to listOf("note"),
         )
 
     fun parse(content: String): List<PhotoImportRow> {
-        val records = readRecords(content.removePrefix("﻿"))
+        val records = readRecords(content.removePrefix(""))
         val (headerLine, header) = records.firstOrNull() ?: throw invalid("The file is empty.")
         val headerNames = header.map { normalize(it) }
 
@@ -56,6 +66,41 @@ object PhotosCsvParser {
                 takenOn = cell("takenOn"),
                 sourceUrl = cell("sourceUrl"),
                 imageUrl = cell("imageUrl"),
+                note = cell("note"),
+            )
+        }
+    }
+
+    /** Reads notes to set on published photos, with the columns cfr (or mmsi), n (the photo number) and note. */
+    fun parseNotes(content: String): List<PhotoNoteRow> {
+        val records = readRecords(content.removePrefix("\uFEFF"))
+        val (headerLine, header) = records.firstOrNull() ?: throw invalid("The file is empty.")
+        val headerNames = header.map { normalize(it) }
+
+        fun indexOf(column: String) =
+            requireNotNull(NOTE_COLUMNS[column]).firstNotNullOfOrNull { alias ->
+                headerNames.indexOf(alias).takeIf {
+                    it >=
+                        0
+                }
+            }
+
+        if (indexOf("cfr") == null && indexOf("mmsi") == null) {
+            throw invalid("No CFR or MMSI column found in the header (line $headerLine).")
+        }
+        if (indexOf("number") == null || indexOf("note") == null) {
+            throw invalid("The header (line $headerLine) needs the columns n and note.")
+        }
+
+        return records.drop(1).map { (line, cells) ->
+            fun cell(column: String) = indexOf(column)?.let { cells.getOrNull(it) }
+
+            PhotoNoteRow(
+                line = line,
+                cfr = cell("cfr"),
+                mmsi = cell("mmsi"),
+                number = cell("number"),
+                note = cell("note"),
             )
         }
     }

@@ -41,6 +41,8 @@ data class PhotoDataOutput(
     val height: Int,
     /** Page of the original photo, for a photo imported from Wikimedia Commons or Flickr */
     val source: String?,
+    /** e.g. "Photographed under its former name LE CRI DES FLOTS" */
+    val note: String?,
 ) {
     companion object {
         fun from(
@@ -64,6 +66,7 @@ data class PhotoDataOutput(
             width = photo.width,
             height = photo.height,
             source = photo.sourceUrl,
+            note = photo.note,
         )
     }
 }

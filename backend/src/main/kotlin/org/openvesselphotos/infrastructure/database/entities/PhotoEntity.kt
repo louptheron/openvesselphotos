@@ -57,6 +57,7 @@ class PhotoEntity(
     val apiKeyId: Int?,
     @Column(name = "source_url")
     val sourceUrl: String?,
+    val note: String?,
 ) {
     fun toPhoto() =
         Photo(
@@ -79,6 +80,7 @@ class PhotoEntity(
             rejectReason = rejectReason,
             apiKeyId = apiKeyId,
             sourceUrl = sourceUrl,
+            note = note,
         )
 
     companion object {
@@ -104,6 +106,7 @@ class PhotoEntity(
                 rejectReason = photo.rejectReason,
                 apiKeyId = photo.apiKeyId,
                 sourceUrl = photo.sourceUrl,
+                note = photo.note,
             )
     }
 }

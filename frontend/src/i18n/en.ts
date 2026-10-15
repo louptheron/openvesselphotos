@@ -377,7 +377,7 @@ export const en = {
     import: 'Import',
     photoImportTitle: 'Import photos',
     photoImportText:
-      'Publishes openly licensed photos without review, e.g. from Wikimedia Commons. CSV columns: mmsi and/or cfr, vessel_name, author, licence, file_page (page of the original photo), image_1600_url and, optionally, date. Images are downloaded from Wikimedia Commons or Flickr one at a time, in the background: this can take a few hours. Photos already imported are skipped, so the same file can be sent again after an interruption.',
+      'Publishes openly licensed photos without review, e.g. from Wikimedia Commons. CSV columns: mmsi and/or cfr, vessel_name, author, licence, file_page (page of the original photo), image_1600_url and, optionally, date and note (shown with the photo). Images are downloaded from Wikimedia Commons or Flickr one at a time, in the background: this can take a few hours. Photos already imported are skipped, so the same file can be sent again after an interruption.',
     photoImportRunning: 'Import running…',
     photoImportFinished: 'Last import finished.',
     photoImportProgress: (s: {
@@ -390,6 +390,12 @@ export const en = {
     }) =>
       `${s.done} / ${s.total} photos: ${s.imported} imported, ${s.alreadyImported} already there, ${s.failed} failed. ${s.invalid} invalid lines skipped.`,
     stopImport: 'Stop',
+    photoNotesTitle: 'Photo notes',
+    photoNotesText:
+      'Sets the notes shown with published photos, e.g. "Photographed under its former name LE CRI DES FLOTS". CSV columns: cfr (or mmsi), n (the photo number) and note. An empty note removes it.',
+    setNotes: 'Set the notes',
+    photoNotesResult: (r: { read: number; updated: number; unchanged: number; errors: string[] }) =>
+      `${r.read} lines read: ${r.updated} notes set, ${r.unchanged} already up to date, ${r.errors.length} errors.`,
     importResult: (r: {
       read: number
       created: number
