@@ -41,7 +41,7 @@ export function RegisterFacts({ vessel }: { vessel: Vessel }) {
       value: register.otherGears.length > 0 && register.otherGears.map(gear => label(t.register.gears, gear)).join(', ')
     },
     { name: t.register.callSign, value: register.callSign && <code>{register.callSign}</code> },
-    { name: t.register.port, value: vessel.port }
+    { name: vessel.flag === 'FRA' ? t.register.frenchPort : t.register.port, value: vessel.port }
   ]
   const shown = facts.filter(({ value }) => value)
   if (shown.length === 0) {

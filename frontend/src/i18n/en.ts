@@ -90,6 +90,8 @@ export const en = {
     otherGears: 'Other gears',
     callSign: 'Call sign',
     port: 'Port of registration',
+    /** French vessels are registered in a quartier maritime, the letters of their marking (LR: La Rochelle) */
+    frenchPort: 'Port of registration',
     meters: (value: string) => `${value} m`,
     power: (kilowatts: string, horsepower: string) => `${kilowatts} kW (${horsepower} hp)`,
     /** 1 kW = 1.341 mechanical horsepower */

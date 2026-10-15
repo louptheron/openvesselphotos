@@ -91,7 +91,9 @@ export const fr: Messages = {
     mainGear: 'Engin principal',
     otherGears: 'Autres engins',
     callSign: 'Indicatif d’appel',
-    port: 'Port d’immatriculation',
+    port: 'Lieu d’immatriculation',
+    /** French vessels are registered in a quartier maritime, the letters of their marking (LR: La Rochelle) */
+    frenchPort: 'Quartier d’immatriculation',
     meters: value => `${value}${_}m`,
     power: (kilowatts, horsepower) => `${kilowatts}${_}kW (${horsepower}${_}ch)`,
     // 1 kW = 1,36 cheval-vapeur
