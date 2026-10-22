@@ -38,14 +38,14 @@ export const Muted = styled.span`
 export const Card = styled.div`
   background: ${COLORS.white};
   border: 1px solid ${COLORS.cardBorder};
-  border-radius: 14px;
+  border-radius: 8px;
 `
 
 export const Chip = styled.span`
   align-self: flex-start;
   font-size: 13px;
   padding: 6px 12px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: ${COLORS.white};
   border: 1px solid ${COLORS.border};
 `
@@ -61,7 +61,7 @@ const buttonBase = css`
   gap: 8px;
   min-height: 44px;
   padding: 0 18px;
-  border-radius: 12px;
+  border-radius: 6px;
   font: inherit;
   font-size: 15px;
   font-weight: 600;
@@ -126,7 +126,7 @@ const inputBase = css`
   min-height: 48px;
   padding: 0 12px;
   border: 1px solid ${COLORS.inputBorder};
-  border-radius: 10px;
+  border-radius: 6px;
   font: inherit;
   /* 16 px at least: iOS Safari zooms into smaller fields when they get the focus */
   font-size: 16px;
@@ -154,7 +154,7 @@ export const CodeBlock = styled.pre`
   margin: 0;
   background: ${COLORS.ink};
   color: ${COLORS.codeText};
-  border-radius: 12px;
+  border-radius: 6px;
   padding: 14px 16px;
   font-family: ${FONTS.mono};
   font-size: 13px;
@@ -165,7 +165,7 @@ export const CodeBlock = styled.pre`
 export const ErrorMessage = styled.p`
   margin: 0;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 6px;
   background: ${COLORS.accentSoft};
   color: ${COLORS.reject};
   font-size: 14px;
@@ -173,7 +173,7 @@ export const ErrorMessage = styled.p`
 
 export const SuccessMessage = styled.div`
   padding: 14px 16px;
-  border-radius: 10px;
+  border-radius: 6px;
   background: ${COLORS.info};
   font-size: 15px;
   line-height: 1.5;

@@ -191,7 +191,7 @@ const Aside = styled.aside`
   min-width: 0;
   background: ${COLORS.ink};
   color: ${COLORS.inkSoft};
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 20px;
   font-size: 14px;
   line-height: 1.5;

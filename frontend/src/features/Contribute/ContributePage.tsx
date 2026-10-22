@@ -380,7 +380,7 @@ const IntroCard = styled(ChartCard)`
   max-width: 700px;
   padding: 26px 28px;
   gap: 10px;
-  border-radius: 16px;
+  border-radius: 8px;
 
   p {
     color: ${CHART_COLORS.text};
@@ -416,7 +416,7 @@ const Step = styled.fieldset`
   margin: 0;
   padding: 20px;
   border: 1px solid ${COLORS.cardBorder};
-  border-radius: 14px;
+  border-radius: 8px;
   background: ${COLORS.white};
   display: flex;
   flex-direction: column;
@@ -454,7 +454,7 @@ const Match = styled.div`
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 6px;
   background: ${COLORS.info};
   font-size: 14px;
 
@@ -471,7 +471,7 @@ const DropZone = styled.label`
   gap: 8px;
   min-height: 180px;
   border: 2px dashed ${COLORS.inputBorder};
-  border-radius: 12px;
+  border-radius: 6px;
   background: #faf8f4;
   cursor: pointer;
   text-align: center;
@@ -508,7 +508,7 @@ const Licences = styled.div`
 const LicenceOption = styled.label<{ $active: boolean }>`
   position: relative;
   padding: 14px;
-  border-radius: 12px;
+  border-radius: 6px;
   border: 2px solid ${p => (p.$active ? COLORS.accent : COLORS.cardBorder)};
   background: ${p => (p.$active ? COLORS.accentSoft : COLORS.white)};
   display: flex;
@@ -568,7 +568,7 @@ const Aside = styled.aside`
 const NextSteps = styled.div`
   background: ${COLORS.ink};
   color: ${COLORS.inkSoft};
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 20px;
 
   h2 {

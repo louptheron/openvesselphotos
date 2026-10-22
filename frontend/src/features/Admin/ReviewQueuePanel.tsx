@@ -358,7 +358,7 @@ const Count = styled.span`
   font-size: 12px;
   padding: 1px 7px;
   margin-left: 6px;
-  border-radius: 10px;
+  border-radius: 6px;
   background: rgba(127, 127, 127, 0.2);
 `
 
@@ -394,7 +394,7 @@ const ListButton = styled.button<{ $active: boolean }>`
   width: 100%;
   text-align: left;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: 6px;
   border: 2px solid ${p => (p.$active ? COLORS.accent : COLORS.cardBorder)};
   background: ${COLORS.white};
   font: inherit;
@@ -478,7 +478,7 @@ const PreviewImage = styled.img`
   max-height: 420px;
   object-fit: contain;
   background: ${COLORS.ground};
-  border-radius: 10px;
+  border-radius: 6px;
 `
 
 const LinkCompare = styled.div`
@@ -489,7 +489,7 @@ const LinkCompare = styled.div`
   > div {
     flex: 1 1 200px;
     padding: 14px 16px;
-    border-radius: 12px;
+    border-radius: 6px;
     background: ${COLORS.ground};
     display: flex;
     flex-direction: column;
@@ -520,7 +520,7 @@ const Facts = styled.dl`
 
   > div {
     padding: 10px 12px;
-    border-radius: 10px;
+    border-radius: 6px;
     background: ${COLORS.ground};
   }
 
@@ -538,7 +538,7 @@ const Facts = styled.dl`
 const Message = styled.blockquote`
   margin: 0;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 6px;
   background: ${COLORS.ground};
   font-size: 14px;
   white-space: pre-wrap;
@@ -555,7 +555,7 @@ const Buttons = styled.div`
 const ActionButton = styled.button`
   min-height: 48px;
   padding: 0 22px;
-  border-radius: 12px;
+  border-radius: 6px;
   font: inherit;
   font-weight: 600;
   font-size: 15px;

@@ -99,7 +99,7 @@ export function ActiveApiKeys({ isLoading, onRevoke }: { isLoading: boolean; onR
 const Banner = styled.output`
   margin-bottom: 16px;
   padding: 16px 18px;
-  border-radius: 12px;
+  border-radius: 6px;
   background: ${COLORS.info};
   border: 1px solid #b8d3e3;
   display: flex;
