@@ -32,4 +32,6 @@ data class VesselDetails(
     val vessel: Vessel,
     val photos: List<Photo>,
     val history: List<HistoryEvent>,
+    /** Other vessels with photos, from the same port or under the same flag */
+    val related: List<VesselWithPhotos> = emptyList(),
 )

@@ -5,6 +5,7 @@ import styled from 'styled-components'
 import { getErrorStatus, useGetVesselQuery } from '../../api/api'
 import type { KeyType, Photo, Vessel } from '../../api/types'
 import { BoatPlaceholder } from '../../components/Logo'
+import { VesselCard, VesselGrid } from '../../components/VesselCard'
 import {
   Card,
   CodeBlock,
@@ -66,7 +67,10 @@ export function VesselPage() {
         </h1>
         {status === 404 && (
           <p>
-            {t.vessel.notFoundText} <Link to={`/contribute?${keyType}=${key}`}>{t.vessel.contributeFirst}</Link>
+            {t.vessel.notFoundText}{' '}
+            <Link rel="nofollow" to={`/contribute?${keyType}=${key}`}>
+              {t.vessel.contributeFirst}
+            </Link>
           </p>
         )}
         {status === 400 && (
@@ -146,7 +150,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
             <EmptyFigure>
               <BoatPlaceholder width={320} />
               <p>{t.vessel.noPhotoOf(name)}</p>
-              <PrimaryButton as={Link} to={`/contribute?${contributeQuery}`}>
+              <PrimaryButton as={Link} rel="nofollow" to={`/contribute?${contributeQuery}`}>
                 {t.vessel.addFirstPhoto}
               </PrimaryButton>
             </EmptyFigure>
@@ -168,7 +172,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
                 <img alt="" loading="lazy" src={getPhotoUrl(item.urls, '320')} />
               </Thumbnail>
             ))}
-            <AddPhoto to={`/contribute?${contributeQuery}`}>
+            <AddPhoto rel="nofollow" to={`/contribute?${contributeQuery}`}>
               <svg
                 aria-hidden="true"
                 fill="none"
@@ -260,6 +264,22 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
         </Aside>
       </Main>
 
+      {vessel.related.length > 0 && (
+        <Related aria-labelledby="related-title">
+          <SectionTitle id="related-title">
+            {vessel.port && vessel.related.every(other => other.port === vessel.port)
+              ? t.vessel.relatedFromPort(vessel.port)
+              : t.vessel.related}
+          </SectionTitle>
+          <VesselGrid>
+            {vessel.related.map((other, index) => (
+              <VesselCard key={other.cfr ?? other.mmsi} index={index} vessel={other} />
+            ))}
+          </VesselGrid>
+          <Link to="/vessels">{t.layout.allVessels} →</Link>
+        </Related>
+      )}
+
       {vessel.history.length > 0 && (
         <History>
           <SectionTitle>{t.vessel.history}</SectionTitle>
@@ -288,6 +308,14 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
     </>
   )
 }
+
+const Related = styled(Container).attrs({ as: 'section' })`
+  padding-top: 32px;
+  padding-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`
 
 const NotFound = styled(Container)`
   padding-top: 48px;

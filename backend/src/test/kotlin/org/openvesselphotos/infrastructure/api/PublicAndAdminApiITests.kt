@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Container
@@ -230,6 +231,19 @@ class PublicAndAdminApiITests {
                 """"id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000999888"""",
             ).find(queue)!!.groupValues[1]
         mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+        // Another French vessel: related to the first one
+        submitPhoto("cfr", "FRA000999777", "SISTER SHIP")
+        val sisterPhotoId =
+            Regex(
+                """"id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000999777"""",
+            ).find(
+                mockMvc
+                    .perform(get("/v1/admin/queue").cookie(cookie))
+                    .andReturn()
+                    .response.contentAsString,
+            )!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$sisterPhotoId/approve").cookie(cookie)).andExpect(status().isNoContent)
 
         val html =
             mockMvc
@@ -266,6 +280,40 @@ class PublicAndAdminApiITests {
         ).contains("""<a href="/vessels/cfr/FRA000999888">""")
             .doesNotContain("noindex")
         mockMvc.perform(get("/docs")).andExpect(status().isOk)
+        assertThat(html)
+            .contains("""rel="nofollow">Add a photo</a>""")
+            .contains("""<a href="/vessels">All vessels</a>""")
+            .contains("""<h2>Other vessels</h2><ul><li><a href="/vessels/cfr/FRA000999777">SISTER SHIP</a>""")
+        mockMvc
+            .perform(get("/v1/cfr/FRA000999888"))
+            .andExpect(jsonPath("$.related[?(@.cfr == 'FRA000999777')].name").value("SISTER SHIP"))
+            .andExpect(jsonPath("$.related[?(@.cfr == 'FRA000999888')]").doesNotExist())
+
+        // The vessel directory links to every vessel page with photos
+        assertThat(
+            mockMvc
+                .perform(get("/vessels"))
+                .andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString,
+        ).contains("""<link rel="canonical" href="http://localhost/vessels" />""")
+            .contains("""<li><a href="/vessels/cfr/FRA000999888">&lt;/script&gt;&lt;b&gt;Evil&lt;/b&gt;</a> """)
+            .contains(""""@type":"CollectionPage"""")
+            .doesNotContain("noindex")
+        mockMvc
+            .perform(get("/vessels").param("page", "1"))
+            .andExpect(status().isMovedPermanently)
+            .andExpect(header().string("Location", "/vessels"))
+        mockMvc.perform(get("/vessels").param("page", "999")).andExpect(status().isNotFound)
+        mockMvc.perform(get("/vessels").param("page", "nope")).andExpect(status().isNotFound)
+        mockMvc
+            .perform(get("/v1/vessels"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.page").value(1))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000999888')]").exists())
+        mockMvc
+            .perform(get("/sitemap-pages.xml"))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("<loc>http://localhost/vessels</loc>")))
 
         mockMvc
             .perform(get("/sitemap.xml"))

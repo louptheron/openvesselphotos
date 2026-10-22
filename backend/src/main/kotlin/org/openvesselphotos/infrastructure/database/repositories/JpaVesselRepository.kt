@@ -64,6 +64,19 @@ class JpaVesselRepository(
 
     override fun countWithApprovedPhotos(): Int = dbVesselRepository.countWithApprovedPhotos().toInt()
 
+    override fun findRelatedWithApprovedPhotos(
+        vessel: Vessel,
+        limit: Int,
+    ): List<Vessel> =
+        dbVesselRepository
+            .findRelatedWithApprovedPhotos(
+                id = requireNotNull(vessel.id),
+                port = vessel.port,
+                flag = vessel.flag,
+                mid = vessel.mmsi?.take(3),
+                limit = limit,
+            ).map { it.toVessel() }
+
     override fun findPageWithApprovedPhotos(
         offset: Int,
         limit: Int,

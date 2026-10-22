@@ -23,6 +23,7 @@ export const en = {
     footerCode: 'code',
     footerUnder: 'under',
     footerPhotos: 'photos under their own open licences',
+    allVessels: 'All vessels',
     dataset: 'Download the dataset',
     apiKey: 'API key',
     review: 'Review'
@@ -58,6 +59,7 @@ export const en = {
     resultsLabel: 'Results',
     resultsFor: (query: string) => `Results for “${query}”`,
     recentlyAdded: 'Recently added',
+    allVessels: 'All vessels →',
     searchUnavailable: 'The search is unavailable right now. Please try again later.',
     noMatch: (query: string) => `No vessel matches “${query}”.`,
     noPhotoOfKey: (key: string) => `No photo of ${key} yet.`,
@@ -176,6 +178,8 @@ export const en = {
   },
   vessel: {
     source: 'Source',
+    related: 'Other vessels',
+    relatedFromPort: (port: string) => `Other vessels of ${port}`,
     pageTitle: (name: string, keys: string) => `${name} (${keys}) — vessel photos`,
     notFoundPageTitle: (key: string) => `No vessel with ${key}`,
     notFoundTitle: (key: string) => `No vessel with ${key} yet`,
@@ -332,11 +336,12 @@ export const en = {
     keyMmsi: 'Key · MMSI (radio identity)',
     endpoints: 'Endpoints',
     endpointDescriptions: [
-      'Vessel, both of its keys, its registration and port, its technical data from the EU fleet register (register: year built, length, engine, tonnage, gears as FAO codes, call sign), and all its published photos with credit and licence.',
+      'Vessel, both of its keys, its registration and port, its technical data from the EU fleet register (register: year built, length, engine, tonnage, gears as FAO codes, call sign), all its published photos with credit and licence, and related vessels with photos (same port, else same flag).',
       'The main photo as an image, ready for an <img> tag. ?size=320|800|full (default 800).',
       'A specific photo; the same n under either key is the same file. Same ?size parameter.',
       'Search by name, port, registration, or the beginning of a CFR or MMSI. Up to 24 results.',
       'Vessels with the most recently published photos. ?limit=12 (max 48).',
+      'All vessels with photos, by name, 100 per page, with the page count and total.',
       'The whole dataset: every vessel with its photo URLs, credits and licences.',
       'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, vesselName?, plus mmsi? under a CFR or cfr? under an MMSI), under whichever key you know. Published after review. Needs an API key.',
       'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review. Needs an API key.',
@@ -365,6 +370,17 @@ export const en = {
     selfHostTitle: 'Self-host it',
     selfHostText:
       'The service is one container (Spring Boot serving the API and this web app) and one PostgreSQL database, which also stores the images. Set OPENVESSELPHOTOS_DATABASE_URL and OPENVESSELPHOTOS_ADMIN_PASSWORD, and run it.'
+  },
+  vessels: {
+    pageTitle: (page: number, pageCount: number) =>
+      `All vessels with photos${pageCount > 1 ? ` — page ${page} of ${pageCount}` : ''}`,
+    title: 'All vessels with photos',
+    lead: (total: number) => `${total} vessel${total === 1 ? '' : 's'}, by name.`,
+    pagination: 'Pages',
+    previous: '← Previous',
+    next: 'Next →',
+    pageOf: (page: number, pageCount: number) => `Page ${page} of ${pageCount}`,
+    unavailable: 'The list of vessels is unavailable right now. Please try again later.'
   },
   notFound: {
     title: 'Page not found',

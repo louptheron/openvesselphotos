@@ -4,13 +4,18 @@ import org.openvesselphotos.config.UseCase
 import org.openvesselphotos.domain.entities.VesselWithPhotos
 import org.openvesselphotos.domain.repositories.VesselRepository
 
-/** Vessels with approved photos, page by page (for the sitemap: pages without photo are not indexed). */
+/**
+ * Vessels with approved photos by name, page by page: the sitemap and the vessel directory (pages without photo are
+ * not indexed).
+ */
 @UseCase
 class GetVesselsPage(
     private val vesselRepository: VesselRepository,
     private val vesselPhotosLoader: VesselPhotosLoader,
 ) {
     fun count(): Int = vesselRepository.countWithApprovedPhotos()
+
+    fun pageCount(pageSize: Int): Int = (count() + pageSize - 1) / pageSize
 
     /** [page] starts at 1. */
     fun execute(
@@ -23,4 +28,9 @@ class GetVesselsPage(
                 pageSize,
             ),
         )
+
+    companion object {
+        /** Vessels per page of the directory (/vessels) */
+        const val DIRECTORY_PAGE_SIZE = 100
+    }
 }

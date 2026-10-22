@@ -17,6 +17,7 @@ class GetVessel(
     private val vesselRepository: VesselRepository,
     private val photoRepository: PhotoRepository,
     private val keyLinkRequestRepository: KeyLinkRequestRepository,
+    private val vesselPhotosLoader: VesselPhotosLoader,
 ) {
     fun execute(key: VesselKey): VesselDetails {
         val vessel =
@@ -71,6 +72,11 @@ class GetVessel(
             vessel = vessel,
             photos = photos,
             history = (photoEvents + linkEvents + listOfNotNull(creationEvent)).sortedByDescending { it.date },
+            related = vesselPhotosLoader.load(vesselRepository.findRelatedWithApprovedPhotos(vessel, RELATED_VESSELS)),
         )
+    }
+
+    companion object {
+        const val RELATED_VESSELS = 6
     }
 }

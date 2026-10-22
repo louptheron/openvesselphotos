@@ -107,6 +107,14 @@ data class RegisterDataOutput(
     }
 }
 
+data class VesselsPageDataOutput(
+    val page: Int,
+    val pageCount: Int,
+    /** Vessels with photos, on all pages */
+    val total: Int,
+    val vessels: List<VesselSummaryDataOutput>,
+)
+
 data class VesselSummaryDataOutput(
     val cfr: String?,
     val mmsi: String?,
@@ -175,6 +183,8 @@ data class VesselDataOutput(
     val register: RegisterDataOutput?,
     val photos: List<PhotoDataOutput>,
     val history: List<HistoryEventDataOutput>,
+    /** Other vessels with photos, from the same port or under the same flag */
+    val related: List<VesselSummaryDataOutput>,
 ) {
     companion object {
         fun from(
@@ -190,6 +200,7 @@ data class VesselDataOutput(
             register = RegisterDataOutput.from(details.vessel.register),
             photos = details.photos.map { PhotoDataOutput.from(baseUrl, details.vessel, it) },
             history = details.history.map { HistoryEventDataOutput.from(it) },
+            related = details.related.map { VesselSummaryDataOutput.from(baseUrl, it) },
         )
     }
 }

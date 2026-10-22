@@ -49,8 +49,9 @@ export function Layout() {
             · {t.layout.footerPhotos}
           </span>
           <span>
-            <a href="/v1/export.json">{t.layout.dataset}</a> · <Link to="/docs">{t.layout.api}</Link> ·{' '}
-            <Link to="/api-key">{t.layout.apiKey}</Link> · <Link to="/admin">{t.layout.review}</Link>
+            <Link to="/vessels">{t.layout.allVessels}</Link> · <a href="/v1/export.json">{t.layout.dataset}</a> ·{' '}
+            <Link to="/docs">{t.layout.api}</Link> · <Link to="/api-key">{t.layout.apiKey}</Link> ·{' '}
+            <Link to="/admin">{t.layout.review}</Link>
           </span>
         </FooterInner>
       </Footer>

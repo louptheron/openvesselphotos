@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import { useGetRecentVesselsQuery, useSearchVesselsQuery } from '../../api/api'
 import { ChartCard, ChartSection, WaveDivider } from '../../components/Chart'
-import { VesselCard } from '../../components/VesselCard'
+import { VesselCard, VesselGrid } from '../../components/VesselCard'
 import { Chip, Container, Muted, PrimaryButton, SectionTitle } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
@@ -100,7 +100,11 @@ export function HomePage() {
       <Results aria-label={t.home.resultsLabel} aria-live="polite">
         <ResultsHeader>
           <SectionTitle>{isSearching ? t.home.resultsFor(query) : t.home.recentlyAdded}</SectionTitle>
-          {isFetching && <Muted>{t.common.loading}</Muted>}
+          {isFetching ? (
+            <Muted>{t.common.loading}</Muted>
+          ) : (
+            !isSearching && <Link to="/vessels">{t.home.allVessels}</Link>
+          )}
         </ResultsHeader>
         {isError && <p>{t.home.searchUnavailable}</p>}
         {vessels && vessels.length === 0 && (
@@ -111,7 +115,9 @@ export function HomePage() {
                 {detectedKey ? (
                   <p>
                     {t.home.noPhotoOfKey(`${detectedKey.keyType.toUpperCase()} ${detectedKey.key}`)}{' '}
-                    <Link to={`/contribute?${detectedKey.keyType}=${detectedKey.key}`}>{t.home.contributeFirst}</Link>
+                    <Link rel="nofollow" to={`/contribute?${detectedKey.keyType}=${detectedKey.key}`}>
+                      {t.home.contributeFirst}
+                    </Link>
                   </p>
                 ) : (
                   <p>
@@ -127,11 +133,11 @@ export function HomePage() {
           </Empty>
         )}
         {vessels && vessels.length > 0 && (
-          <Grid>
+          <VesselGrid>
             {vessels.map((vessel, index) => (
               <VesselCard key={vessel.cfr ?? vessel.mmsi} index={index} vessel={vessel} />
             ))}
-          </Grid>
+          </VesselGrid>
         )}
       </Results>
 
@@ -296,12 +302,6 @@ const Empty = styled.div`
   p {
     margin: 0 0 6px;
   }
-`
-
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 18px;
 `
 
 const ApiBand = styled.section`

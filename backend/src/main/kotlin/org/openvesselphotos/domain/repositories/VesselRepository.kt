@@ -41,7 +41,16 @@ interface VesselRepository {
 
     fun countWithApprovedPhotos(): Int
 
-    /** Vessels with at least one approved photo, ordered by id. */
+    /**
+     * Other vessels with approved photos, from the same port first, then under the same flag (from the CFR) or the
+     * same MMSI country code (MID). Among them, the closest ids: each vessel links to different ones.
+     */
+    fun findRelatedWithApprovedPhotos(
+        vessel: Vessel,
+        limit: Int,
+    ): List<Vessel>
+
+    /** Vessels with at least one approved photo, by name (unnamed last). */
     fun findPageWithApprovedPhotos(
         offset: Int,
         limit: Int,

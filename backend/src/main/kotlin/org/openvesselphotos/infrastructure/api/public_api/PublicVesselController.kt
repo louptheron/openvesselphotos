@@ -11,6 +11,7 @@ import org.openvesselphotos.domain.use_cases.public_api.ExportDataset
 import org.openvesselphotos.domain.use_cases.public_api.GetPhotoImage
 import org.openvesselphotos.domain.use_cases.public_api.GetRecentVessels
 import org.openvesselphotos.domain.use_cases.public_api.GetVessel
+import org.openvesselphotos.domain.use_cases.public_api.GetVesselsPage
 import org.openvesselphotos.domain.use_cases.public_api.PhotoSubmission
 import org.openvesselphotos.domain.use_cases.public_api.ReportPhoto
 import org.openvesselphotos.domain.use_cases.public_api.RequestApiKey
@@ -25,6 +26,7 @@ import org.openvesselphotos.infrastructure.api.outputs.PhotoDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.SubmissionDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.VesselDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.VesselSummaryDataOutput
+import org.openvesselphotos.infrastructure.api.outputs.VesselsPageDataOutput
 import org.openvesselphotos.infrastructure.api.security.ApiKeyCheckFilter
 import org.springframework.http.CacheControl
 import org.springframework.http.HttpStatus
@@ -51,6 +53,7 @@ import java.time.format.DateTimeParseException
 class PublicVesselController(
     private val searchVessels: SearchVessels,
     private val getRecentVessels: GetRecentVessels,
+    private val getVesselsPage: GetVesselsPage,
     private val getVessel: GetVessel,
     private val getPhotoImage: GetPhotoImage,
     private val submitPhoto: SubmitPhoto,
@@ -69,6 +72,22 @@ class PublicVesselController(
         @RequestParam(defaultValue = "12") limit: Int,
     ): List<VesselSummaryDataOutput> =
         getRecentVessels.execute(limit).map { VesselSummaryDataOutput.from(baseUrl(), it) }
+
+    /** The vessel directory: vessels with photos by name, [GetVesselsPage.DIRECTORY_PAGE_SIZE] per page. */
+    @GetMapping("/vessels")
+    fun vessels(
+        @RequestParam(defaultValue = "1") page: Int,
+    ): VesselsPageDataOutput {
+        val pageSize = GetVesselsPage.DIRECTORY_PAGE_SIZE
+        val vessels = if (page >= 1) getVesselsPage.execute(page, pageSize) else emptyList()
+
+        return VesselsPageDataOutput(
+            page = page,
+            pageCount = getVesselsPage.pageCount(pageSize),
+            total = getVesselsPage.count(),
+            vessels = vessels.map { VesselSummaryDataOutput.from(baseUrl(), it) },
+        )
+    }
 
     @GetMapping("/export.json")
     fun export(): List<ExportedVesselDataOutput> {

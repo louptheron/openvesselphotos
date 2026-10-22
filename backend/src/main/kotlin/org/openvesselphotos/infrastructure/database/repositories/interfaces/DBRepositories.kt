@@ -72,13 +72,36 @@ interface DBVesselRepository : JpaRepository<VesselEntity, Int> {
         value = """
             SELECT * FROM vessels v
             WHERE EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')
-            ORDER BY v.id
+            ORDER BY v.name NULLS LAST, v.id
             OFFSET :offset LIMIT :limit
         """,
         nativeQuery = true,
     )
     fun findPageWithApprovedPhotos(
         offset: Int,
+        limit: Int,
+    ): List<VesselEntity>
+
+    /** See [org.openvesselphotos.domain.repositories.VesselRepository.findRelatedWithApprovedPhotos] */
+    @Query(
+        value = """
+            SELECT * FROM vessels v
+            WHERE v.id <> :id
+              AND EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')
+              AND (v.port = CAST(:port AS TEXT) OR left(v.cfr, 3) = CAST(:flag AS TEXT)
+                OR left(v.mmsi, 3) = CAST(:mid AS TEXT))
+            ORDER BY v.port = CAST(:port AS TEXT) DESC NULLS LAST,
+              left(v.cfr, 3) = CAST(:flag AS TEXT) DESC NULLS LAST,
+              abs(v.id - :id), v.id
+            LIMIT :limit
+        """,
+        nativeQuery = true,
+    )
+    fun findRelatedWithApprovedPhotos(
+        id: Int,
+        port: String?,
+        flag: String?,
+        mid: String?,
         limit: Int,
     ): List<VesselEntity>
 }

@@ -17,6 +17,7 @@ export const fr: Messages = {
     footerCode: 'code',
     footerUnder: 'sous',
     footerPhotos: 'photos sous leurs propres licences libres',
+    allVessels: 'Tous les navires',
     dataset: 'Télécharger les données',
     apiKey: 'Clé d’API',
     review: 'Modération'
@@ -59,6 +60,7 @@ export const fr: Messages = {
     resultsLabel: 'Résultats',
     resultsFor: (query: string) => `Résultats pour «${_}${query}${_}»`,
     recentlyAdded: 'Ajoutés récemment',
+    allVessels: 'Tous les navires →',
     searchUnavailable: 'La recherche est indisponible pour le moment. Veuillez réessayer plus tard.',
     noMatch: (query: string) => `Aucun navire ne correspond à «${_}${query}${_}».`,
     noPhotoOfKey: (key: string) => `Pas encore de photo du ${key}.`,
@@ -180,6 +182,8 @@ export const fr: Messages = {
   },
   vessel: {
     source: 'Source',
+    related: 'Autres navires',
+    relatedFromPort: (port: string) => `Autres navires de ${port}`,
     pageTitle: (name: string, keys: string) => `${name} (${keys}) — photos du navire`,
     notFoundPageTitle: (key: string) => `Aucun navire avec le ${key}`,
     notFoundTitle: (key: string) => `Aucun navire avec le ${key} pour l’instant`,
@@ -337,11 +341,12 @@ export const fr: Messages = {
     keyMmsi: 'Identifiant · MMSI (identité radio)',
     endpoints: 'Points d’accès',
     endpointDescriptions: [
-      `Le navire, ses deux identifiants, son immatriculation et son port, ses caractéristiques du registre de la flotte de l’UE (register${_}: année de construction, longueur, moteur, jauge, engins en codes FAO, indicatif d’appel), et toutes ses photos publiées avec crédit et licence.`,
+      `Le navire, ses deux identifiants, son immatriculation et son port, ses caractéristiques du registre de la flotte de l’UE (register${_}: année de construction, longueur, moteur, jauge, engins en codes FAO, indicatif d’appel), toutes ses photos publiées avec crédit et licence, et des navires proches avec photos (même port, sinon même pavillon).`,
       'La photo principale, en image, prête pour une balise <img>. ?size=320|800|full (800 par défaut).',
       `Une photo précise${_}; le même n sous l’un ou l’autre identifiant est le même fichier. Même paramètre ?size.`,
       'Recherche par nom, port, immatriculation, ou début de CFR ou de MMSI. 24 résultats au plus.',
       'Les navires dont les photos ont été publiées le plus récemment. ?limit=12 (48 au plus).',
+      'Tous les navires avec photos, par nom, 100 par page, avec le nombre de pages et le total.',
       `Toutes les données${_}: chaque navire avec les URL, crédits et licences de ses photos.`,
       `Envoyer une photo (multipart${_}: file, credit, licence, takenOn?, place?, email?, vesselName?, et mmsi? sous un CFR ou cfr? sous un MMSI), sous l’identifiant que vous connaissez. Publiée après vérification. Nécessite une clé d’API.`,
       'Proposer l’identifiant manquant, ex. {"keyType": "cfr", "key": "FRA000123456"}. Appliqué après vérification. Nécessite une clé d’API.',
@@ -369,6 +374,17 @@ export const fr: Messages = {
     selfHostTitle: 'L’héberger soi-même',
     selfHostText:
       'Le service tient en un conteneur (Spring Boot, qui sert l’API et cette application web) et une base PostgreSQL, qui stocke aussi les images. Renseignez OPENVESSELPHOTOS_DATABASE_URL et OPENVESSELPHOTOS_ADMIN_PASSWORD, puis lancez-le.'
+  },
+  vessels: {
+    pageTitle: (page: number, pageCount: number) =>
+      `Tous les navires avec photos${pageCount > 1 ? ` — page ${page} sur ${pageCount}` : ''}`,
+    title: 'Tous les navires avec photos',
+    lead: (total: number) => `${total} navire${total > 1 ? 's' : ''}, par nom.`,
+    pagination: 'Pages',
+    previous: '← Précédente',
+    next: 'Suivante →',
+    pageOf: (page: number, pageCount: number) => `Page ${page} sur ${pageCount}`,
+    unavailable: 'La liste des navires est indisponible pour le moment. Veuillez réessayer plus tard.'
   },
   notFound: {
     title: 'Page introuvable',

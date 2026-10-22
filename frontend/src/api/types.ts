@@ -22,6 +22,15 @@ export type Photo = {
   width: number
 }
 
+/** A page of the vessel directory: vessels with photos, by name */
+export type VesselsPage = {
+  page: number
+  pageCount: number
+  /** Vessels with photos, on all pages */
+  total: number
+  vessels: VesselSummary[]
+}
+
 export type VesselSummary = {
   cfr: string | null
   flag: string | null
@@ -73,6 +82,8 @@ export type Vessel = {
   port: string | null
   register: RegisterData | null
   registration: string | null
+  /** Other vessels with photos, from the same port or under the same flag */
+  related: VesselSummary[]
 }
 
 export type Submission = {
