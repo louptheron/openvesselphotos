@@ -13,9 +13,12 @@ import { VesselPage } from './features/Vessel/VesselPage'
 
 export function App() {
   const { pathname } = useLocation()
-  // Scroll to the top on each page change
-  // oxlint-disable-next-line react/exhaustive-effect-dependencies
-  useEffect(() => window.scrollTo(0, 0), [pathname])
+  // Scroll to the top on each page change. The braces matter: scrollTo returns a Promise in recent browsers, which
+  // React would take for the effect's clean-up function and call on the next page change, unmounting the app.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
+  }, [pathname])
 
   return (
     <Routes>
