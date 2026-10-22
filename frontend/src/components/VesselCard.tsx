@@ -65,7 +65,7 @@ export const VesselGrid = styled.div`
 
 export const LicenceBadge = styled.span`
   padding: 3px 8px;
-  border-radius: 10px;
+  border-radius: 6px;
   background: ${COLORS.info};
   color: ${COLORS.link};
   font-weight: 500;
@@ -75,7 +75,7 @@ export const LicenceBadge = styled.span`
 const Article = styled.article`
   position: relative;
   background: ${COLORS.white};
-  border-radius: 14px;
+  border-radius: 8px;
   overflow: hidden;
   border: 1px solid ${COLORS.cardBorder};
   display: flex;

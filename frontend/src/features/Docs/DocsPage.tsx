@@ -184,7 +184,7 @@ const Keys = styled.div`
 
   > div {
     padding: 14px 16px;
-    border-radius: 12px;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -217,7 +217,7 @@ const Section = styled.section`
 
 const Endpoint = styled(Card)`
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 6px;
 
   > div {
     display: flex;

@@ -286,7 +286,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
               <VesselCard key={other.cfr ?? other.mmsi} index={index} vessel={other} />
             ))}
           </VesselGrid>
-          <Link to="/vessels">{t.layout.allVessels} →</Link>
+          <Link to="/vessels">{t.layout.allVessels}</Link>
         </Related>
       )}
 
@@ -380,7 +380,7 @@ const Gallery = styled.div`
 
 const Figure = styled.figure`
   margin: 0;
-  border-radius: 16px;
+  border-radius: 8px;
   overflow: hidden;
   background: ${SKIES[0]};
 
@@ -411,7 +411,7 @@ const Registration = styled.p`
 
 const EmptyFigure = styled.div`
   height: 360px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: ${getSkyAndSea(SKIES[0] ?? COLORS.info, 82)};
   display: flex;
   flex-direction: column;
@@ -431,7 +431,7 @@ const Thumbnail = styled.button<{ $active: boolean }>`
   width: 128px;
   height: 84px;
   padding: 0;
-  border-radius: 10px;
+  border-radius: 6px;
   border: 3px solid ${p => (p.$active ? COLORS.accent : 'transparent')};
   background: ${getSkyAndSea(SKIES[0] ?? COLORS.info, 82)};
   overflow: hidden;
@@ -448,7 +448,7 @@ const Thumbnail = styled.button<{ $active: boolean }>`
 const AddPhoto = styled(Link)`
   width: 128px;
   height: 84px;
-  border-radius: 10px;
+  border-radius: 6px;
   border: 2px dashed ${COLORS.inputBorder};
   display: flex;
   flex-direction: column;
@@ -504,7 +504,7 @@ const Heading = styled.div`
 const FlagChip = styled.span`
   font-size: 12px;
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: 6px;
   background: ${COLORS.white};
   border: 1px solid ${COLORS.border};
 `
@@ -517,7 +517,7 @@ const Keys = styled.dl`
 
   > div {
     padding: 12px 14px;
-    border-radius: 12px;
+    border-radius: 6px;
   }
 
   dt {

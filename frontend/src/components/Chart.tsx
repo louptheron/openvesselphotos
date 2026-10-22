@@ -20,13 +20,13 @@ export function ChartSection({ children, overlay }: { children: ReactNode; overl
 export const ChartCard = styled.div`
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid ${CHART_COLORS.cardBorder};
-  border-radius: 18px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
 `
 
-/** The wave above a dark band. */
-export function WaveDivider() {
+/** A wavy line, above a band of the given color. */
+export function WaveDivider({ color }: { color: string }) {
   return (
     <svg
       aria-hidden="true"
@@ -38,7 +38,7 @@ export function WaveDivider() {
     >
       <path
         d="M0 44 V24 C120 4 240 44 360 24 C480 4 600 44 720 24 C840 4 960 44 1080 24 C1200 4 1320 44 1440 24 V44 Z"
-        fill={COLORS.ink}
+        fill={color}
       />
       <path
         d="M0 18 C120 -2 240 38 360 18 C480 -2 600 38 720 18 C840 -2 960 38 1080 18 C1200 -2 1320 38 1440 18"

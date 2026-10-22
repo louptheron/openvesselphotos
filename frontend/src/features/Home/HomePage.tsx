@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import { useGetRecentVesselsQuery, useSearchVesselsQuery } from '../../api/api'
 import { ChartCard, ChartSection, WaveDivider } from '../../components/Chart'
 import { VesselCard, VesselGrid } from '../../components/VesselCard'
-import { Chip, Container, Muted, PrimaryButton, SectionTitle } from '../../components/ui'
+import { CodeBlock, Container, Muted, PrimaryButton, SectionTitle } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
 import { CHART_COLORS, COLORS, FONTS } from '../../theme'
@@ -58,11 +58,6 @@ export function HomePage() {
       <ChartSection overlay={!recentResult.isLoading && <ChartVessels vessels={recentResult.data ?? []} />}>
         <Hero>
           <HeroCard>
-            <Chips>
-              {t.home.chips.map(chip => (
-                <Chip key={chip}>{chip}</Chip>
-              ))}
-            </Chips>
             <h1>{t.home.title}</h1>
             <p>{t.home.lead}</p>
             <SearchForm aria-label={t.home.searchFormLabel} onSubmit={search}>
@@ -141,39 +136,29 @@ export function HomePage() {
         )}
       </Results>
 
-      <WaveDivider />
-      <ApiBand>
-        <ApiBandInner>
-          <div>
-            <h2>{t.home.apiTitle}</h2>
-            <p>{t.home.apiLead}</p>
-            <PrimaryButton as={Link} to="/docs">
-              {t.home.apiButton}
-            </PrimaryButton>
-          </div>
-          <pre>
-            {`<img src="${window.location.origin}/v1/cfr/FRA000123456.jpg">\n\n<img src="${window.location.origin}/v1/mmsi/227000101.jpg">`}
-          </pre>
-        </ApiBandInner>
-      </ApiBand>
-
-      <Features>
-        <div>
-          <h3>{t.home.contributeTitle}</h3>
-          <p>{t.home.contributeText}</p>
-          <Link to="/contribute">{t.home.contributeLink}</Link>
-        </div>
-        <div>
-          <h3>{t.home.openTitle}</h3>
-          <p>{t.home.openText}</p>
-          <Link to="/docs#licences">{t.home.openLink}</Link>
-        </div>
-        <div>
-          <h3>{t.home.datasetTitle}</h3>
-          <p>{t.home.datasetText}</p>
-          <a href="/v1/export.json">{t.home.datasetLink}</a>
-        </div>
-      </Features>
+      <WaveDivider color={COLORS.ink} />
+      <AboutBand>
+        <About>
+          <SectionTitle>{t.home.aboutTitle}</SectionTitle>
+          <p>{t.home.aboutText}</p>
+          <p>
+            {t.home.contributeText} <Link to="/contribute">{t.home.contributeLink}</Link>
+            {t.home.contributeEnd}
+          </p>
+          <p>{t.home.apiText}</p>
+          <CodeBlock>
+            {`<img src="${window.location.origin}/v1/cfr/FRA000123456.jpg">\n<img src="${window.location.origin}/v1/mmsi/227000101.jpg">`}
+          </CodeBlock>
+          <p>
+            {t.home.apiMore} <Link to="/docs">{t.home.apiLink}</Link>
+            {t.home.apiEnd}
+          </p>
+          <p>
+            {t.home.datasetText} <a href="/v1/export.json">{t.home.datasetLink}</a>
+            {t.home.datasetEnd}
+          </p>
+        </About>
+      </AboutBand>
     </>
   )
 }
@@ -238,12 +223,6 @@ const HeroCard = styled(ChartCard)`
   }
 `
 
-const Chips = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`
-
 const SearchForm = styled.form`
   display: flex;
   flex-wrap: wrap;
@@ -257,7 +236,7 @@ const SearchForm = styled.form`
     height: 56px;
     padding: 0 18px;
     border: 2px solid ${COLORS.ink};
-    border-radius: 12px;
+    border-radius: 6px;
     font: inherit;
     font-size: 16px;
     background: ${COLORS.white};
@@ -304,88 +283,40 @@ const Empty = styled.div`
   }
 `
 
-const ApiBand = styled.section`
+const AboutBand = styled.section`
   background: ${COLORS.ink};
   color: ${COLORS.codeText};
+  /* Reaches the footer, without a strip of the page background in between */
+  margin-bottom: -24px;
 `
 
-const ApiBandInner = styled(Container)`
-  padding-top: 48px;
-  padding-bottom: 48px;
+const About = styled(Container)`
+  padding-top: 32px;
+  padding-bottom: 56px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 32px;
-  align-items: center;
+  flex-direction: column;
+  gap: 14px;
 
-  > div {
-    flex: 1 1 340px;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  > * {
+    max-width: 720px;
   }
 
   h2 {
-    margin: 0;
-    font-family: ${FONTS.display};
-    font-size: 32px;
     color: ${COLORS.white};
   }
 
   p {
     margin: 0;
-    font-size: 16px;
-    line-height: 1.5;
     color: ${COLORS.inkSoft};
+    line-height: 1.6;
   }
 
-  a {
-    align-self: flex-start;
-    border-radius: 22px;
+  a,
+  a:hover {
+    color: ${COLORS.white};
   }
 
   pre {
-    flex: 1 1 480px;
-    min-width: 0;
-    margin: 0;
     background: ${COLORS.codeBackground};
-    border-radius: 12px;
-    padding: 18px;
-    font-family: ${FONTS.mono};
-    font-size: 13px;
-    line-height: 1.7;
-    overflow-x: auto;
-  }
-`
-
-const Features = styled(Container).attrs({ as: 'section' })`
-  padding-top: 48px;
-  padding-bottom: 48px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 18px;
-
-  > div {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  h3 {
-    margin: 0;
-    font-family: ${FONTS.display};
-    font-size: 22px;
-  }
-
-  p {
-    margin: 0;
-    color: ${COLORS.text};
-    line-height: 1.5;
-  }
-
-  a {
-    align-self: flex-start;
-    padding: 12px 0;
-    font-weight: 500;
   }
 `
