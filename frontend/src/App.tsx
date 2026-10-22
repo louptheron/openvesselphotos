@@ -10,6 +10,7 @@ import { DocsPage } from './features/Docs/DocsPage'
 import { HomePage } from './features/Home/HomePage'
 import { NotFoundPage } from './features/NotFound/NotFoundPage'
 import { VesselPage } from './features/Vessel/VesselPage'
+import { VesselsPage } from './features/Vessels/VesselsPage'
 
 export function App() {
   const { pathname } = useLocation()
@@ -24,6 +25,7 @@ export function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route element={<HomePage />} index />
+        <Route element={<VesselsPage />} path="vessels" />
         <Route element={<VesselPage />} path="vessels/:keyType/:key" />
         <Route element={<ContributePage />} path="contribute" />
         <Route element={<DocsPage />} path="docs" />

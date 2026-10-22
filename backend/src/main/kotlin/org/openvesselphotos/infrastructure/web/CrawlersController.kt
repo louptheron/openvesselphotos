@@ -32,7 +32,7 @@ class CrawlersController(
     @GetMapping("/sitemap.xml")
     fun sitemapIndex(): ResponseEntity<String> {
         val baseUrl = publicUrl.get()
-        val vesselSitemaps = (getVesselsPage.count() + VESSELS_PER_SITEMAP - 1) / VESSELS_PER_SITEMAP
+        val vesselSitemaps = getVesselsPage.pageCount(VESSELS_PER_SITEMAP)
         val sitemaps =
             listOf("$baseUrl/sitemap-pages.xml") + (1..vesselSitemaps).map { "$baseUrl/sitemap-vessels-$it.xml" }
 
@@ -43,17 +43,22 @@ class CrawlersController(
         )
     }
 
+    /** The static pages, and each page of the vessel directory. */
     @GetMapping("/sitemap-pages.xml")
     fun pagesSitemap(): ResponseEntity<String> {
         val baseUrl = publicUrl.get()
+        val directoryPages = getVesselsPage.pageCount(GetVesselsPage.DIRECTORY_PAGE_SIZE)
 
         return xml(
             URLSET_OPEN +
-                listOf(
-                    "/",
-                    "/docs",
-                    "/contribute",
-                    "/api-key",
+                (
+                    listOf(
+                        "/",
+                        "/vessels",
+                        "/docs",
+                        "/contribute",
+                        "/api-key",
+                    ) + (2..directoryPages).map { PagesController.directoryPath(it) }
                 ).joinToString("") { "<url><loc>$baseUrl$it</loc></url>" } +
                 "</urlset>",
         )

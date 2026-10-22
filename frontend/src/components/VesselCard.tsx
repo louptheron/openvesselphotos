@@ -56,6 +56,13 @@ export function VesselCard({ index, vessel }: { index: number; vessel: VesselSum
   )
 }
 
+/** Vessel cards, as many per row as fit */
+export const VesselGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+`
+
 export const LicenceBadge = styled.span`
   padding: 3px 8px;
   border-radius: 10px;

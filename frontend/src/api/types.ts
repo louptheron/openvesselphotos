@@ -22,6 +22,39 @@ export type Photo = {
   width: number
 }
 
+/** Filters of the vessel directory (query parameters of /v1/vessels and /vessels) */
+export type VesselFilter = {
+  /** ISO 3166-1 alpha-3, from the CFR or else the MMSI */
+  flag?: string
+  /** Port of registration ("quartier d'immatriculation" in France) */
+  port?: string
+  vesselType?: string
+  mainGear?: string
+}
+
+export type FilterOption = {
+  /** For flags: ISO 3166-1 alpha-2, to name the country */
+  countryCode: string | null
+  count: number
+  value: string
+}
+
+export type VesselFilterOptions = {
+  flags: FilterOption[]
+  mainGears: FilterOption[]
+  ports: FilterOption[]
+  vesselTypes: FilterOption[]
+}
+
+/** A page of the vessel directory: vessels with photos, by name */
+export type VesselsPage = {
+  page: number
+  pageCount: number
+  /** Vessels with photos, on all pages */
+  total: number
+  vessels: VesselSummary[]
+}
+
 export type VesselSummary = {
   cfr: string | null
   flag: string | null
@@ -73,6 +106,8 @@ export type Vessel = {
   port: string | null
   register: RegisterData | null
   registration: string | null
+  /** Other vessels with photos, from the same port or under the same flag */
+  related: VesselSummary[]
 }
 
 export type Submission = {

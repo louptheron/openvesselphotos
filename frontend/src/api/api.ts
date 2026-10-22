@@ -15,7 +15,10 @@ import type {
   Submission,
   UsageStatistics,
   Vessel,
-  VesselSummary
+  VesselFilter,
+  VesselFilterOptions,
+  VesselSummary,
+  VesselsPage
 } from './types'
 
 type VesselKeyParams = { key: string; keyType: KeyType }
@@ -31,6 +34,14 @@ export const api = createApi({
     getVessel: builder.query<Vessel, VesselKeyParams>({
       providesTags: ['Vessels'],
       query: ({ key, keyType }) => `/${keyType}/${encodeURIComponent(key)}`
+    }),
+    getVesselFilterOptions: builder.query<VesselFilterOptions, void>({
+      providesTags: ['Vessels'],
+      query: () => '/vessels/filters'
+    }),
+    getVesselsPage: builder.query<VesselsPage, VesselFilter & { page: number }>({
+      providesTags: ['Vessels'],
+      query: params => ({ params, url: '/vessels' })
     }),
     requestApiKey: builder.mutation<Submission, ApiKeyRequest>({
       query: body => ({ body, method: 'POST', url: '/api-key-requests' })
@@ -126,7 +137,9 @@ export const {
   useGetRecentVesselsQuery,
   useGetReviewQueueQuery,
   useGetUsageQuery,
+  useGetVesselFilterOptionsQuery,
   useGetVesselQuery,
+  useGetVesselsPageQuery,
   useImportPhotosMutation,
   useImportVesselsMutation,
   useLazyGetVesselQuery,
