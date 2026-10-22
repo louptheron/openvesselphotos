@@ -67,8 +67,8 @@ class UsageCountingFilter(
             ?.takeIf { it.isNotEmpty() && it.length <= MAX_HOST_LENGTH }
 
     companion object {
-        /** /v1/{cfr|mmsi}/{key}.jpg and /v1/{cfr|mmsi}/{key}/photos/{n}.jpg */
-        private val IMAGE_PATH = Regex("^/v1/(cfr|mmsi)/[A-Za-z0-9]+(/photos/[0-9]+)?\\.jpg$")
+        /** /v1/{cfr|mmsi}/{key}.jpg, /v1/{cfr|mmsi}/{key}/photos/{n}.jpg and /v1/{cfr|mmsi}/{key}/photos/{n}/{name}.jpg */
+        private val IMAGE_PATH = Regex("^/v1/(cfr|mmsi)/[A-Za-z0-9]+(/photos/[0-9]+(/[a-z0-9-]+)?)?\\.jpg$")
         private const val MAX_HOST_LENGTH = 255
     }
 }

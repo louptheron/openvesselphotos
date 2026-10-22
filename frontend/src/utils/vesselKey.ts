@@ -34,3 +34,32 @@ export function getPhotoUrl(urls: { cfr: string | null; mmsi: string | null }, s
 
   return size ? `${url}?size=${size}` : url
 }
+
+const MAX_SLUG_LENGTH = 80
+
+/**
+ * Name of a vessel's photos in their URLs, e.g. "lola-lr-539755": search engines read the words of an image's URL. Same
+ * as the server's (PagesController.photoSlug).
+ */
+export function getPhotoSlug(vessel: { name: string | null; registration: string | null }): string {
+  const slug = [vessel.name, vessel.registration]
+    .filter(Boolean)
+    .join(' ')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .slice(0, MAX_SLUG_LENGTH)
+    .replace(/^-+|-+$/g, '')
+
+  return slug || 'vessel'
+}
+
+/** e.g. ".../photos/1/lola-lr-539755.jpg?size=800" for ".../photos/1.jpg" */
+export function getNamedPhotoUrl(
+  urls: { cfr: string | null; mmsi: string | null },
+  slug: string,
+  size: '320' | '800' | 'full'
+): string {
+  return getPhotoUrl(urls, size).replace(/\.jpg(\?|$)/, `/${slug}.jpg$1`)
+}

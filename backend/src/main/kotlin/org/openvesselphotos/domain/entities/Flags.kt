@@ -60,6 +60,11 @@ object Flags {
     fun alpha2(flag: String): String? = ALPHA2_BY_ALPHA3[flag]
 
     /** e.g. "Norway" */
-    fun englishName(flag: String): String =
-        alpha2(flag)?.let { Locale.of("", it).getDisplayCountry(Locale.ENGLISH) } ?: flag
+    fun englishName(flag: String): String = name(flag, Locale.ENGLISH)
+
+    /** e.g. "Norvège" in French */
+    fun name(
+        flag: String,
+        locale: Locale,
+    ): String = alpha2(flag)?.let { Locale.of("", it).getDisplayCountry(locale) } ?: flag
 }

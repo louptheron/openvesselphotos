@@ -180,7 +180,10 @@ export const en = {
     source: 'Source',
     related: 'Other vessels',
     relatedFromPort: (port: string) => `Other vessels of ${port}`,
-    pageTitle: (name: string, keys: string) => `${name} (${keys}) — vessel photos`,
+    /** e.g. "LOLA (LR 539755) — 9 photos · Gillnetter · La Rochelle", as the server renders it */
+    pageTitle: (vessel: string, photoCount: number, details: string[]) =>
+      `${vessel} — ${photoCount ? `${photoCount} photo${photoCount === 1 ? '' : 's'}` : 'vessel photos'}` +
+      details.map(detail => ` · ${detail}`).join(''),
     notFoundPageTitle: (key: string) => `No vessel with ${key}`,
     notFoundTitle: (key: string) => `No vessel with ${key} yet`,
     unavailable: 'Unavailable',
@@ -191,7 +194,8 @@ export const en = {
     tryLater: 'Please try again later.',
     breadcrumb: 'Breadcrumb',
     search: 'Search',
-    photoAlt: (name: string, credit: string) => `${name}, by ${credit}`,
+    photoAlt: (vessel: string, vesselType: string | undefined, place: string | null, credit: string) =>
+      [vessel, vesselType?.toLowerCase(), place && `at ${place}`].filter(Boolean).join(', ') + `, by ${credit}`,
     photoOf: (n: number, count: number) => `Photo ${n} of ${count}`,
     taken: (date: string) => `taken ${date}`,
     noPhotoOf: (name: string) => `No photo of ${name} yet.`,
