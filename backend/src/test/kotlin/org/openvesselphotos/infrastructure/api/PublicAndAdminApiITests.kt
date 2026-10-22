@@ -254,7 +254,7 @@ class PublicAndAdminApiITests {
                 .response.contentAsString
         assertThat(html)
             .contains(
-                "<title>&lt;/script&gt;&lt;b&gt;Evil&lt;/b&gt; (CFR FRA000999888) — vessel photos | Open Vessel Photos</title>",
+                "<title>&lt;/script&gt;&lt;b&gt;Evil&lt;/b&gt; (CFR FRA000999888) — 1 photo | Open Vessel Photos</title>",
             ).contains("""<link rel="canonical" href="http://localhost/vessels/cfr/FRA000999888" />""")
             .contains(""""@type":"ImageObject"""")
             .contains(""""license":"https://creativecommons.org/licenses/by/4.0/"""")
@@ -262,6 +262,46 @@ class PublicAndAdminApiITests {
             .contains("<h1>&lt;/script&gt;&lt;b&gt;Evil&lt;/b&gt;</h1>")
             .doesNotContain("<b>Evil</b>")
             .doesNotContain("noindex")
+
+        // Each page has a French version under /fr, which search engines find from the hreflang links
+        assertThat(html)
+            .contains("""<html lang="en">""")
+            .contains("""<link rel="alternate" hreflang="fr" href="http://localhost/fr/vessels/cfr/FRA000999888" />""")
+            .contains(
+                """<link rel="alternate" hreflang="x-default" href="http://localhost/vessels/cfr/FRA000999888" />""",
+            )
+            // The vessel's name in its photos' URLs
+            .contains("""src="http://localhost/v1/cfr/FRA000999888/photos/1/script-b-evil-b.jpg?size=""")
+        val frenchHtml =
+            mockMvc
+                .perform(get("/fr/vessels/cfr/FRA000999888"))
+                .andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString
+        assertThat(frenchHtml)
+            .contains("""<html lang="fr">""")
+            .contains("""<link rel="canonical" href="http://localhost/fr/vessels/cfr/FRA000999888" />""")
+            .contains("""<link rel="alternate" hreflang="en" href="http://localhost/vessels/cfr/FRA000999888" />""")
+            .contains("1 photo du navire &lt;/script&gt;&lt;b&gt;Evil&lt;/b&gt;")
+            .contains("""<a href="/fr/vessels">Tous les navires</a>""")
+            .contains("""<a href="/fr/vessels/cfr/FRA000999777">SISTER SHIP</a>""")
+            .doesNotContain("noindex")
+        assertThat(
+            mockMvc
+                .perform(get("/fr"))
+                .andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<h1>La photothèque libre des navires, par CFR ou MMSI.</h1>")
+            .contains("""<link rel="canonical" href="http://localhost/fr" />""")
+        mockMvc.perform(get("/fr/vessels")).andExpect(status().isOk)
+        mockMvc.perform(get("/fr/docs")).andExpect(status().isOk)
+        mockMvc.perform(get("/fr/unknown-page")).andExpect(status().isNotFound)
+        mockMvc
+            .perform(get("/v1/cfr/FRA000999888/photos/1/script-b-evil-b.jpg"))
+            .andExpect(status().isOk)
+            .andExpect(content().contentType(MediaType.IMAGE_JPEG))
+        mockMvc.perform(get("/v1/cfr/FRA000999888/photos/1/Not_A_Slug.jpg")).andExpect(status().isNotFound)
 
         mockMvc.perform(get("/vessels/cfr/FRA000000001")).andExpect(status().isNotFound)
         mockMvc.perform(get("/vessels/mmsi/nope")).andExpect(status().isNotFound)
@@ -362,6 +402,7 @@ class PublicAndAdminApiITests {
         mockMvc
             .perform(get("/sitemap-pages.xml"))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("<loc>http://localhost/vessels</loc>")))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("<loc>http://localhost/fr</loc>")))
 
         mockMvc
             .perform(get("/sitemap.xml"))
@@ -381,7 +422,19 @@ class PublicAndAdminApiITests {
             ).andExpect(
                 content().string(
                     org.hamcrest.Matchers.containsString(
-                        "<image:loc>http://localhost/v1/cfr/FRA000999888/photos/1.jpg?size=full</image:loc>",
+                        "<image:loc>http://localhost/v1/cfr/FRA000999888/photos/1/script-b-evil-b.jpg?size=full</image:loc>",
+                    ),
+                ),
+            ).andExpect(
+                content().string(
+                    org.hamcrest.Matchers.containsString(
+                        "<loc>http://localhost/fr/vessels/cfr/FRA000999888</loc>",
+                    ),
+                ),
+            ).andExpect(
+                content().string(
+                    org.hamcrest.Matchers.containsString(
+                        """<xhtml:link rel="alternate" hreflang="fr" href="http://localhost/fr/vessels/cfr/FRA000999888"/>""",
                     ),
                 ),
             )
@@ -734,7 +787,12 @@ class PublicAndAdminApiITests {
                 .perform(get("/vessels/cfr/FRA000700001"))
                 .andReturn()
                 .response.contentAsString,
-        ).contains("Built in 1998 · 24.5 m · 331 kW · 139.46 GT · main gear OTB · call sign FHZV")
+        ).contains("Built in 1998 · 24.5 m · 331 kW · 139.46 GT · main gear Bottom otter trawls (OTB) · call sign FHZV")
+            .contains("<title>LES MENHIRS (CFR FRA000700001) — vessel photos · Trawler | Open Vessel Photos</title>")
+            .contains(
+                "LES MENHIRS is a trawler of 24.5 m, built in 1998, under the flag of France. " +
+                    "Main gear: bottom otter trawls.",
+            )
     }
 
     @Test

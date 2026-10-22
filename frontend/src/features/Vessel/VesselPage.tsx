@@ -19,7 +19,7 @@ import {
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../../theme'
-import { getPhotoUrl, normalizeKey } from '../../utils/vesselKey'
+import { getNamedPhotoUrl, getPhotoSlug, getPhotoUrl, normalizeKey } from '../../utils/vesselKey'
 import { KeyLinkForm } from './KeyLinkForm'
 import { RegisterFacts } from './RegisterFacts'
 import { ReportForm } from './ReportForm'
@@ -44,9 +44,14 @@ export function VesselPage() {
   const keys = vessel
     ? [vessel.cfr && `CFR ${vessel.cfr}`, vessel.mmsi && `MMSI ${vessel.mmsi}`].filter(Boolean).join(', ')
     : ''
+  const vesselType = vessel?.register?.vesselType ? t.register.vesselTypes[vessel.register.vesselType] : undefined
   usePageMeta(
     vessel
-      ? t.vessel.pageTitle(vessel.name ?? keys, keys)
+      ? t.vessel.pageTitle(
+          vessel.name ? `${vessel.name} (${vessel.registration ?? keys})` : keys,
+          vessel.photos.length,
+          [vesselType, vessel.port].filter((detail): detail is string => !!detail)
+        )
       : isLoading
         ? undefined
         : t.vessel.notFoundPageTitle(`${keyType.toUpperCase()} ${key}`)
@@ -121,9 +126,14 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
           {photo ? (
             <Figure>
               <img
-                alt={t.vessel.photoAlt(name, photo.credit)}
-                src={getPhotoUrl(photo.urls, '800')}
-                srcSet={`${getPhotoUrl(photo.urls, '800')} 800w, ${getPhotoUrl(photo.urls, 'full')} 1600w`}
+                alt={t.vessel.photoAlt(
+                  vessel.registration ? `${name} (${vessel.registration})` : name,
+                  vessel.register?.vesselType ? t.register.vesselTypes[vessel.register.vesselType] : undefined,
+                  photo.place,
+                  photo.credit
+                )}
+                src={getNamedPhotoUrl(photo.urls, getPhotoSlug(vessel), '800')}
+                srcSet={`${getNamedPhotoUrl(photo.urls, getPhotoSlug(vessel), '800')} 800w, ${getNamedPhotoUrl(photo.urls, getPhotoSlug(vessel), 'full')} 1600w`}
                 sizes="(max-width: 900px) 100vw, 760px"
               />
               <figcaption>

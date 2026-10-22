@@ -130,7 +130,15 @@ class PublicVesselController(
         @RequestParam(required = false) size: String?,
     ): ResponseEntity<ByteArray> = image(keyType, key, null, size)
 
-    @GetMapping("/{keyType:cfr|mmsi}/{key:[A-Za-z0-9]+}/photos/{n:[0-9]+}.jpg", produces = [MediaType.IMAGE_JPEG_VALUE])
+    /**
+     * The website's pages add the vessel's name to the URL, e.g. /v1/cfr/FRA000539755/photos/1/lola-lr-539755.jpg: search
+     * engines read the words of an image's URL. The name is not checked, so that former names' URLs keep working.
+     */
+    @GetMapping(
+        "/{keyType:cfr|mmsi}/{key:[A-Za-z0-9]+}/photos/{n:[0-9]+}.jpg",
+        "/{keyType:cfr|mmsi}/{key:[A-Za-z0-9]+}/photos/{n:[0-9]+}/{name:[a-z0-9-]+}.jpg",
+        produces = [MediaType.IMAGE_JPEG_VALUE],
+    )
     fun photo(
         @PathVariable keyType: String,
         @PathVariable key: String,

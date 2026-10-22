@@ -11,18 +11,25 @@ import { BrowserRouter } from 'react-router-dom'
 
 import { App } from './App'
 import { GlobalStyle } from './components/GlobalStyle'
-import { I18nProvider } from './i18n'
+import { getBasename, getPathLanguage, getPreferredLanguageUrl, I18nProvider } from './i18n'
 import { store } from './store'
 
-createRoot(document.getElementById('root') as HTMLElement).render(
-  <StrictMode>
-    <Provider store={store}>
-      <I18nProvider>
-        <BrowserRouter>
-          <GlobalStyle />
-          <App />
-        </BrowserRouter>
-      </I18nProvider>
-    </Provider>
-  </StrictMode>
-)
+const preferredLanguageUrl = getPreferredLanguageUrl(window.location)
+const language = getPathLanguage(window.location.pathname)
+
+if (preferredLanguageUrl) {
+  window.location.replace(preferredLanguageUrl)
+} else {
+  createRoot(document.getElementById('root') as HTMLElement).render(
+    <StrictMode>
+      <Provider store={store}>
+        <I18nProvider language={language}>
+          <BrowserRouter basename={getBasename(language)}>
+            <GlobalStyle />
+            <App />
+          </BrowserRouter>
+        </I18nProvider>
+      </Provider>
+    </StrictMode>
+  )
+}

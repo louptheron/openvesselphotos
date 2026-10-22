@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { detectKey, getPhotoUrl, getVesselPath, isValidKey } from './vesselKey'
+import { detectKey, getNamedPhotoUrl, getPhotoSlug, getPhotoUrl, getVesselPath, isValidKey } from './vesselKey'
 
 describe('utils/vesselKey', () => {
   it('detectKey() should recognize a CFR and an MMSI', () => {
@@ -23,6 +23,18 @@ describe('utils/vesselKey', () => {
   it('getPhotoUrl() should add the size', () => {
     expect(getPhotoUrl({ cfr: null, mmsi: 'https://x/v1/mmsi/1/photos/1.jpg' }, '320')).toBe(
       'https://x/v1/mmsi/1/photos/1.jpg?size=320'
+    )
+  })
+
+  it('getPhotoSlug() should name the photos after the vessel, as the server does', () => {
+    expect(getPhotoSlug({ name: 'LOLA', registration: 'LR 539755' })).toBe('lola-lr-539755')
+    expect(getPhotoSlug({ name: "DAMA'LYJO — Île d'Yeu", registration: null })).toBe('dama-lyjo-ile-d-yeu')
+    expect(getPhotoSlug({ name: null, registration: null })).toBe('vessel')
+  })
+
+  it('getNamedPhotoUrl() should add the slug before the extension', () => {
+    expect(getNamedPhotoUrl({ cfr: 'https://x.org/v1/cfr/FRA000539755/photos/1.jpg', mmsi: null }, 'lola', '800')).toBe(
+      'https://x.org/v1/cfr/FRA000539755/photos/1/lola.jpg?size=800'
     )
   })
 })

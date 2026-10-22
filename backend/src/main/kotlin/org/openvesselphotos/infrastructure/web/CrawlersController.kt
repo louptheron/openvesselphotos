@@ -43,7 +43,7 @@ class CrawlersController(
         )
     }
 
-    /** The static pages, and each page of the vessel directory. */
+    /** The static pages, and each page of the vessel directory, in every language. */
     @GetMapping("/sitemap-pages.xml")
     fun pagesSitemap(): ResponseEntity<String> {
         val baseUrl = publicUrl.get()
@@ -59,12 +59,12 @@ class CrawlersController(
                         "/contribute",
                         "/api-key",
                     ) + (2..directoryPages).map { PagesController.directoryPath(it) }
-                ).joinToString("") { "<url><loc>$baseUrl$it</loc></url>" } +
+                ).joinToString("") { urls(baseUrl, it) } +
                 "</urlset>",
         )
     }
 
-    /** Vessel pages, with their photos (Google image sitemap extension). */
+    /** Vessel pages in every language, with their photos (Google image sitemap extension). */
     @GetMapping("/sitemap-vessels-{page:[0-9]+}.xml")
     fun vesselsSitemap(
         @PathVariable page: Int,
@@ -84,12 +84,36 @@ class CrawlersController(
                         )}</image:loc></image:image>"
                     }
 
-                "<url><loc>$baseUrl${PagesController.vesselPath(
-                    vessel,
-                )}</loc>${lastModified?.let { "<lastmod>$it</lastmod>" } ?: ""}$images</url>"
+                urls(
+                    baseUrl,
+                    PagesController.vesselPath(vessel),
+                    lastModified?.let { "<lastmod>$it</lastmod>" }.orEmpty(),
+                    images,
+                )
             }
 
         return xml(URLSET_OPEN + urls + "</urlset>")
+    }
+
+    /**
+     * A page's URL in each language, each linked to the others (hreflang). The photos are listed under the English
+     * URL only: they are the same images.
+     */
+    private fun urls(
+        baseUrl: String,
+        path: String,
+        lastModified: String = "",
+        images: String = "",
+    ): String {
+        val alternates =
+            Language.entries.joinToString("") {
+                """<xhtml:link rel="alternate" hreflang="${it.code}" href="${escapeHtml(baseUrl + it.path(path))}"/>"""
+            } + """<xhtml:link rel="alternate" hreflang="x-default" href="${escapeHtml(baseUrl + path)}"/>"""
+
+        return Language.entries.joinToString("") {
+            "<url><loc>${escapeHtml(baseUrl + it.path(path))}</loc>$lastModified$alternates" +
+                "${if (it == Language.EN) images else ""}</url>"
+        }
     }
 
     private fun xml(body: String): ResponseEntity<String> =
@@ -103,6 +127,7 @@ class CrawlersController(
         const val VESSELS_PER_SITEMAP = 10_000
         private const val URLSET_OPEN =
             """<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" """ +
-                """xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">"""
+                """xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" """ +
+                """xmlns:xhtml="http://www.w3.org/1999/xhtml">"""
     }
 }

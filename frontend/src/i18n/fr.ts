@@ -184,7 +184,9 @@ export const fr: Messages = {
     source: 'Source',
     related: 'Autres navires',
     relatedFromPort: (port: string) => `Autres navires de ${port}`,
-    pageTitle: (name: string, keys: string) => `${name} (${keys}) — photos du navire`,
+    pageTitle: (vessel: string, photoCount: number, details: string[]) =>
+      `${vessel} — ${photoCount ? `${photoCount} photo${photoCount === 1 ? '' : 's'}` : 'photos du navire'}` +
+      details.map(detail => ` · ${detail}`).join(''),
     notFoundPageTitle: (key: string) => `Aucun navire avec le ${key}`,
     notFoundTitle: (key: string) => `Aucun navire avec le ${key} pour l’instant`,
     unavailable: 'Indisponible',
@@ -195,7 +197,8 @@ export const fr: Messages = {
     tryLater: 'Veuillez réessayer plus tard.',
     breadcrumb: 'Fil d’Ariane',
     search: 'Recherche',
-    photoAlt: (name: string, credit: string) => `${name}, par ${credit}`,
+    photoAlt: (vessel: string, vesselType: string | undefined, place: string | null, credit: string) =>
+      [vessel, vesselType?.toLowerCase(), place && `à ${place}`].filter(Boolean).join(', ') + `, par ${credit}`,
     photoOf: (n: number, count: number) => `Photo ${n} sur ${count}`,
     taken: (date: string) => `prise le ${date}`,
     noPhotoOf: (name: string) => `Pas encore de photo de ${name}.`,

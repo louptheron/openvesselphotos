@@ -16,6 +16,12 @@ data class HtmlPage(
     val description: String,
     /** Path of the canonical URL; null for pages that must not be indexed. */
     val canonicalPath: String?,
+    val language: Language = Language.EN,
+    /**
+     * Path of the page without its language prefix, for pages in every language (e.g. "/vessels"): search engines link
+     * each language's version to the others with it (hreflang).
+     */
+    val pathInEveryLanguage: String? = null,
     val isIndexable: Boolean = true,
     val imageUrl: String? = null,
     val structuredData: List<Map<String, Any?>> = emptyList(),
@@ -52,7 +58,8 @@ class HtmlPageRenderer(
                 .replace(
                     Regex("$HEAD_START.*?$HEAD_END", RegexOption.DOT_MATCHES_ALL),
                     Regex.escapeReplacement(renderHead(page)),
-                ).replace(BODY_MARKER, page.body)
+                ).replace(HTML_LANG, """<html lang="${page.language.code}">""")
+                .replace(BODY_MARKER, page.body)
 
         return ResponseEntity
             .status(page.status)
@@ -77,7 +84,18 @@ class HtmlPageRenderer(
                 appendLine("""    <link rel="canonical" href="${escapeHtml(it)}" />""")
                 appendLine("""    <meta property="og:url" content="${escapeHtml(it)}" />""")
             }
+            page.pathInEveryLanguage?.let { path ->
+                Language.entries.forEach {
+                    appendLine(
+                        """    <link rel="alternate" hreflang="${it.code}" href="${escapeHtml(
+                            baseUrl + it.path(path),
+                        )}" />""",
+                    )
+                }
+                appendLine("""    <link rel="alternate" hreflang="x-default" href="${escapeHtml(baseUrl + path)}" />""")
+            }
             appendLine("""    <meta property="og:site_name" content="$SITE_NAME" />""")
+            appendLine("""    <meta property="og:locale" content="${page.language.ogLocale}" />""")
             appendLine("""    <meta property="og:type" content="website" />""")
             appendLine("""    <meta property="og:title" content="$title" />""")
             appendLine("""    <meta property="og:description" content="$description" />""")
@@ -101,6 +119,7 @@ class HtmlPageRenderer(
         private const val HEAD_START = "<!-- seo:head -->"
         private const val HEAD_END = "<!-- /seo:head -->"
         private const val BODY_MARKER = "<!-- seo:body -->"
+        private const val HTML_LANG = """<html lang="en">"""
         private const val FALLBACK_TEMPLATE =
             "<!doctype html><html lang=\"en\"><head>$HEAD_START$HEAD_END</head><body><div id=\"root\">$BODY_MARKER</div></body></html>"
     }
