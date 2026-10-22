@@ -1,14 +1,17 @@
 package org.openvesselphotos.infrastructure.web
 
+import org.openvesselphotos.domain.entities.Flags
 import org.openvesselphotos.domain.entities.ImageSize
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Photo
 import org.openvesselphotos.domain.entities.Vessel
+import org.openvesselphotos.domain.entities.VesselFilter
 import org.openvesselphotos.domain.entities.VesselKey
 import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.use_cases.public_api.GetRecentVessels
 import org.openvesselphotos.domain.use_cases.public_api.GetVessel
 import org.openvesselphotos.domain.use_cases.public_api.GetVesselsPage
+import org.openvesselphotos.domain.use_cases.public_api.vesselFilter
 import org.openvesselphotos.infrastructure.web.HtmlPageRenderer.Companion.SITE_NAME
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import java.net.URI
+import java.net.URLEncoder
 
 /**
  * Serves the pages of the React app, each with its own title, description, canonical URL, structured data and
@@ -188,28 +192,45 @@ class PagesController(
     @GetMapping("/vessels")
     fun vessels(
         @RequestParam(required = false) page: String?,
+        @RequestParam(required = false) flag: String?,
+        @RequestParam(required = false) port: String?,
+        @RequestParam(required = false) vesselType: String?,
+        @RequestParam(required = false) mainGear: String?,
     ): ResponseEntity<String> {
+        val filter = vesselFilter(flag, port, vesselType, mainGear)
         val pageSize = GetVesselsPage.DIRECTORY_PAGE_SIZE
-        val pageCount = getVesselsPage.pageCount(pageSize).coerceAtLeast(1)
+        val pageCount = getVesselsPage.pageCount(pageSize, filter).coerceAtLeast(1)
         if (page == "1") {
-            return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).location(URI.create(directoryPath(1))).build()
+            return ResponseEntity
+                .status(HttpStatus.MOVED_PERMANENTLY)
+                .location(URI.create(directoryPath(1, filter)))
+                .build()
         }
         val number = if (page == null) 1 else page.toIntOrNull()?.takeIf { it in 2..pageCount }
         if (number == null) {
             return notFound("Page not found")
         }
-        val vessels = getVesselsPage.execute(number, pageSize)
-        val total = getVesselsPage.count()
+        val vessels = getVesselsPage.execute(number, pageSize, filter)
+        val total = getVesselsPage.count(filter)
         val range =
             vessels
                 .takeIf { it.isNotEmpty() }
                 ?.let { " (${vesselName(it.first().vessel)} to ${vesselName(it.last().vessel)})" }
                 .orEmpty()
         val pageText = if (pageCount > 1) ", page $number of $pageCount$range" else ""
+        // e.g. "flag Norway, main gear OTB"
+        val filterText =
+            listOfNotNull(
+                filter.flag?.let { "flag ${Flags.englishName(it)}" },
+                filter.port?.let { "port $it" },
+                filter.vesselType?.let { "type $it" },
+                filter.mainGear?.let { "main gear $it" },
+            ).joinToString(", ")
+        val heading = if (filter.isEmpty) "All vessels with photos" else "Vessels with photos: $filterText"
         val description = "Browse the $total vessels with free photos on $SITE_NAME, by name$pageText."
         val items = vessels.joinToString("") { (vessel, photos) -> vesselListItem(vessel, photos) }
-        val previousLink = """<a href="${directoryPath(number - 1)}" rel="prev">Previous page</a>"""
-        val nextLink = """<a href="${directoryPath(number + 1)}" rel="next">Next page</a>"""
+        val previousLink = """<a href="${escapeHtml(directoryPath(number - 1, filter))}" rel="prev">Previous page</a>"""
+        val nextLink = """<a href="${escapeHtml(directoryPath(number + 1, filter))}" rel="next">Next page</a>"""
         val navigation =
             listOfNotNull(
                 previousLink.takeIf { number > 1 },
@@ -218,22 +239,24 @@ class PagesController(
 
         return htmlPageRenderer.render(
             HtmlPage(
-                title =
-                    "All vessels with photos${if (pageCount > 1) " — page $number of $pageCount" else ""} | $SITE_NAME",
+                title = "$heading${if (pageCount > 1) " — page $number of $pageCount" else ""} | $SITE_NAME",
                 description = description,
-                canonicalPath = directoryPath(number),
+                // Filtered pages repeat the directory's vessels: only the directory itself is indexed
+                canonicalPath = directoryPath(number).takeIf { filter.isEmpty },
+                isIndexable = filter.isEmpty,
                 structuredData =
                     listOf(
                         mapOf(
                             "@context" to "https://schema.org",
                             "@type" to "CollectionPage",
-                            "name" to "All vessels with photos",
+                            "name" to heading,
                             "description" to description,
                             "url" to publicUrl.get() + directoryPath(number),
                         ),
-                    ),
+                    ).takeIf { filter.isEmpty }
+                        .orEmpty(),
                 body =
-                    """<main><h1>All vessels with photos</h1><p>${escapeHtml(description)}</p>""" +
+                    """<main><h1>${escapeHtml(heading)}</h1><p>${escapeHtml(description)}</p>""" +
                         """<ul>$items</ul><p>$navigation</p></main>""",
             ),
         )
@@ -377,8 +400,25 @@ class PagesController(
 
         fun vesselName(vessel: Vessel): String = vessel.name ?: vessel.cfr?.let { "CFR $it" } ?: "MMSI ${vessel.mmsi}"
 
-        /** [page] starts at 1, whose URL has no parameter. */
-        fun directoryPath(page: Int): String = if (page <= 1) "/vessels" else "/vessels?page=$page"
+        private fun encode(value: String): String = URLEncoder.encode(value, Charsets.UTF_8)
+
+        /** [page] starts at 1, whose URL has no page parameter. Same URLs as the React app's (VesselsPage). */
+        fun directoryPath(
+            page: Int,
+            filter: VesselFilter = VesselFilter(),
+        ): String {
+            val parameters =
+                listOfNotNull(
+                    filter.flag?.let { "flag" to it },
+                    filter.port?.let { "port" to it },
+                    filter.vesselType?.let { "vesselType" to it },
+                    filter.mainGear?.let { "mainGear" to it },
+                    page.takeIf { it > 1 }?.let { "page" to "$it" },
+                )
+            val query = parameters.joinToString("&") { (name, value) -> "$name=${encode(value)}" }
+
+            return "/vessels${if (query.isEmpty()) "" else "?$query"}"
+        }
 
         /** A vessel's page is under its CFR when it has one, else its MMSI. */
         fun vesselPath(vessel: Vessel): String =

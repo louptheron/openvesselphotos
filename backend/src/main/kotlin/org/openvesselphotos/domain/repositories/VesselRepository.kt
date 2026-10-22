@@ -1,6 +1,8 @@
 package org.openvesselphotos.domain.repositories
 
 import org.openvesselphotos.domain.entities.Vessel
+import org.openvesselphotos.domain.entities.VesselFilter
+import org.openvesselphotos.domain.entities.VesselFilterOptions
 import org.openvesselphotos.domain.entities.VesselKey
 import java.time.LocalDate
 
@@ -39,7 +41,10 @@ interface VesselRepository {
     /** Vessels created on each day since [day], imports included (days without any are left out). */
     fun countCreatedByDay(day: LocalDate): Map<LocalDate, Int>
 
-    fun countWithApprovedPhotos(): Int
+    fun countWithApprovedPhotos(filter: VesselFilter = VesselFilter()): Int
+
+    /** The flags (see [org.openvesselphotos.domain.entities.Flags]), ports, types and gears of vessels with photos */
+    fun findFilterOptions(): VesselFilterOptions
 
     /**
      * Other vessels with approved photos, from the same port first, then under the same flag (from the CFR) or the
@@ -54,5 +59,6 @@ interface VesselRepository {
     fun findPageWithApprovedPhotos(
         offset: Int,
         limit: Int,
+        filter: VesselFilter = VesselFilter(),
     ): List<Vessel>
 }

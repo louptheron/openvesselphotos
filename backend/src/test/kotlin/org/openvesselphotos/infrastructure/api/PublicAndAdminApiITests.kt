@@ -311,6 +311,54 @@ class PublicAndAdminApiITests {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.page").value(1))
             .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000999888')]").exists())
+
+        // Filters: the flag comes from the CFR, or from the MMSI's MID (257: Norway) for vessels without CFR
+        submitPhoto("mmsi", "257123450", "NORDLYS")
+        val norwegianPhotoId =
+            Regex(
+                """"id":(\d+),"number":null,"submittedKeyType":"mmsi","submittedKey":"257123450"""",
+            ).find(
+                mockMvc
+                    .perform(get("/v1/admin/queue").cookie(cookie))
+                    .andReturn()
+                    .response.contentAsString,
+            )!!
+                .groupValues[1]
+        mockMvc
+            .perform(
+                post("/v1/admin/photos/$norwegianPhotoId/approve").cookie(cookie),
+            ).andExpect(status().isNoContent)
+        mockMvc
+            .perform(get("/v1/vessels").param("flag", "nor"))
+            .andExpect(jsonPath("$.vessels[?(@.mmsi == '257123450')]").exists())
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000999888')]").doesNotExist())
+        mockMvc
+            .perform(get("/v1/vessels").param("flag", "FRA"))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000999888')]").exists())
+            .andExpect(jsonPath("$.vessels[?(@.mmsi == '257123450')]").doesNotExist())
+        mockMvc
+            .perform(get("/v1/vessels").param("mainGear", "OTB"))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000999888')]").doesNotExist())
+        mockMvc
+            .perform(get("/v1/vessels/filters"))
+            .andExpect(jsonPath("$.flags[?(@.value == 'NOR')].countryCode").value("NO"))
+            .andExpect(jsonPath("$.flags[?(@.value == 'FRA')].countryCode").value("FR"))
+        // Filtered pages are not indexed, and keep their filters from page to page
+        assertThat(
+            mockMvc
+                .perform(get("/vessels").param("flag", "NOR"))
+                .andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<h1>Vessels with photos: flag Norway</h1>")
+            .contains("""<li><a href="/vessels/mmsi/257123450">NORDLYS</a>""")
+            .contains("noindex")
+            .doesNotContain("""rel="canonical"""")
+            .doesNotContain("FRA000999888")
+        mockMvc
+            .perform(get("/vessels").param("flag", "NOR").param("page", "1"))
+            .andExpect(status().isMovedPermanently)
+            .andExpect(header().string("Location", "/vessels?flag=NOR"))
         mockMvc
             .perform(get("/sitemap-pages.xml"))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("<loc>http://localhost/vessels</loc>")))

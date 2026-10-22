@@ -346,7 +346,8 @@ export const fr: Messages = {
       `Une photo précise${_}; le même n sous l’un ou l’autre identifiant est le même fichier. Même paramètre ?size.`,
       'Recherche par nom, port, immatriculation, ou début de CFR ou de MMSI. 24 résultats au plus.',
       'Les navires dont les photos ont été publiées le plus récemment. ?limit=12 (48 au plus).',
-      'Tous les navires avec photos, par nom, 100 par page, avec le nombre de pages et le total.',
+      `Tous les navires avec photos, par nom, 100 par page, avec le nombre de pages et le total. Filtres facultatifs${_}: flag (ISO alpha-3, d’après le CFR ou sinon le MMSI), port, vesselType, mainGear.`,
+      `Les valeurs de ces filtres, avec leur nombre de navires${_}; les pavillons ont aussi leur code ISO alpha-2 countryCode.`,
       `Toutes les données${_}: chaque navire avec les URL, crédits et licences de ses photos.`,
       `Envoyer une photo (multipart${_}: file, credit, licence, takenOn?, place?, email?, vesselName?, et mmsi? sous un CFR ou cfr? sous un MMSI), sous l’identifiant que vous connaissez. Publiée après vérification. Nécessite une clé d’API.`,
       'Proposer l’identifiant manquant, ex. {"keyType": "cfr", "key": "FRA000123456"}. Appliqué après vérification. Nécessite une clé d’API.',
@@ -384,6 +385,12 @@ export const fr: Messages = {
     previous: '← Précédente',
     next: 'Suivante →',
     pageOf: (page: number, pageCount: number) => `Page ${page} sur ${pageCount}`,
+    filteredTitle: 'Navires avec photos',
+    filters: 'Filtres',
+    flag: 'Pavillon',
+    any: 'Tous',
+    clearFilters: 'Effacer les filtres',
+    noMatch: 'Aucun navire ne correspond à ces filtres.',
     unavailable: 'La liste des navires est indisponible pour le moment. Veuillez réessayer plus tard.'
   },
   notFound: {

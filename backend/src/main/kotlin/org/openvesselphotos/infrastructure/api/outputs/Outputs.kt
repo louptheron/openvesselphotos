@@ -1,11 +1,13 @@
 package org.openvesselphotos.infrastructure.api.outputs
 
+import org.openvesselphotos.domain.entities.Flags
 import org.openvesselphotos.domain.entities.HistoryEvent
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Photo
 import org.openvesselphotos.domain.entities.RegisterData
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselDetails
+import org.openvesselphotos.domain.entities.VesselFilterOptions
 import org.openvesselphotos.domain.entities.VesselWithPhotos
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -104,6 +106,34 @@ data class RegisterDataOutput(
                     importedOn = register.importedOn,
                 )
             }
+    }
+}
+
+data class FilterOptionDataOutput(
+    val value: String,
+    val count: Int,
+    /** For flags: ISO 3166-1 alpha-2, to name the country in any language */
+    val countryCode: String? = null,
+)
+
+data class VesselFilterOptionsDataOutput(
+    /** ISO 3166-1 alpha-3, from the CFR or else the MMSI's MID */
+    val flags: List<FilterOptionDataOutput>,
+    /** Ports of registration ("quartiers d'immatriculation" in France) */
+    val ports: List<FilterOptionDataOutput>,
+    /** EU fleet register vessel type codes */
+    val vesselTypes: List<FilterOptionDataOutput>,
+    /** FAO gear codes */
+    val mainGears: List<FilterOptionDataOutput>,
+) {
+    companion object {
+        fun from(options: VesselFilterOptions) =
+            VesselFilterOptionsDataOutput(
+                flags = options.flags.map { FilterOptionDataOutput(it.value, it.count, Flags.alpha2(it.value)) },
+                ports = options.ports.map { FilterOptionDataOutput(it.value, it.count) },
+                vesselTypes = options.vesselTypes.map { FilterOptionDataOutput(it.value, it.count) },
+                mainGears = options.mainGears.map { FilterOptionDataOutput(it.value, it.count) },
+            )
     }
 }
 

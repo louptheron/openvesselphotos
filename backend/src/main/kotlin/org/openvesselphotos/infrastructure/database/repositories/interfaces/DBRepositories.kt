@@ -15,6 +15,33 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 
+/**
+ * Filters of the vessel directory, null for any value. The flag comes from the CFR, else from the MMSI's MID: [mids]
+ * lists the flag's MIDs, comma-separated.
+ */
+private const val DIRECTORY_FILTER = """
+    AND (CAST(:flag AS TEXT) IS NULL
+        OR (v.cfr IS NOT NULL AND left(v.cfr, 3) = CAST(:flag AS TEXT))
+        OR (v.cfr IS NULL AND left(v.mmsi, 3) = ANY(string_to_array(CAST(:mids AS TEXT), ','))))
+    AND (CAST(:port AS TEXT) IS NULL OR v.port = CAST(:port AS TEXT))
+    AND (CAST(:vesselType AS TEXT) IS NULL OR v.vessel_type = CAST(:vesselType AS TEXT))
+    AND (CAST(:mainGear AS TEXT) IS NULL OR v.main_gear = CAST(:mainGear AS TEXT))
+"""
+
+private const val WITH_APPROVED_PHOTOS =
+    "FROM vessels v WHERE EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')"
+
+private const val COUNT_DIRECTORY = "SELECT count(*) $WITH_APPROVED_PHOTOS $DIRECTORY_FILTER"
+
+private const val FIND_DIRECTORY_PAGE =
+    "SELECT * $WITH_APPROVED_PHOTOS $DIRECTORY_FILTER ORDER BY v.name NULLS LAST, v.id OFFSET :offset LIMIT :limit"
+
+interface FilterOptionCount {
+    val kind: String
+    val value: String
+    val count: Long
+}
+
 interface DBVesselRepository : JpaRepository<VesselEntity, Int> {
     fun findByCfr(cfr: String): VesselEntity?
 
@@ -59,28 +86,46 @@ interface DBVesselRepository : JpaRepository<VesselEntity, Int> {
     )
     fun findAllWithApprovedPhotos(): List<VesselEntity>
 
-    @Query(
-        value = """
-            SELECT count(*) FROM vessels v
-            WHERE EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')
-        """,
-        nativeQuery = true,
-    )
-    fun countWithApprovedPhotos(): Long
+    @Query(value = COUNT_DIRECTORY, nativeQuery = true)
+    fun countWithApprovedPhotos(
+        flag: String?,
+        mids: String?,
+        port: String?,
+        vesselType: String?,
+        mainGear: String?,
+    ): Long
 
-    @Query(
-        value = """
-            SELECT * FROM vessels v
-            WHERE EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')
-            ORDER BY v.name NULLS LAST, v.id
-            OFFSET :offset LIMIT :limit
-        """,
-        nativeQuery = true,
-    )
+    @Query(value = FIND_DIRECTORY_PAGE, nativeQuery = true)
     fun findPageWithApprovedPhotos(
         offset: Int,
         limit: Int,
+        flag: String?,
+        mids: String?,
+        port: String?,
+        vesselType: String?,
+        mainGear: String?,
     ): List<VesselEntity>
+
+    /** Per filter ("flag", "port", "vesselType", "mainGear"), the number of vessels with photos by value */
+    @Query(
+        value = """
+            WITH v AS (
+                SELECT * FROM vessels v
+                WHERE EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')
+            )
+            SELECT 'flag' AS kind, CASE WHEN cfr IS NOT NULL THEN left(cfr, 3) ELSE 'MID' || left(mmsi, 3) END AS value,
+                count(*) AS count
+            FROM v GROUP BY 2
+            UNION ALL
+            SELECT 'port', port, count(*) FROM v WHERE port IS NOT NULL GROUP BY 2
+            UNION ALL
+            SELECT 'vesselType', vessel_type, count(*) FROM v WHERE vessel_type IS NOT NULL GROUP BY 2
+            UNION ALL
+            SELECT 'mainGear', main_gear, count(*) FROM v WHERE main_gear IS NOT NULL GROUP BY 2
+        """,
+        nativeQuery = true,
+    )
+    fun countFilterOptions(): List<FilterOptionCount>
 
     /** See [org.openvesselphotos.domain.repositories.VesselRepository.findRelatedWithApprovedPhotos] */
     @Query(

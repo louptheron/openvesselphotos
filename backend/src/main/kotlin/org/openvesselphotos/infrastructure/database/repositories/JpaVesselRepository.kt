@@ -1,7 +1,11 @@
 package org.openvesselphotos.infrastructure.database.repositories
 
+import org.openvesselphotos.domain.entities.FilterOption
+import org.openvesselphotos.domain.entities.Flags
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Vessel
+import org.openvesselphotos.domain.entities.VesselFilter
+import org.openvesselphotos.domain.entities.VesselFilterOptions
 import org.openvesselphotos.domain.entities.VesselKey
 import org.openvesselphotos.domain.repositories.VesselImportCounts
 import org.openvesselphotos.domain.repositories.VesselRepository
@@ -62,7 +66,43 @@ class JpaVesselRepository(
                 java.sql.Date.valueOf(day),
             ).toMap()
 
-    override fun countWithApprovedPhotos(): Int = dbVesselRepository.countWithApprovedPhotos().toInt()
+    override fun countWithApprovedPhotos(filter: VesselFilter): Int =
+        dbVesselRepository
+            .countWithApprovedPhotos(
+                flag = filter.flag,
+                mids = filter.flag?.let { Flags.midsOf(it).joinToString(",") },
+                port = filter.port,
+                vesselType = filter.vesselType,
+                mainGear = filter.mainGear,
+            ).toInt()
+
+    override fun findFilterOptions(): VesselFilterOptions {
+        val counts = dbVesselRepository.countFilterOptions().groupBy { it.kind }
+
+        fun options(kind: String) =
+            counts[kind]
+                .orEmpty()
+                .map { FilterOption(it.value, it.count.toInt()) }
+                .sortedWith(compareByDescending<FilterOption> { it.count }.thenBy { it.value })
+
+        // Vessels without CFR are counted by MID ("MID257"): summed by country, unknown MIDs left out
+        val flags =
+            counts["flag"]
+                .orEmpty()
+                .mapNotNull { count ->
+                    val flag = if (count.value.startsWith("MID")) Flags.ofMmsi(count.value.drop(3)) else count.value
+                    flag?.let { it to count.count.toInt() }
+                }.groupBy({ it.first }, { it.second })
+                .map { (flag, counts) -> FilterOption(flag, counts.sum()) }
+                .sortedWith(compareByDescending<FilterOption> { it.count }.thenBy { it.value })
+
+        return VesselFilterOptions(
+            flags = flags,
+            ports = options("port"),
+            vesselTypes = options("vesselType"),
+            mainGears = options("mainGear"),
+        )
+    }
 
     override fun findRelatedWithApprovedPhotos(
         vessel: Vessel,
@@ -80,7 +120,18 @@ class JpaVesselRepository(
     override fun findPageWithApprovedPhotos(
         offset: Int,
         limit: Int,
-    ): List<Vessel> = dbVesselRepository.findPageWithApprovedPhotos(offset, limit).map { it.toVessel() }
+        filter: VesselFilter,
+    ): List<Vessel> =
+        dbVesselRepository
+            .findPageWithApprovedPhotos(
+                offset = offset,
+                limit = limit,
+                flag = filter.flag,
+                mids = filter.flag?.let { Flags.midsOf(it).joinToString(",") },
+                port = filter.port,
+                vesselType = filter.vesselType,
+                mainGear = filter.mainGear,
+            ).map { it.toVessel() }
 
     /** JDBC batches: a whole fleet register (tens of thousands of vessels) imports in seconds. */
     override fun importAll(vessels: List<Vessel>): VesselImportCounts {

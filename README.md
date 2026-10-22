@@ -211,7 +211,8 @@ See `/docs` on a running instance. In short:
 | GET    | `/v1/{cfr\|mmsi}/{key}/photos/{n}.jpg`        | Photo `n`, same file under both keys          |
 | GET    | `/v1/search?q=`                              | Search by name, CFR or MMSI prefix            |
 | GET    | `/v1/vessels/recent`                         | Latest published vessels                      |
-| GET    | `/v1/vessels?page=`                          | All vessels with photos, by name, 100 a page  |
+| GET    | `/v1/vessels?page=&flag=&port=&vesselType=&mainGear=` | All vessels with photos, by name, 100 a page, filtered |
+| GET    | `/v1/vessels/filters`                        | Values of these filters, with their counts    |
 | GET    | `/v1/export.json`                            | Whole dataset                                 |
 | POST   | `/v1/{cfr\|mmsi}/{key}/photos`                | Contribute a photo (multipart), API key       |
 | POST   | `/v1/{cfr\|mmsi}/{key}/link`                  | Suggest the missing key                       |

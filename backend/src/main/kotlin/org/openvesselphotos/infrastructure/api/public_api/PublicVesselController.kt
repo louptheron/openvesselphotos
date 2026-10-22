@@ -18,6 +18,7 @@ import org.openvesselphotos.domain.use_cases.public_api.RequestApiKey
 import org.openvesselphotos.domain.use_cases.public_api.SearchVessels
 import org.openvesselphotos.domain.use_cases.public_api.SubmitPhoto
 import org.openvesselphotos.domain.use_cases.public_api.SuggestKeyLink
+import org.openvesselphotos.domain.use_cases.public_api.vesselFilter
 import org.openvesselphotos.infrastructure.api.inputs.ApiKeyRequestDataInput
 import org.openvesselphotos.infrastructure.api.inputs.KeyLinkDataInput
 import org.openvesselphotos.infrastructure.api.inputs.ReportDataInput
@@ -25,6 +26,7 @@ import org.openvesselphotos.infrastructure.api.outputs.ExportedVesselDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.PhotoDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.SubmissionDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.VesselDataOutput
+import org.openvesselphotos.infrastructure.api.outputs.VesselFilterOptionsDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.VesselSummaryDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.VesselsPageDataOutput
 import org.openvesselphotos.infrastructure.api.security.ApiKeyCheckFilter
@@ -73,21 +75,33 @@ class PublicVesselController(
     ): List<VesselSummaryDataOutput> =
         getRecentVessels.execute(limit).map { VesselSummaryDataOutput.from(baseUrl(), it) }
 
-    /** The vessel directory: vessels with photos by name, [GetVesselsPage.DIRECTORY_PAGE_SIZE] per page. */
+    /**
+     * The vessel directory: vessels with photos by name, [GetVesselsPage.DIRECTORY_PAGE_SIZE] per page, optionally
+     * filtered (see /vessels/filters for the values).
+     */
     @GetMapping("/vessels")
     fun vessels(
         @RequestParam(defaultValue = "1") page: Int,
+        @RequestParam(required = false) flag: String?,
+        @RequestParam(required = false) port: String?,
+        @RequestParam(required = false) vesselType: String?,
+        @RequestParam(required = false) mainGear: String?,
     ): VesselsPageDataOutput {
         val pageSize = GetVesselsPage.DIRECTORY_PAGE_SIZE
-        val vessels = if (page >= 1) getVesselsPage.execute(page, pageSize) else emptyList()
+        val filter = vesselFilter(flag, port, vesselType, mainGear)
+        val vessels = if (page >= 1) getVesselsPage.execute(page, pageSize, filter) else emptyList()
 
         return VesselsPageDataOutput(
             page = page,
-            pageCount = getVesselsPage.pageCount(pageSize),
-            total = getVesselsPage.count(),
+            pageCount = getVesselsPage.pageCount(pageSize, filter),
+            total = getVesselsPage.count(filter),
             vessels = vessels.map { VesselSummaryDataOutput.from(baseUrl(), it) },
         )
     }
+
+    @GetMapping("/vessels/filters")
+    fun vesselFilters(): VesselFilterOptionsDataOutput =
+        VesselFilterOptionsDataOutput.from(getVesselsPage.filterOptions())
 
     @GetMapping("/export.json")
     fun export(): List<ExportedVesselDataOutput> {

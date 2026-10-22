@@ -341,7 +341,8 @@ export const en = {
       'A specific photo; the same n under either key is the same file. Same ?size parameter.',
       'Search by name, port, registration, or the beginning of a CFR or MMSI. Up to 24 results.',
       'Vessels with the most recently published photos. ?limit=12 (max 48).',
-      'All vessels with photos, by name, 100 per page, with the page count and total.',
+      'All vessels with photos, by name, 100 per page, with the page count and total. Optional filters: flag (ISO alpha-3, from the CFR or else the MMSI), port, vesselType, mainGear.',
+      'The values of these filters, with their number of vessels; flags also have their ISO alpha-2 countryCode.',
       'The whole dataset: every vessel with its photo URLs, credits and licences.',
       'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, vesselName?, plus mmsi? under a CFR or cfr? under an MMSI), under whichever key you know. Published after review. Needs an API key.',
       'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review. Needs an API key.',
@@ -380,6 +381,12 @@ export const en = {
     previous: '← Previous',
     next: 'Next →',
     pageOf: (page: number, pageCount: number) => `Page ${page} of ${pageCount}`,
+    filteredTitle: 'Vessels with photos',
+    filters: 'Filters',
+    flag: 'Flag',
+    any: 'All',
+    clearFilters: 'Clear filters',
+    noMatch: 'No vessel matches these filters.',
     unavailable: 'The list of vessels is unavailable right now. Please try again later.'
   },
   notFound: {
