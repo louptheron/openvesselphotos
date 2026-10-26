@@ -176,9 +176,11 @@ class PagesController(
                         photo.sourceUrl?.let { """<a href="${escapeHtml(it)}">${escapeHtml(texts.source)}</a>""" },
                     ).joinToString(" · ") + photo.note?.let { "<br>${escapeHtml(it)}" }.orEmpty()
 
-                """<figure><img src="${escapeHtml(photoUrl(baseUrl, vessel, photo, ImageSize.MEDIUM))}" """ +
+                // The link ties the full size image, the one in the sitemap and the structured data, to the page
+                """<figure><a href="${escapeHtml(photoUrl(baseUrl, vessel, photo, ImageSize.FULL))}">""" +
+                    """<img src="${escapeHtml(photoUrl(baseUrl, vessel, photo, ImageSize.MEDIUM))}" """ +
                     """alt="${escapeHtml(alt)}" width="${ImageSize.MEDIUM.pixels}" """ +
-                    """height="${photo.height * ImageSize.MEDIUM.pixels / photo.width}" />""" +
+                    """height="${photo.height * ImageSize.MEDIUM.pixels / photo.width}" /></a>""" +
                     """<figcaption>$caption</figcaption></figure>"""
             }
 
