@@ -12,8 +12,21 @@ data class Vessel(
     /** Port of registration */
     val port: String? = null,
     val register: RegisterData = RegisterData(),
+    val wikidata: WikidataData = WikidataData(),
     val createdAt: ZonedDateTime? = null,
 ) {
+    /**
+     * Named, with its type, year and length known: enough for a page of its own before any photo. Same rule as
+     * [org.openvesselphotos.domain.repositories.VesselRepository.findDescribedWithoutApprovedPhotos].
+     */
+    val isDescribed: Boolean
+        get() =
+            name != null &&
+                register.vesselType != null &&
+                register.vesselType != UNSPECIFIED_VESSEL_TYPE &&
+                register.yearBuilt != null &&
+                register.lengthMeters != null
+
     /** ISO 3166-1 alpha-3 code, the first three letters of the CFR. */
     val flag: String? get() = cfr?.take(3)
 
@@ -30,6 +43,9 @@ data class Vessel(
         }
 
     companion object {
+        /** FAO vessel type code of the EU fleet register when the type is not specified */
+        const val UNSPECIFIED_VESSEL_TYPE = "FX"
+
         fun create(
             key: VesselKey,
             name: String?,

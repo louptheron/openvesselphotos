@@ -44,11 +44,19 @@ sealed interface PageTexts {
     /** e.g. "Flag France", after the vessel's keys */
     fun flagFact(country: String): String
 
+    /** e.g. "Also known as Lee A. Tregurtha" */
+    fun otherNames(names: String): String
+
+    /** Credits Wikidata, linked, for the data found there */
+    val wikidataSource: String
+
+    /** [summary]: the vessel's own sentence (see [summary]), which opens the description of a vessel without photo */
     fun vesselDescription(
         name: String,
         details: String,
         photoCount: Int,
         licences: String,
+        summary: String?,
     ): String
 
     fun otherVesselsOf(port: String): String
@@ -164,13 +172,19 @@ sealed interface PageTexts {
 
         override fun flagFact(country: String) = "Flag $country"
 
+        override fun otherNames(names: String) = "Also known as $names"
+
+        override val wikidataSource = "Vessel data from Wikidata (CC0)"
+
         override fun vesselDescription(
             name: String,
             details: String,
             photoCount: Int,
             licences: String,
+            summary: String?,
         ) = if (photoCount == 0) {
-            "Vessel $name ($details). No photo yet: contribute the first one."
+            "${summary ?: "Vessel $name."} ${details.replaceFirstChar { it.uppercase() }}. " +
+                "No photo yet: contribute the first one."
         } else {
             "${photos(photoCount)} of the vessel $name ($details), free to reuse under open licences ($licences)."
         }
@@ -202,7 +216,9 @@ sealed interface PageTexts {
             port: String?,
             country: String?,
             mainGear: String?,
-        ) = "$name is a ${vesselType?.lowercase() ?: "vessel"}" +
+        ) = "$name is ${vesselType?.lowercase()?.let {
+            "${if (it.first() in "aeiou") "an" else "a"} $it"
+        } ?: "a vessel"}" +
             lengthMeters?.let { " of ${formatNumber(it)} m" }.orEmpty() +
             yearBuilt?.let { ", built in $it" }.orEmpty() +
             listOfNotNull(port?.let { "registered in $it" }, country?.let { "under the flag of $it" })
@@ -311,13 +327,19 @@ sealed interface PageTexts {
 
         override fun flagFact(country: String) = "Pavillon $country"
 
+        override fun otherNames(names: String) = "Aussi connu sous le nom de $names"
+
+        override val wikidataSource = "Données du navire$NBSP: Wikidata (CC0)"
+
         override fun vesselDescription(
             name: String,
             details: String,
             photoCount: Int,
             licences: String,
+            summary: String?,
         ) = if (photoCount == 0) {
-            "Navire $name ($details). Pas encore de photo$NBSP: envoyez la première."
+            "${summary ?: "Navire $name."} ${details.replaceFirstChar { it.uppercase() }}. " +
+                "Pas encore de photo$NBSP: envoyez la première."
         } else {
             "${photos(photoCount)} du navire $name ($details), réutilisable${if (photoCount == 1) "" else "s"} " +
                 "librement sous licence libre ($licences)."

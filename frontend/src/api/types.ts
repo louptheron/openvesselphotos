@@ -96,8 +96,27 @@ export type RegisterData = {
   yearBuilt: number | null
 }
 
+/** What Wikidata knows of a vessel, found by its MMSI. */
+export type WikidataData = {
+  /** e.g. "Q7868346" */
+  id: string
+  /** Day of the last import that gave this data */
+  importedOn: string | null
+  imo: string | null
+  lengthMeters: number | null
+  /** Names the vessel had or has, other than its name here, e.g. a former name */
+  otherNames: string[]
+  shipTypeEn: string | null
+  shipTypeFr: string | null
+  url: string
+  /** Year of construction, or else of entry into service */
+  yearBuilt: number | null
+}
+
 export type Vessel = {
   cfr: string | null
+  /** ISO 3166-1 alpha-2 of the flag, from the CFR or else the MMSI's MID */
+  countryCode: string | null
   flag: string | null
   history: HistoryEvent[]
   mmsi: string | null
@@ -108,6 +127,8 @@ export type Vessel = {
   registration: string | null
   /** Other vessels with photos, from the same port or under the same flag */
   related: VesselSummary[]
+  /** What Wikidata knows of the vessel, if found by its MMSI */
+  wikidata: WikidataData | null
 }
 
 export type Submission = {
@@ -218,6 +239,19 @@ export type UsageStatistics = {
   siteCount: number
   vesselCount: number
   vesselsAdded: number
+}
+
+export type WikidataImportStatus = {
+  done: number
+  errors: string[]
+  failed: number
+  finishedAt: string | null
+  /** Vessels found on Wikidata */
+  found: number
+  isRunning: boolean
+  startedAt: string | null
+  /** Vessels with photos and an MMSI */
+  total: number
 }
 
 export type PhotoImportStatus = {

@@ -3,7 +3,8 @@ import styled from 'styled-components'
 
 import type { Vessel } from '../../api/types'
 import { Card } from '../../components/ui'
-import { useTranslation } from '../../i18n'
+import { type Language, useTranslation } from '../../i18n'
+import type { Messages } from '../../i18n/en'
 import { COLORS, FONTS } from '../../theme'
 
 /** The vessel's technical data from the EU fleet register, when imported. */
@@ -60,6 +61,59 @@ export function RegisterFacts({ vessel }: { vessel: Vessel }) {
         ))}
       </dl>
       <small>{t.register.source(register.importedOn ? formatDate(register.importedOn) : null)}</small>
+    </Panel>
+  )
+}
+
+/** The vessel's type: from the EU fleet register, or else from Wikidata, e.g. "Replenishment oiler" */
+export function getVesselType(vessel: Vessel, language: Language, t: Messages): string | undefined {
+  if (vessel.register?.vesselType) {
+    return t.register.vesselTypes[vessel.register.vesselType]
+  }
+  const wikidataType =
+    language === 'fr' ? (vessel.wikidata?.shipTypeFr ?? vessel.wikidata?.shipTypeEn) : vessel.wikidata?.shipTypeEn
+
+  return wikidataType ? wikidataType.charAt(0).toUpperCase() + wikidataType.slice(1) : undefined
+}
+
+/** What Wikidata knows of a vessel outside the EU fleet register, when found by its MMSI. */
+export function WikidataFacts({ vessel }: { vessel: Vessel }) {
+  const { formatNumber, language, t } = useTranslation()
+  const [currentYear] = useState(() => new Date().getFullYear())
+  const wikidata = vessel.wikidata
+  if (!wikidata) {
+    return null
+  }
+  const facts: { name: string; value: ReactNode }[] = [
+    { name: t.register.type, value: getVesselType(vessel, language, t) },
+    {
+      name: t.register.built,
+      value: wikidata.yearBuilt && t.register.yearAndAge(wikidata.yearBuilt, currentYear - wikidata.yearBuilt)
+    },
+    { name: t.register.length, value: wikidata.lengthMeters && t.register.meters(formatNumber(wikidata.lengthMeters)) },
+    { name: t.register.imo, value: wikidata.imo && <code>{wikidata.imo}</code> }
+  ]
+  const shown = facts.filter(({ value }) => value)
+  if (shown.length === 0) {
+    return null
+  }
+
+  return (
+    <Panel as="section" aria-labelledby="wikidata-title">
+      <h2 id="wikidata-title">{t.register.wikidataTitle}</h2>
+      <dl>
+        {shown.map(({ name, value }) => (
+          <div key={name}>
+            <dt>{name}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <small>
+        <a href={wikidata.url} rel="noreferrer" target="_blank">
+          {t.register.wikidataSource}
+        </a>
+      </small>
     </Panel>
   )
 }

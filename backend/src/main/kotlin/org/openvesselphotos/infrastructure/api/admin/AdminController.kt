@@ -11,6 +11,7 @@ import org.openvesselphotos.domain.use_cases.admin.GetReviewQueue
 import org.openvesselphotos.domain.use_cases.admin.GetUsageStatistics
 import org.openvesselphotos.domain.use_cases.admin.ImportPhotos
 import org.openvesselphotos.domain.use_cases.admin.ImportVessels
+import org.openvesselphotos.domain.use_cases.admin.ImportWikidata
 import org.openvesselphotos.domain.use_cases.admin.PhotoImportStatus
 import org.openvesselphotos.domain.use_cases.admin.PhotoNotesResult
 import org.openvesselphotos.domain.use_cases.admin.RejectApiKeyRequest
@@ -21,6 +22,7 @@ import org.openvesselphotos.domain.use_cases.admin.RevokeApiKey
 import org.openvesselphotos.domain.use_cases.admin.SetPhotoNotes
 import org.openvesselphotos.domain.use_cases.admin.UsageStatistics
 import org.openvesselphotos.domain.use_cases.admin.VesselImportResult
+import org.openvesselphotos.domain.use_cases.admin.WikidataImportStatus
 import org.openvesselphotos.infrastructure.api.inputs.ApprovePhotoDataInput
 import org.openvesselphotos.infrastructure.api.inputs.LoginDataInput
 import org.openvesselphotos.infrastructure.api.inputs.RejectPhotoDataInput
@@ -59,6 +61,7 @@ class AdminController(
     private val revokeApiKey: RevokeApiKey,
     private val importVessels: ImportVessels,
     private val importPhotos: ImportPhotos,
+    private val importWikidata: ImportWikidata,
     private val setPhotoNotes: SetPhotoNotes,
     private val getUsageStatistics: GetUsageStatistics,
 ) {
@@ -183,6 +186,17 @@ class AdminController(
     fun importVesselsFromCsv(
         @RequestPart file: MultipartFile,
     ): VesselImportResult = importVessels.execute(VesselsCsvParser.parse(String(file.bytes, Charsets.UTF_8)))
+
+    /**
+     * Completes the vessels with photos with what Wikidata knows of them, found by their MMSI: starts a background
+     * import and returns its status at once.
+     */
+    @PostMapping("/vessels/wikidata")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    fun importWikidata(): WikidataImportStatus = importWikidata.start()
+
+    @GetMapping("/vessels/wikidata")
+    fun wikidataImportStatus(): WikidataImportStatus = importWikidata.status()
 
     /**
      * Publishes openly licensed photos without review, e.g. from Wikimedia Commons: starts a background import and

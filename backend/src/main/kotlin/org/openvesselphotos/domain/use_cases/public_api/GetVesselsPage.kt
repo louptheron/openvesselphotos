@@ -8,7 +8,7 @@ import org.openvesselphotos.domain.repositories.VesselRepository
 
 /**
  * Vessels with approved photos by name, page by page: the sitemap and the vessel directory (pages without photo are
- * not indexed).
+ * not indexed, but a few described by the EU fleet register: see [GetVesselsWithoutPhotosToIndex]).
  */
 
 @UseCase

@@ -7,8 +7,10 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.openvesselphotos.TestImages
 import org.openvesselphotos.config.AdminAuthentication
+import org.openvesselphotos.domain.entities.WikidataData
 import org.openvesselphotos.domain.images.ImageDownloader
 import org.openvesselphotos.domain.use_cases.public_api.RecordUsage
+import org.openvesselphotos.domain.wikidata.WikidataClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -29,7 +31,13 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 
-@SpringBootTest(properties = ["openvesselphotos.admin-password=test-password"])
+@SpringBootTest(
+    properties = [
+        "openvesselphotos.admin-password=test-password",
+        // Every vessel without photo described by the register is released
+        "openvesselphotos.vessels-without-photos.since=2000-01-01",
+    ],
+)
 @AutoConfigureMockMvc
 @Testcontainers
 class PublicAndAdminApiITests {
@@ -53,6 +61,10 @@ class PublicAndAdminApiITests {
     /** Imports would download from Wikimedia Commons */
     @MockitoBean
     lateinit var imageDownloader: ImageDownloader
+
+    /** The Wikidata import would query the Wikidata Query Service */
+    @MockitoBean
+    lateinit var wikidataClient: WikidataClient
 
     @Autowired
     lateinit var recordUsage: RecordUsage
@@ -759,6 +771,7 @@ class PublicAndAdminApiITests {
         mockMvc
             .perform(get("/v1/cfr/FRA000700001"))
             .andExpect(jsonPath("$.register.vesselType").value("TO"))
+            .andExpect(jsonPath("$.countryCode").value("FR"))
             .andExpect(jsonPath("$.register.yearBuilt").value(1998))
             .andExpect(jsonPath("$.register.lengthMeters").value(22.0))
             .andExpect(jsonPath("$.register.enginePowerKw").value(331.0))
@@ -793,6 +806,110 @@ class PublicAndAdminApiITests {
                 "LES MENHIRS is a trawler of 24.5 m, built in 1998, under the flag of France. " +
                     "Main gear: bottom otter trawls.",
             )
+            // Described by the register: indexed without photo, its summary in its description
+            .doesNotContain("noindex")
+            .contains(
+                """<meta name="description" content="LES MENHIRS is a trawler of 24.5 m, built in 1998, under the """ +
+                    """flag of France. Main gear: bottom otter trawls. CFR FRA000700001. No photo yet: contribute """ +
+                    """the first one." />""",
+            )
+        assertThat(
+            mockMvc
+                .perform(get("/sitemap-vessels-without-photos.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<loc>http://localhost/vessels/cfr/FRA000700001</loc>")
+            .contains("<loc>http://localhost/fr/vessels/cfr/FRA000700001</loc>")
+            // Without register data
+            .doesNotContain("FRA000752221")
+        mockMvc
+            .perform(get("/sitemap.xml"))
+            .andExpect(
+                content().string(
+                    org.hamcrest.Matchers.containsString(
+                        "<loc>http://localhost/sitemap-vessels-without-photos.xml</loc>",
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `Wikidata data Should complete a vessel with photos found by its MMSI, without its own name`() {
+        submitPhoto("mmsi", "366904950", "USS Chiwawa")
+        val cookie = adminCookie()
+        val photoId =
+            Regex(
+                """"id":(\d+),"number":null,"submittedKeyType":"mmsi","submittedKey":"366904950"""",
+            ).find(
+                mockMvc
+                    .perform(get("/v1/admin/queue").cookie(cookie))
+                    .andReturn()
+                    .response.contentAsString,
+            )!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+        `when`(wikidataClient.findByMmsi(org.mockito.ArgumentMatchers.anyCollection())).thenReturn(
+            mapOf(
+                "366904950" to
+                    WikidataData(
+                        id = "Q7868346",
+                        imo = "5385625",
+                        shipTypeEn = "replenishment oiler",
+                        shipTypeFr = "pétrolier ravitailleur",
+                        yearBuilt = 1942,
+                        lengthMeters = 152.9,
+                        otherNames = listOf("USS Chiwawa", "Lee A. Tregurtha", "Samoset"),
+                    ),
+            ),
+        )
+
+        mockMvc.perform(post("/v1/admin/vessels/wikidata").cookie(cookie)).andExpect(status().isAccepted)
+        // The import runs in the background
+        var attempts = 0
+        while (
+            attempts++ < 50 &&
+            mockMvc
+                .perform(get("/v1/admin/vessels/wikidata").cookie(cookie))
+                .andReturn()
+                .response.contentAsString
+                .contains(""""isRunning":true""")
+        ) {
+            Thread.sleep(100)
+        }
+
+        mockMvc
+            .perform(get("/v1/mmsi/366904950"))
+            .andExpect(jsonPath("$.wikidata.id").value("Q7868346"))
+            // From the MMSI's MID
+            .andExpect(jsonPath("$.countryCode").value("US"))
+            .andExpect(jsonPath("$.wikidata.url").value("https://www.wikidata.org/wiki/Q7868346"))
+            .andExpect(jsonPath("$.wikidata.imo").value("5385625"))
+            .andExpect(jsonPath("$.wikidata.yearBuilt").value(1942))
+            // Its own name is left out
+            .andExpect(
+                jsonPath("$.wikidata.otherNames[*]").value(
+                    org.hamcrest.Matchers.contains("Lee A. Tregurtha", "Samoset"),
+                ),
+            )
+        assertThat(
+            mockMvc
+                .perform(get("/vessels/mmsi/366904950"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains(
+            "<title>USS Chiwawa / Lee A. Tregurtha (MMSI 366904950) — 1 photo · Replenishment oiler " +
+                "| Open Vessel Photos</title>",
+        ).contains("<p>MMSI 366904950, IMO 5385625</p>")
+            .contains(
+                "USS Chiwawa is a replenishment oiler of 152.9 m, built in 1942, under the flag of United States.",
+            ).contains("Also known as Lee A. Tregurtha, Samoset")
+            .contains(""""sameAs":"https://www.wikidata.org/wiki/Q7868346"""")
+        assertThat(
+            mockMvc
+                .perform(get("/fr/vessels/mmsi/366904950"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("· Pétrolier ravitailleur | Open Vessel Photos</title>")
     }
 
     @Test

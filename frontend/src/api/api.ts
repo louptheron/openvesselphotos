@@ -18,7 +18,8 @@ import type {
   VesselFilter,
   VesselFilterOptions,
   VesselSummary,
-  VesselsPage
+  VesselsPage,
+  WikidataImportStatus
 } from './types'
 
 type VesselKeyParams = { key: string; keyType: KeyType }
@@ -92,6 +93,14 @@ export const api = createApi({
       invalidatesTags: ['Vessels'],
       query: form => ({ body: form, method: 'POST', url: '/admin/vessels/import' })
     }),
+    getWikidataImport: builder.query<WikidataImportStatus, void>({
+      providesTags: ['WikidataImport'],
+      query: () => '/admin/vessels/wikidata'
+    }),
+    importWikidata: builder.mutation<WikidataImportStatus, void>({
+      invalidatesTags: ['WikidataImport', 'Vessels'],
+      query: () => ({ method: 'POST', url: '/admin/vessels/wikidata' })
+    }),
     cancelPhotoImport: builder.mutation<void, void>({
       invalidatesTags: ['PhotoImport'],
       query: () => ({ method: 'POST', url: '/admin/photos/import/cancel' })
@@ -125,7 +134,7 @@ export const api = createApi({
     })
   }),
   reducerPath: 'api',
-  tagTypes: ['ApiKeys', 'PhotoImport', 'Queue', 'Vessels']
+  tagTypes: ['ApiKeys', 'PhotoImport', 'Queue', 'Vessels', 'WikidataImport']
 })
 
 export const {
@@ -140,8 +149,10 @@ export const {
   useGetVesselFilterOptionsQuery,
   useGetVesselQuery,
   useGetVesselsPageQuery,
+  useGetWikidataImportQuery,
   useImportPhotosMutation,
   useImportVesselsMutation,
+  useImportWikidataMutation,
   useLazyGetVesselQuery,
   useLoginMutation,
   useLogoutMutation,

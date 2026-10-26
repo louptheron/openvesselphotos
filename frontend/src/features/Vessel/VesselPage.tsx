@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -21,7 +21,7 @@ import { useTranslation } from '../../i18n'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../../theme'
 import { getNamedPhotoUrl, getPhotoSlug, getPhotoUrl, normalizeKey } from '../../utils/vesselKey'
 import { KeyLinkForm } from './KeyLinkForm'
-import { RegisterFacts } from './RegisterFacts'
+import { getVesselType, RegisterFacts, WikidataFacts } from './RegisterFacts'
 import { ReportForm } from './ReportForm'
 
 /** Licences under which crediting the author is welcome but not required */
@@ -40,15 +40,16 @@ export function VesselPage() {
   const keyType: KeyType = params.keyType === 'mmsi' ? 'mmsi' : 'cfr'
   const key = normalizeKey(params.key ?? '')
   const { data: vessel, error, isLoading } = useGetVesselQuery({ key, keyType })
-  const { t } = useTranslation()
+  const { language, t } = useTranslation()
   const keys = vessel
     ? [vessel.cfr && `CFR ${vessel.cfr}`, vessel.mmsi && `MMSI ${vessel.mmsi}`].filter(Boolean).join(', ')
     : ''
-  const vesselType = vessel?.register?.vesselType ? t.register.vesselTypes[vessel.register.vesselType] : undefined
+  const vesselType = vessel ? getVesselType(vessel, language, t) : undefined
+  const otherName = vessel?.wikidata?.otherNames[0]
   usePageMeta(
     vessel
       ? t.vessel.pageTitle(
-          vessel.name ? `${vessel.name} (${vessel.registration ?? keys})` : keys,
+          vessel.name ? `${vessel.name}${otherName ? ` / ${otherName}` : ''} (${vessel.registration ?? keys})` : keys,
           vessel.photos.length,
           [vesselType, vessel.port].filter((detail): detail is string => !!detail)
         )
@@ -91,8 +92,37 @@ export function VesselPage() {
   return <VesselDetails key={`${keyType}-${key}`} vessel={vessel} />
 }
 
+/**
+ * The vessel's own sentence, e.g. "LOLA is a gillnetter of 14.85 m, built in 1981, registered in La Rochelle under the
+ * flag of France.", as the server renders it (PagesController.summary). Undefined when nothing is known.
+ */
+function useSummary(vessel: Vessel, vesselType: string | undefined): string | undefined {
+  const { formatNumber, language, t } = useTranslation()
+  const countryNames = useMemo(() => new Intl.DisplayNames([language], { type: 'region' }), [language])
+  // The EU fleet register first: Wikidata completes the vessels outside it
+  const lengthMeters = vessel.register?.lengthMeters ?? vessel.wikidata?.lengthMeters
+  const yearBuilt = vessel.register?.yearBuilt ?? vessel.wikidata?.yearBuilt
+  const country = vessel.countryCode ? countryNames.of(vessel.countryCode) : undefined
+  if (!vesselType && !lengthMeters && !yearBuilt && !vessel.port && !country) {
+    return undefined
+  }
+  const mainGear = vessel.register?.mainGear
+
+  return t.vessel.summary({
+    country,
+    length: lengthMeters ? formatNumber(lengthMeters) : undefined,
+    mainGear: mainGear ? (t.register.gears[mainGear] ?? mainGear) : undefined,
+    name: vessel.name ?? t.common.unnamedVessel,
+    port: vessel.port,
+    vesselType,
+    yearBuilt
+  })
+}
+
 function VesselDetails({ vessel }: { vessel: Vessel }) {
-  const { formatDate, t } = useTranslation()
+  const { formatDate, language, t } = useTranslation()
+  const vesselType = getVesselType(vessel, language, t)
+  const summary = useSummary(vessel, vesselType)
   const [pickedIndex, setPickedIndex] = useState(0)
   const [size, setSize] = useState<Size>('800')
   const [copied, setCopied] = useState(false)
@@ -128,7 +158,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
               <img
                 alt={t.vessel.photoAlt(
                   vessel.registration ? `${name} (${vessel.registration})` : name,
-                  vessel.register?.vesselType ? t.register.vesselTypes[vessel.register.vesselType] : undefined,
+                  vesselType,
                   photo.place,
                   photo.credit
                 )}
@@ -214,10 +244,14 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
           <Heading>
             {vessel.flag && <FlagChip>{t.vessel.flag(vessel.flag)}</FlagChip>}
             <h1>{name}</h1>
+            {vessel.wikidata && vessel.wikidata.otherNames.length > 0 && (
+              <Registration>{t.vessel.otherNames(vessel.wikidata.otherNames.join(', '))}</Registration>
+            )}
             {(vessel.registration || vessel.port) && (
               <Registration>{[vessel.registration, vessel.port].filter(Boolean).join(' · ')}</Registration>
             )}
           </Heading>
+          {summary && <Summary>{summary}</Summary>}
 
           <Keys>
             <Card as="div">
@@ -231,6 +265,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
           </Keys>
           {(!vessel.cfr || !vessel.mmsi) && <KeyLinkForm vessel={vessel} vesselKey={vesselKey} />}
           <RegisterFacts vessel={vessel} />
+          {!vessel.register && <WikidataFacts vessel={vessel} />}
 
           {photo && (
             <UsePanel>
@@ -401,6 +436,12 @@ const Figure = styled.figure`
     gap: 8px;
     font-size: 14px;
   }
+`
+
+const Summary = styled.p`
+  margin: 0;
+  line-height: 1.5;
+  color: ${COLORS.text};
 `
 
 const Registration = styled.p`

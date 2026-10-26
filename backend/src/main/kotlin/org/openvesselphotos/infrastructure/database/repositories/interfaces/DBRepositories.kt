@@ -31,6 +31,12 @@ private const val DIRECTORY_FILTER = """
 private const val WITH_APPROVED_PHOTOS =
     "FROM vessels v WHERE EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')"
 
+/** Same rule as Vessel.isDescribed */
+private const val DESCRIBED_WITHOUT_APPROVED_PHOTOS =
+    "FROM vessels v WHERE v.name IS NOT NULL AND v.vessel_type IS NOT NULL AND v.vessel_type <> 'FX' " +
+        "AND v.year_built IS NOT NULL AND v.length_m IS NOT NULL " +
+        "AND NOT EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')"
+
 private const val COUNT_DIRECTORY = "SELECT count(*) $WITH_APPROVED_PHOTOS $DIRECTORY_FILTER"
 
 private const val FIND_DIRECTORY_PAGE =
@@ -85,6 +91,12 @@ interface DBVesselRepository : JpaRepository<VesselEntity, Int> {
         nativeQuery = true,
     )
     fun findAllWithApprovedPhotos(): List<VesselEntity>
+
+    @Query("SELECT * $DESCRIBED_WITHOUT_APPROVED_PHOTOS ORDER BY v.id LIMIT :limit", nativeQuery = true)
+    fun findDescribedWithoutApprovedPhotos(limit: Int): List<VesselEntity>
+
+    @Query("SELECT count(*) $DESCRIBED_WITHOUT_APPROVED_PHOTOS AND v.id < :id", nativeQuery = true)
+    fun countDescribedWithoutApprovedPhotosBefore(id: Int): Long
 
     @Query(value = COUNT_DIRECTORY, nativeQuery = true)
     fun countWithApprovedPhotos(

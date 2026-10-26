@@ -102,6 +102,9 @@ export const en = {
     yearAndAge: (year: number, age: number) => `${year} (${age} years ago)`,
     source: (date: string | null) =>
       date ? `Source: EU fleet register, last imported on ${date}.` : 'Source: EU fleet register, as last imported.',
+    wikidataTitle: 'Vessel data',
+    imo: 'IMO number',
+    wikidataSource: 'Source: Wikidata (CC0)',
     gears: {
       DRB: 'Boat dredges',
       DRH: 'Hand dredges',
@@ -186,6 +189,32 @@ export const en = {
       `${vessel} — ${photoCount ? `${photoCount} photo${photoCount === 1 ? '' : 's'}` : 'vessel photos'}` +
       details.map(detail => ` · ${detail}`).join(''),
     notFoundPageTitle: (key: string) => `No vessel with ${key}`,
+    /** e.g. "LOLA is a gillnetter of 14.85 m, built in 1981, registered in La Rochelle…", as the server renders it */
+    summary: (s: {
+      name: string
+      vesselType: string | undefined
+      length: string | undefined
+      yearBuilt: number | null | undefined
+      port: string | null
+      country: string | undefined
+      mainGear: string | undefined
+    }) => {
+      const type = s.vesselType?.toLowerCase()
+      const place = [s.port && `registered in ${s.port}`, s.country && `under the flag of ${s.country}`]
+        .filter(Boolean)
+        .join(' ')
+
+      return (
+        `${s.name} is ${type ? `${/^[aeiou]/.test(type) ? 'an' : 'a'} ${type}` : 'a vessel'}` +
+        (s.length ? ` of ${s.length} m` : '') +
+        (s.yearBuilt ? `, built in ${s.yearBuilt}` : '') +
+        (place ? `, ${place}` : '') +
+        '.' +
+        (s.mainGear ? ` Main gear: ${s.mainGear.toLowerCase()}.` : '')
+      )
+    },
+    /** e.g. "Also known as Lee A. Tregurtha" */
+    otherNames: (names: string) => `Also known as ${names}`,
     notFoundTitle: (key: string) => `No vessel with ${key} yet`,
     unavailable: 'Unavailable',
     notFoundText: 'Nobody has shared a photo of it so far.',
@@ -489,6 +518,12 @@ export const en = {
     csvFile: 'CSV file',
     importing: 'Importing…',
     import: 'Import',
+    wikidataImportTitle: 'Complete vessels from Wikidata',
+    wikidataImportText:
+      'Looks for every vessel with photos and an MMSI on Wikidata (CC0), and saves its IMO number, type, year, length and other names (e.g. a former name), shown on its page. Runs in the background, by batches of 200 vessels; vessels Wikidata does not know keep their data. Can be run again at any time to refresh the data.',
+    wikidataImportStart: 'Start',
+    wikidataImportProgress: (s: { done: number; total: number; found: number; failed: number }) =>
+      `${s.done} / ${s.total} vessels: ${s.found} found on Wikidata, ${s.failed} failed.`,
     photoImportTitle: 'Import photos',
     photoImportText:
       'Publishes openly licensed photos without review, e.g. from Wikimedia Commons. CSV columns: mmsi and/or cfr, vessel_name, author, licence, file_page (page of the original photo), image_1600_url and, optionally, date and note (shown with the photo). Images are downloaded from Wikimedia Commons or Flickr one at a time, in the background: this can take a few hours. Photos already imported are skipped, so the same file can be sent again after an interruption.',

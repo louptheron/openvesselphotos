@@ -29,6 +29,11 @@ openvesselphotos:
         api-key-writes-per-hour: ${OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_WRITES_PER_HOUR:1000}
         # POST /v1/api-key-requests, per IP
         api-key-requests-per-hour: ${OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_REQUESTS_PER_HOUR:5}
+    # Pages of vessels without photo, described by the EU fleet register, released to search engines a few a day
+    # from this day (YYYY-MM-DD). Empty = none.
+    vessels-without-photos:
+        since: ${OPENVESSELPHOTOS_VESSELS_WITHOUT_PHOTOS_SINCE:2026-10-27}
+        per-day: ${OPENVESSELPHOTOS_VESSELS_WITHOUT_PHOTOS_PER_DAY:10}
     # Unique admin password. Empty = admin disabled.
     admin-password: ${OPENVESSELPHOTOS_ADMIN_PASSWORD:}
     database:

@@ -8,6 +8,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.openvesselphotos.domain.entities.RegisterData
 import org.openvesselphotos.domain.entities.Vessel
+import org.openvesselphotos.domain.entities.WikidataData
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -42,6 +43,22 @@ class VesselEntity(
     val callSign: String? = null,
     @Column(name = "register_imported_on")
     val registerImportedOn: LocalDate? = null,
+    @Column(name = "wikidata_id")
+    val wikidataId: String? = null,
+    val imo: String? = null,
+    @Column(name = "wikidata_ship_type_en")
+    val wikidataShipTypeEn: String? = null,
+    @Column(name = "wikidata_ship_type_fr")
+    val wikidataShipTypeFr: String? = null,
+    @Column(name = "wikidata_year_built")
+    val wikidataYearBuilt: Int? = null,
+    @Column(name = "wikidata_length_m")
+    val wikidataLengthMeters: BigDecimal? = null,
+    /** Separated by "|" */
+    @Column(name = "other_names")
+    val otherNames: String? = null,
+    @Column(name = "wikidata_imported_on")
+    val wikidataImportedOn: LocalDate? = null,
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: ZonedDateTime? = null,
 ) {
@@ -64,6 +81,17 @@ class VesselEntity(
                     otherGears = otherGears?.split(",")?.filter { it.isNotBlank() }.orEmpty(),
                     callSign = callSign,
                     importedOn = registerImportedOn,
+                ),
+            wikidata =
+                WikidataData(
+                    id = wikidataId,
+                    imo = imo,
+                    shipTypeEn = wikidataShipTypeEn,
+                    shipTypeFr = wikidataShipTypeFr,
+                    yearBuilt = wikidataYearBuilt,
+                    lengthMeters = wikidataLengthMeters?.toDouble(),
+                    otherNames = otherNames?.split("|")?.filter { it.isNotBlank() }.orEmpty(),
+                    importedOn = wikidataImportedOn,
                 ),
             createdAt = createdAt,
         )
@@ -89,6 +117,17 @@ class VesselEntity(
                         .ifEmpty { null },
                 callSign = vessel.register.callSign,
                 registerImportedOn = vessel.register.importedOn,
+                wikidataId = vessel.wikidata.id,
+                imo = vessel.wikidata.imo,
+                wikidataShipTypeEn = vessel.wikidata.shipTypeEn,
+                wikidataShipTypeFr = vessel.wikidata.shipTypeFr,
+                wikidataYearBuilt = vessel.wikidata.yearBuilt,
+                wikidataLengthMeters = vessel.wikidata.lengthMeters?.toBigDecimal(),
+                otherNames =
+                    vessel.wikidata.otherNames
+                        .joinToString("|")
+                        .ifEmpty { null },
+                wikidataImportedOn = vessel.wikidata.importedOn,
                 createdAt = vessel.createdAt,
             )
     }

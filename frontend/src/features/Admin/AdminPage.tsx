@@ -26,6 +26,7 @@ import { ReviewQueuePanel } from './ReviewQueuePanel'
 import { PhotoImport } from './PhotoImport'
 import { PhotoNotes } from './PhotoNotes'
 import { VesselImport } from './VesselImport'
+import { WikidataImport } from './WikidataImport'
 
 export function AdminPage() {
   const { data: queue, error, isLoading } = useGetReviewQueueQuery()
@@ -60,6 +61,7 @@ export function AdminPage() {
       </Header>
       <ReviewQueuePanel queue={queue} />
       <VesselImport />
+      <WikidataImport />
       <PhotoImport />
       <PhotoNotes />
     </Page>
