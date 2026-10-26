@@ -12,6 +12,7 @@ import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.use_cases.public_api.GetRecentVessels
 import org.openvesselphotos.domain.use_cases.public_api.GetVessel
 import org.openvesselphotos.domain.use_cases.public_api.GetVesselsPage
+import org.openvesselphotos.domain.use_cases.public_api.GetVesselsWithoutPhotosToIndex
 import org.openvesselphotos.domain.use_cases.public_api.vesselFilter
 import org.openvesselphotos.infrastructure.web.HtmlPageRenderer.Companion.SITE_NAME
 import org.springframework.http.HttpStatus
@@ -36,6 +37,8 @@ class PagesController(
     private val getVessel: GetVessel,
     private val getRecentVessels: GetRecentVessels,
     private val getVesselsPage: GetVesselsPage,
+    private val getVesselsWithoutPhotosToIndex: GetVesselsWithoutPhotosToIndex,
+    private val vesselsWithoutPhotosRelease: VesselsWithoutPhotosRelease,
 ) {
     @GetMapping("/", "/fr")
     fun home(
@@ -102,23 +105,37 @@ class PagesController(
         val baseUrl = publicUrl.get()
         val name = vesselName(vessel)
         val keys = listOfNotNull(vessel.cfr?.let { "CFR $it" }, vessel.mmsi?.let { "MMSI $it" }).joinToString(", ")
+        val wikidata = vessel.wikidata
+        // e.g. "MMSI 366904950, IMO 5385625": the IMO number is not a key here, but people search vessels by it
+        val identifiers = listOfNotNull(keys, wikidata.imo?.let { "IMO $it" }).joinToString(", ")
         val licences = photos.map { it.licence.label }.distinct().joinToString(", ")
         // e.g. "LO 752221, Lorient"
         val registration = listOfNotNull(vessel.registration, vessel.port).joinToString(", ").ifEmpty { null }
         val flagText = vessel.flag?.let { ", ${texts.flag(it)}" }.orEmpty()
+        val vesselType =
+            vessel.register.vesselType?.let { FaoCodes.vesselType(it, language) }
+                ?: wikidata.shipType(language.code)?.replaceFirstChar { it.uppercase() }
+        val summary = summary(vessel, vesselType, language)
         val description =
             texts.vesselDescription(
                 name = name,
-                details = "$keys${registration?.let { ", $it" }.orEmpty()}$flagText",
+                // The summary already gives the flag
+                details =
+                    "$identifiers${registration?.let { ", $it" }.orEmpty()}" +
+                        flagText.takeIf { photos.isNotEmpty() || summary == null }.orEmpty(),
                 photoCount = photos.size,
                 licences = licences,
+                summary = summary,
             )
-        val vesselType = vessel.register.vesselType?.let { FaoCodes.vesselType(it, language) }
         // e.g. "LOLA (LR 539755) — 9 photos · Gillnetter · La Rochelle": people search a vessel by its name and the
-        // marking painted on its hull, rather than by its CFR
+        // marking painted on its hull, rather than by its CFR; and by its other name, e.g. "USS Chiwawa / Lee A.
+        // Tregurtha (MMSI 366904950)"
         val pageTitle =
             listOfNotNull(
-                vessel.name?.let { "$it (${vessel.registration ?: keys})" } ?: keys,
+                vessel.name?.let {
+                    "$it${wikidata.otherNames.firstOrNull()?.let { other -> " / $other" }.orEmpty()} " +
+                        "(${vessel.registration ?: keys})"
+                } ?: keys,
                 " — ${photos.takeIf { it.isNotEmpty() }?.let { texts.photos(it.size) } ?: texts.vesselPhotos}",
                 vesselType?.let { " · $it" },
                 vessel.port?.let { " · $it" },
@@ -172,8 +189,11 @@ class PagesController(
                 canonicalPath = canonicalPath,
                 language = language,
                 pathInEveryLanguage = path,
-                // Pages without photo are near-identical: indexed once their first photo is approved
-                isIndexable = photos.isNotEmpty(),
+                // Pages without photo are near-identical, but those described by the EU fleet register: these are
+                // released to search engines a few a day
+                isIndexable =
+                    photos.isNotEmpty() ||
+                        getVesselsWithoutPhotosToIndex.isIndexed(vessel, vesselsWithoutPhotosRelease.limit()),
                 imageUrl = photos.firstOrNull()?.let { photoUrl(baseUrl, vessel, it, ImageSize.MEDIUM) },
                 structuredData =
                     listOf(
@@ -187,6 +207,15 @@ class PagesController(
                             "primaryImageOfPage" to
                                 photos.firstOrNull()?.let { imageObject(baseUrl, vessel, it, texts) },
                             "image" to photos.map { imageObject(baseUrl, vessel, it, texts) },
+                            "about" to
+                                wikidata.url?.let { url ->
+                                    mapOf(
+                                        "@type" to "Thing",
+                                        "name" to name,
+                                        "alternateName" to wikidata.otherNames.ifEmpty { null },
+                                        "sameAs" to url,
+                                    ).filterValues { it != null }
+                                },
                         ).filterValues { it != null },
                         mapOf(
                             "@context" to "https://schema.org",
@@ -211,10 +240,17 @@ class PagesController(
                 body =
                     """<main><p><a href="${language.path("/")}">${escapeHtml(texts.search)}</a> › """ +
                         """${escapeHtml(name)}</p><h1>${escapeHtml(name)}</h1>""" +
-                        """<p>${escapeHtml(keys)}${registration?.let { " · ${escapeHtml(it)}" } ?: ""}""" +
+                        """<p>${escapeHtml(identifiers)}${registration?.let { " · ${escapeHtml(it)}" } ?: ""}""" +
                         """${vessel.flag?.let { " · ${escapeHtml(texts.flagFact(it))}" } ?: ""}</p>""" +
-                        summary(vessel, vesselType, language)?.let { """<p>${escapeHtml(it)}</p>""" }.orEmpty() +
+                        summary?.let { """<p>${escapeHtml(it)}</p>""" }.orEmpty() +
+                        wikidata.otherNames
+                            .takeIf { it.isNotEmpty() }
+                            ?.let { """<p>${escapeHtml(texts.otherNames(it.joinToString(", ")))}</p>""" }
+                            .orEmpty() +
                         registerFacts(vessel, language)?.let { """<p>${escapeHtml(it)}</p>""" }.orEmpty() +
+                        wikidata.url
+                            ?.let { """<p><a href="${escapeHtml(it)}">${escapeHtml(texts.wikidataSource)}</a></p>""" }
+                            .orEmpty() +
                         """<p>${escapeHtml(description)}</p>$figures$related""" +
                         // The contribution form is the same page for every vessel: not worth crawling
                         """<p><a href="${language.path("/contribute")}?$contributeQuery" rel="nofollow">""" +
@@ -422,9 +458,12 @@ class PagesController(
     ): String? {
         val register = vessel.register
         val flag = vessel.flag ?: Flags.ofMmsi(vessel.mmsi)
+        // The EU fleet register first: Wikidata completes the vessels outside it
+        val lengthMeters = register.lengthMeters ?: vessel.wikidata.lengthMeters
+        val yearBuilt = register.yearBuilt ?: vessel.wikidata.yearBuilt
         if (vesselType == null &&
-            register.lengthMeters == null &&
-            register.yearBuilt == null &&
+            lengthMeters == null &&
+            yearBuilt == null &&
             vessel.port == null &&
             flag == null
         ) {
@@ -434,8 +473,8 @@ class PagesController(
         return PageTexts.of(language).summary(
             name = vesselName(vessel),
             vesselType = vesselType,
-            lengthMeters = register.lengthMeters,
-            yearBuilt = register.yearBuilt,
+            lengthMeters = lengthMeters,
+            yearBuilt = yearBuilt,
             port = vessel.port,
             country = flag?.let { Flags.name(it, language.locale) },
             mainGear = register.mainGear?.let { FaoCodes.gear(it, language) },

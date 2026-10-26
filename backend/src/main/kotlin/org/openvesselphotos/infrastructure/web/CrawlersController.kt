@@ -2,6 +2,7 @@ package org.openvesselphotos.infrastructure.web
 
 import org.openvesselphotos.domain.entities.ImageSize
 import org.openvesselphotos.domain.use_cases.public_api.GetVesselsPage
+import org.openvesselphotos.domain.use_cases.public_api.GetVesselsWithoutPhotosToIndex
 import org.springframework.http.CacheControl
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -14,6 +15,8 @@ import java.time.Duration
 class CrawlersController(
     private val publicUrl: PublicUrl,
     private val getVesselsPage: GetVesselsPage,
+    private val getVesselsWithoutPhotosToIndex: GetVesselsWithoutPhotosToIndex,
+    private val vesselsWithoutPhotosRelease: VesselsWithoutPhotosRelease,
 ) {
     @GetMapping("/robots.txt", produces = [MediaType.TEXT_PLAIN_VALUE])
     fun robots(): String =
@@ -28,13 +31,17 @@ class CrawlersController(
         |
         """.trimMargin()
 
-    /** Sitemap index: the static pages, then every vessel page with photos by files of [VESSELS_PER_SITEMAP]. */
+    /**
+     * Sitemap index: the static pages, then every vessel page with photos by files of [VESSELS_PER_SITEMAP], then the
+     * vessels without photo released so far.
+     */
     @GetMapping("/sitemap.xml")
     fun sitemapIndex(): ResponseEntity<String> {
         val baseUrl = publicUrl.get()
         val vesselSitemaps = getVesselsPage.pageCount(VESSELS_PER_SITEMAP)
         val sitemaps =
-            listOf("$baseUrl/sitemap-pages.xml") + (1..vesselSitemaps).map { "$baseUrl/sitemap-vessels-$it.xml" }
+            listOf("$baseUrl/sitemap-pages.xml") + (1..vesselSitemaps).map { "$baseUrl/sitemap-vessels-$it.xml" } +
+                "$baseUrl/sitemap-vessels-without-photos.xml"
 
         return xml(
             """<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">""" +
@@ -91,6 +98,21 @@ class CrawlersController(
                     images,
                 )
             }
+
+        return xml(URLSET_OPEN + urls + "</urlset>")
+    }
+
+    /**
+     * Pages of vessels without photo described by the EU fleet register, a few more each day (see
+     * [VesselsWithoutPhotosRelease]).
+     */
+    @GetMapping("/sitemap-vessels-without-photos.xml")
+    fun vesselsWithoutPhotosSitemap(): ResponseEntity<String> {
+        val baseUrl = publicUrl.get()
+        val urls =
+            getVesselsWithoutPhotosToIndex
+                .execute(vesselsWithoutPhotosRelease.limit())
+                .joinToString("") { urls(baseUrl, PagesController.vesselPath(it)) }
 
         return xml(URLSET_OPEN + urls + "</urlset>")
     }

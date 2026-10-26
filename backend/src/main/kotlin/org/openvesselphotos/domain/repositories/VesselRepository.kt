@@ -4,6 +4,7 @@ import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselFilter
 import org.openvesselphotos.domain.entities.VesselFilterOptions
 import org.openvesselphotos.domain.entities.VesselKey
+import org.openvesselphotos.domain.entities.WikidataData
 import java.time.LocalDate
 
 data class VesselImportCounts(
@@ -36,6 +37,9 @@ interface VesselRepository {
      */
     fun importAll(vessels: List<Vessel>): VesselImportCounts
 
+    /** Replaces the Wikidata data of the vessels, by id. */
+    fun updateWikidata(dataByVesselId: Map<Int, WikidataData>)
+
     fun count(): Int
 
     /** Vessels created on each day since [day], imports included (days without any are left out). */
@@ -54,6 +58,15 @@ interface VesselRepository {
         vessel: Vessel,
         limit: Int,
     ): List<Vessel>
+
+    /**
+     * Vessels without approved photo but described by the EU fleet register (see [Vessel.isDescribed]), oldest
+     * first: their pages are released to search engines a few at a time.
+     */
+    fun findDescribedWithoutApprovedPhotos(limit: Int): List<Vessel>
+
+    /** How many vessels come before this one in [findDescribedWithoutApprovedPhotos]. */
+    fun countDescribedWithoutApprovedPhotosBefore(id: Int): Int
 
     /** Vessels with at least one approved photo, by name (unnamed last). */
     fun findPageWithApprovedPhotos(

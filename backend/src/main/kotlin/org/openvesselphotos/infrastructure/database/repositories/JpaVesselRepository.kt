@@ -7,6 +7,7 @@ import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselFilter
 import org.openvesselphotos.domain.entities.VesselFilterOptions
 import org.openvesselphotos.domain.entities.VesselKey
+import org.openvesselphotos.domain.entities.WikidataData
 import org.openvesselphotos.domain.repositories.VesselImportCounts
 import org.openvesselphotos.domain.repositories.VesselRepository
 import org.openvesselphotos.infrastructure.database.entities.VesselEntity
@@ -54,6 +55,30 @@ class JpaVesselRepository(
 
         // Reload to get database defaults (created_at)
         return findById(requireNotNull(saved.id)) ?: saved.toVessel()
+    }
+
+    override fun updateWikidata(dataByVesselId: Map<Int, WikidataData>) {
+        if (dataByVesselId.isEmpty()) {
+            return
+        }
+        jdbcTemplate.batchUpdate(
+            "UPDATE vessels SET wikidata_id = ?, imo = ?, wikidata_ship_type_en = ?, wikidata_ship_type_fr = ?, " +
+                "wikidata_year_built = ?, wikidata_length_m = ?, other_names = ?, wikidata_imported_on = ? " +
+                "WHERE id = ?",
+            dataByVesselId.map { (id, data) ->
+                arrayOf<Any?>(
+                    data.id,
+                    data.imo,
+                    data.shipTypeEn,
+                    data.shipTypeFr,
+                    data.yearBuilt,
+                    data.lengthMeters?.toBigDecimal(),
+                    data.otherNames.joinToString("|").ifEmpty { null },
+                    data.importedOn?.let { java.sql.Date.valueOf(it) },
+                    id,
+                )
+            },
+        )
     }
 
     override fun count(): Int = dbVesselRepository.count().toInt()
@@ -116,6 +141,12 @@ class JpaVesselRepository(
                 mid = vessel.mmsi?.take(3),
                 limit = limit,
             ).map { it.toVessel() }
+
+    override fun findDescribedWithoutApprovedPhotos(limit: Int): List<Vessel> =
+        dbVesselRepository.findDescribedWithoutApprovedPhotos(limit).map { it.toVessel() }
+
+    override fun countDescribedWithoutApprovedPhotosBefore(id: Int): Int =
+        dbVesselRepository.countDescribedWithoutApprovedPhotosBefore(id).toInt()
 
     override fun findPageWithApprovedPhotos(
         offset: Int,

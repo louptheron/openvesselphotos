@@ -9,6 +9,7 @@ import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselDetails
 import org.openvesselphotos.domain.entities.VesselFilterOptions
 import org.openvesselphotos.domain.entities.VesselWithPhotos
+import org.openvesselphotos.domain.entities.WikidataData
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
@@ -104,6 +105,39 @@ data class RegisterDataOutput(
                     otherGears = register.otherGears,
                     callSign = register.callSign,
                     importedOn = register.importedOn,
+                )
+            }
+    }
+}
+
+data class WikidataDataOutput(
+    /** e.g. "Q7868346" */
+    val id: String,
+    val url: String,
+    val imo: String?,
+    val shipTypeEn: String?,
+    val shipTypeFr: String?,
+    /** Year of construction, or else of entry into service */
+    val yearBuilt: Int?,
+    val lengthMeters: Double?,
+    /** Names the vessel had or has, other than its name here, e.g. a former name */
+    val otherNames: List<String>,
+    /** Day of the last import that gave this data */
+    val importedOn: LocalDate?,
+) {
+    companion object {
+        fun from(wikidata: WikidataData): WikidataDataOutput? =
+            wikidata.id?.let { id ->
+                WikidataDataOutput(
+                    id = id,
+                    url = requireNotNull(wikidata.url),
+                    imo = wikidata.imo,
+                    shipTypeEn = wikidata.shipTypeEn,
+                    shipTypeFr = wikidata.shipTypeFr,
+                    yearBuilt = wikidata.yearBuilt,
+                    lengthMeters = wikidata.lengthMeters,
+                    otherNames = wikidata.otherNames,
+                    importedOn = wikidata.importedOn,
                 )
             }
     }
@@ -211,6 +245,8 @@ data class VesselDataOutput(
     val flag: String?,
     /** Technical data from the EU fleet register, if imported */
     val register: RegisterDataOutput?,
+    /** What Wikidata knows of the vessel, if found by its MMSI */
+    val wikidata: WikidataDataOutput?,
     val photos: List<PhotoDataOutput>,
     val history: List<HistoryEventDataOutput>,
     /** Other vessels with photos, from the same port or under the same flag */
@@ -228,6 +264,7 @@ data class VesselDataOutput(
             port = details.vessel.port,
             flag = details.vessel.flag,
             register = RegisterDataOutput.from(details.vessel.register),
+            wikidata = WikidataDataOutput.from(details.vessel.wikidata),
             photos = details.photos.map { PhotoDataOutput.from(baseUrl, details.vessel, it) },
             history = details.history.map { HistoryEventDataOutput.from(it) },
             related = details.related.map { VesselSummaryDataOutput.from(baseUrl, it) },

@@ -104,6 +104,9 @@ export const fr: Messages = {
       date
         ? `Source${_}: registre de la flotte de l’UE, dernier import le ${date}.`
         : `Source${_}: registre de la flotte de l’UE, au dernier import.`,
+    wikidataTitle: 'Données du navire',
+    imo: 'Numéro IMO',
+    wikidataSource: `Source${_}: Wikidata (CC0)`,
     gears: {
       DRB: 'Dragues remorquées',
       DRH: 'Dragues à main',
@@ -187,6 +190,7 @@ export const fr: Messages = {
       `${vessel} — ${photoCount ? `${photoCount} photo${photoCount === 1 ? '' : 's'}` : 'photos du navire'}` +
       details.map(detail => ` · ${detail}`).join(''),
     notFoundPageTitle: (key: string) => `Aucun navire avec le ${key}`,
+    otherNames: (names: string) => `Aussi connu sous le nom de ${names}`,
     notFoundTitle: (key: string) => `Aucun navire avec le ${key} pour l’instant`,
     unavailable: 'Indisponible',
     notFoundText: 'Personne n’en a encore partagé de photo.',
@@ -489,6 +493,11 @@ export const fr: Messages = {
     csvFile: 'Fichier CSV',
     importing: 'Import…',
     import: 'Importer',
+    wikidataImportTitle: 'Compléter les navires depuis Wikidata',
+    wikidataImportText: `Cherche chaque navire avec photos et MMSI sur Wikidata (CC0), et enregistre son numéro IMO, son type, son année, sa longueur et ses autres noms (par exemple un ancien nom), affichés sur sa page. Tourne en arrière-plan, par lots de 200 navires${_}; les navires inconnus de Wikidata gardent leurs données. Peut être relancé à tout moment pour rafraîchir les données.`,
+    wikidataImportStart: 'Lancer',
+    wikidataImportProgress: s =>
+      `${s.done} / ${s.total} navires${_}: ${s.found} trouvés sur Wikidata, ${s.failed} en échec.`,
     photoImportTitle: 'Importer des photos',
     photoImportText: `Publie sans relecture des photos sous licence libre, venant par exemple de Wikimedia Commons. Colonnes du CSV${_}: mmsi et/ou cfr, vessel_name, author, licence, file_page (page de la photo d’origine), image_1600_url et, en option, date et note (affichée avec la photo). Les images sont téléchargées depuis Wikimedia Commons ou Flickr une à une, en arrière-plan${_}: cela peut prendre quelques heures. Les photos déjà importées sont ignorées${_}: le même fichier peut être renvoyé après une interruption.`,
     photoImportRunning: 'Import en cours…',
