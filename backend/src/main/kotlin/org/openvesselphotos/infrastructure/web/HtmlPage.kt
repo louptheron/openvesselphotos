@@ -79,6 +79,9 @@ class HtmlPageRenderer(
             appendLine("""    <meta name="description" content="$description" />""")
             if (!page.isIndexable) {
                 appendLine("""    <meta name="robots" content="noindex" />""")
+            } else {
+                // Without it, Google Images and Discover may only show a small thumbnail of the photos
+                appendLine("""    <meta name="robots" content="max-image-preview:large" />""")
             }
             canonicalUrl?.let {
                 appendLine("""    <link rel="canonical" href="${escapeHtml(it)}" />""")

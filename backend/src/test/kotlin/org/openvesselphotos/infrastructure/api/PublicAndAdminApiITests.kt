@@ -274,6 +274,10 @@ class PublicAndAdminApiITests {
             .contains("<h1>&lt;/script&gt;&lt;b&gt;Evil&lt;/b&gt;</h1>")
             .doesNotContain("<b>Evil</b>")
             .doesNotContain("noindex")
+            .contains("""<meta name="robots" content="max-image-preview:large" />""")
+            .containsPattern(
+                """<figure><a href="http://localhost/v1/cfr/FRA000999888/photos/1/[a-z0-9-]+\.jpg\?size=full"><img """,
+            )
 
         // Each page has a French version under /fr, which search engines find from the hreflang links
         assertThat(html)
