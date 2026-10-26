@@ -243,6 +243,8 @@ data class VesselDataOutput(
     val registration: String?,
     val port: String?,
     val flag: String?,
+    /** ISO 3166-1 alpha-2 of the flag, from the CFR or else the MMSI's MID: to name the country in any language */
+    val countryCode: String?,
     /** Technical data from the EU fleet register, if imported */
     val register: RegisterDataOutput?,
     /** What Wikidata knows of the vessel, if found by its MMSI */
@@ -263,6 +265,7 @@ data class VesselDataOutput(
             registration = details.vessel.registration,
             port = details.vessel.port,
             flag = details.vessel.flag,
+            countryCode = (details.vessel.flag ?: Flags.ofMmsi(details.vessel.mmsi))?.let { Flags.alpha2(it) },
             register = RegisterDataOutput.from(details.vessel.register),
             wikidata = WikidataDataOutput.from(details.vessel.wikidata),
             photos = details.photos.map { PhotoDataOutput.from(baseUrl, details.vessel, it) },

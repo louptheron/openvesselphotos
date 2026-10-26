@@ -115,6 +115,8 @@ export type WikidataData = {
 
 export type Vessel = {
   cfr: string | null
+  /** ISO 3166-1 alpha-2 of the flag, from the CFR or else the MMSI's MID */
+  countryCode: string | null
   flag: string | null
   history: HistoryEvent[]
   mmsi: string | null

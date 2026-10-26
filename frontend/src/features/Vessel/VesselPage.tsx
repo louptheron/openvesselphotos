@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -92,9 +92,37 @@ export function VesselPage() {
   return <VesselDetails key={`${keyType}-${key}`} vessel={vessel} />
 }
 
+/**
+ * The vessel's own sentence, e.g. "LOLA is a gillnetter of 14.85 m, built in 1981, registered in La Rochelle under the
+ * flag of France.", as the server renders it (PagesController.summary). Undefined when nothing is known.
+ */
+function useSummary(vessel: Vessel, vesselType: string | undefined): string | undefined {
+  const { formatNumber, language, t } = useTranslation()
+  const countryNames = useMemo(() => new Intl.DisplayNames([language], { type: 'region' }), [language])
+  // The EU fleet register first: Wikidata completes the vessels outside it
+  const lengthMeters = vessel.register?.lengthMeters ?? vessel.wikidata?.lengthMeters
+  const yearBuilt = vessel.register?.yearBuilt ?? vessel.wikidata?.yearBuilt
+  const country = vessel.countryCode ? countryNames.of(vessel.countryCode) : undefined
+  if (!vesselType && !lengthMeters && !yearBuilt && !vessel.port && !country) {
+    return undefined
+  }
+  const mainGear = vessel.register?.mainGear
+
+  return t.vessel.summary({
+    country,
+    length: lengthMeters ? formatNumber(lengthMeters) : undefined,
+    mainGear: mainGear ? (t.register.gears[mainGear] ?? mainGear) : undefined,
+    name: vessel.name ?? t.common.unnamedVessel,
+    port: vessel.port,
+    vesselType,
+    yearBuilt
+  })
+}
+
 function VesselDetails({ vessel }: { vessel: Vessel }) {
   const { formatDate, language, t } = useTranslation()
   const vesselType = getVesselType(vessel, language, t)
+  const summary = useSummary(vessel, vesselType)
   const [pickedIndex, setPickedIndex] = useState(0)
   const [size, setSize] = useState<Size>('800')
   const [copied, setCopied] = useState(false)
@@ -223,6 +251,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
               <Registration>{[vessel.registration, vessel.port].filter(Boolean).join(' · ')}</Registration>
             )}
           </Heading>
+          {summary && <Summary>{summary}</Summary>}
 
           <Keys>
             <Card as="div">
@@ -407,6 +436,12 @@ const Figure = styled.figure`
     gap: 8px;
     font-size: 14px;
   }
+`
+
+const Summary = styled.p`
+  margin: 0;
+  line-height: 1.5;
+  color: ${COLORS.text};
 `
 
 const Registration = styled.p`

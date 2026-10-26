@@ -189,6 +189,30 @@ export const en = {
       `${vessel} — ${photoCount ? `${photoCount} photo${photoCount === 1 ? '' : 's'}` : 'vessel photos'}` +
       details.map(detail => ` · ${detail}`).join(''),
     notFoundPageTitle: (key: string) => `No vessel with ${key}`,
+    /** e.g. "LOLA is a gillnetter of 14.85 m, built in 1981, registered in La Rochelle…", as the server renders it */
+    summary: (s: {
+      name: string
+      vesselType: string | undefined
+      length: string | undefined
+      yearBuilt: number | null | undefined
+      port: string | null
+      country: string | undefined
+      mainGear: string | undefined
+    }) => {
+      const type = s.vesselType?.toLowerCase()
+      const place = [s.port && `registered in ${s.port}`, s.country && `under the flag of ${s.country}`]
+        .filter(Boolean)
+        .join(' ')
+
+      return (
+        `${s.name} is ${type ? `${/^[aeiou]/.test(type) ? 'an' : 'a'} ${type}` : 'a vessel'}` +
+        (s.length ? ` of ${s.length} m` : '') +
+        (s.yearBuilt ? `, built in ${s.yearBuilt}` : '') +
+        (place ? `, ${place}` : '') +
+        '.' +
+        (s.mainGear ? ` Main gear: ${s.mainGear.toLowerCase()}.` : '')
+      )
+    },
     /** e.g. "Also known as Lee A. Tregurtha" */
     otherNames: (names: string) => `Also known as ${names}`,
     notFoundTitle: (key: string) => `No vessel with ${key} yet`,

@@ -771,6 +771,7 @@ class PublicAndAdminApiITests {
         mockMvc
             .perform(get("/v1/cfr/FRA000700001"))
             .andExpect(jsonPath("$.register.vesselType").value("TO"))
+            .andExpect(jsonPath("$.countryCode").value("FR"))
             .andExpect(jsonPath("$.register.yearBuilt").value(1998))
             .andExpect(jsonPath("$.register.lengthMeters").value(22.0))
             .andExpect(jsonPath("$.register.enginePowerKw").value(331.0))
@@ -879,6 +880,8 @@ class PublicAndAdminApiITests {
         mockMvc
             .perform(get("/v1/mmsi/366904950"))
             .andExpect(jsonPath("$.wikidata.id").value("Q7868346"))
+            // From the MMSI's MID
+            .andExpect(jsonPath("$.countryCode").value("US"))
             .andExpect(jsonPath("$.wikidata.url").value("https://www.wikidata.org/wiki/Q7868346"))
             .andExpect(jsonPath("$.wikidata.imo").value("5385625"))
             .andExpect(jsonPath("$.wikidata.yearBuilt").value(1942))

@@ -216,7 +216,9 @@ sealed interface PageTexts {
             port: String?,
             country: String?,
             mainGear: String?,
-        ) = "$name is a ${vesselType?.lowercase() ?: "vessel"}" +
+        ) = "$name is ${vesselType?.lowercase()?.let {
+            "${if (it.first() in "aeiou") "an" else "a"} $it"
+        } ?: "a vessel"}" +
             lengthMeters?.let { " of ${formatNumber(it)} m" }.orEmpty() +
             yearBuilt?.let { ", built in $it" }.orEmpty() +
             listOfNotNull(port?.let { "registered in $it" }, country?.let { "under the flag of $it" })

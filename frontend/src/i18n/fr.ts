@@ -190,6 +190,14 @@ export const fr: Messages = {
       `${vessel} — ${photoCount ? `${photoCount} photo${photoCount === 1 ? '' : 's'}` : 'photos du navire'}` +
       details.map(detail => ` · ${detail}`).join(''),
     notFoundPageTitle: (key: string) => `Aucun navire avec le ${key}`,
+    summary: s =>
+      `${s.name} est un ${s.vesselType?.toLowerCase() ?? 'navire'}` +
+      (s.length ? ` de ${s.length}${_}m` : '') +
+      (s.yearBuilt ? `, construit en ${s.yearBuilt}` : '') +
+      (s.port ? `, immatriculé à ${s.port}` : '') +
+      (s.country ? `, pavillon${_}: ${s.country}` : '') +
+      '.' +
+      (s.mainGear ? ` Engin principal${_}: ${s.mainGear.toLowerCase()}.` : ''),
     otherNames: (names: string) => `Aussi connu sous le nom de ${names}`,
     notFoundTitle: (key: string) => `Aucun navire avec le ${key} pour l’instant`,
     unavailable: 'Indisponible',
