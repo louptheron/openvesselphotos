@@ -4,12 +4,14 @@ import org.openvesselphotos.domain.entities.Flags
 import org.openvesselphotos.domain.entities.HistoryEvent
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Photo
+import org.openvesselphotos.domain.entities.PhotoStatus
 import org.openvesselphotos.domain.entities.RegisterData
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselDetails
 import org.openvesselphotos.domain.entities.VesselFilterOptions
 import org.openvesselphotos.domain.entities.VesselWithPhotos
 import org.openvesselphotos.domain.entities.WikidataData
+import org.openvesselphotos.domain.use_cases.public_api.ReviewedSubmission
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
@@ -286,3 +288,41 @@ data class SubmissionDataOutput(
     val id: Int,
     val status: String,
 )
+
+/** The review of a photo sent with an API key, e.g. to tell its contributor "Your photo of LOLA was published". */
+data class ReviewedSubmissionDataOutput(
+    val id: Int,
+    /** APPROVED or REJECTED */
+    val status: String,
+    val reviewedAt: ZonedDateTime?,
+    val cfr: String?,
+    val mmsi: String?,
+    val vesselName: String?,
+    /** Image URLs, for an approved photo */
+    val urls: PhotoUrlsDataOutput?,
+    val rejectReason: String?,
+) {
+    companion object {
+        fun from(
+            baseUrl: String,
+            submission: ReviewedSubmission,
+        ): ReviewedSubmissionDataOutput {
+            val (photo, vessel) = submission
+            val submittedKeys = listOfNotNull(photo.submittedKey, photo.submittedOtherKey)
+
+            return ReviewedSubmissionDataOutput(
+                id = requireNotNull(photo.id),
+                status = photo.status.name,
+                reviewedAt = photo.reviewedAt,
+                cfr = vessel?.keyValue(KeyType.CFR) ?: submittedKeys.find { it.type == KeyType.CFR }?.value,
+                mmsi = vessel?.keyValue(KeyType.MMSI) ?: submittedKeys.find { it.type == KeyType.MMSI }?.value,
+                vesselName = vessel?.name ?: photo.submittedVesselName,
+                urls =
+                    vessel?.takeIf { photo.status == PhotoStatus.APPROVED }?.let {
+                        PhotoUrlsDataOutput.from(baseUrl, it, photo)
+                    },
+                rejectReason = photo.rejectReason,
+            )
+        }
+    }
+}

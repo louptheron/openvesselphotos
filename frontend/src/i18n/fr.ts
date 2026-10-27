@@ -364,6 +364,8 @@ export const fr: Messages = {
       `Les valeurs de ces filtres, avec leur nombre de navires${_}; les pavillons ont aussi leur code ISO alpha-2 countryCode.`,
       `Toutes les données${_}: chaque navire avec les URL, crédits et licences de ses photos.`,
       `Envoyer une photo (multipart${_}: file, credit, licence, takenOn?, place?, email?, contributorId?, vesselName?, et mmsi? sous un CFR ou cfr? sous un MMSI), sous l’identifiant que vous connaissez. Publiée après vérification. Nécessite une clé d’API.`,
+      `Les photos d’un contributorId envoyées avec votre clé, publiées ou refusées, dont la vérification n’a pas encore été vue${_}: id, status (APPROVED|REJECTED), reviewedAt, cfr, mmsi, vesselName, urls, rejectReason. Nécessite une clé d’API.`,
+      `Marquer la vérification d’une photo comme vue par son contributeur${_}: elle n’est plus renvoyée par la requête précédente. Nécessite une clé d’API.`,
       'Proposer l’identifiant manquant, ex. {"keyType": "cfr", "key": "FRA000123456"}. Appliqué après vérification. Nécessite une clé d’API.',
       `Signaler une photo${_}: {"reason": "WRONG_VESSEL|COPYRIGHT|PRIVACY|OTHER", "message": "…"}. Nécessite une clé d’API.`,
       `Demander une clé d’API${_}: {"name", "email", "organisation"?, "intendedUse"}. Envoyée par e-mail une fois acceptée.`

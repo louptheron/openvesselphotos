@@ -379,6 +379,8 @@ export const en = {
       'The values of these filters, with their number of vessels; flags also have their ISO alpha-2 countryCode.',
       'The whole dataset: every vessel with its photo URLs, credits and licences.',
       'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, contributorId?, vesselName?, plus mmsi? under a CFR or cfr? under an MMSI), under whichever key you know. Published after review. Needs an API key.',
+      'The photos of a contributorId sent with your key, published or rejected, whose review was not seen yet: id, status (APPROVED|REJECTED), reviewedAt, cfr, mmsi, vesselName, urls, rejectReason. Needs an API key.',
+      'Mark the review of a photo as seen by its contributor: it is no longer returned by the request above. Needs an API key.',
       'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review. Needs an API key.',
       'Report a photo: {"reason": "WRONG_VESSEL|COPYRIGHT|PRIVACY|OTHER", "message": "…"}. Needs an API key.',
       'Request an API key: {"name", "email", "organisation"?, "intendedUse"}. Sent by email once approved.'

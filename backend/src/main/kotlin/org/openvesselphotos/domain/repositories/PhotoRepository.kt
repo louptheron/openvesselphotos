@@ -23,6 +23,12 @@ interface PhotoRepository {
 
     fun countByStatus(status: PhotoStatus): Int
 
+    /** Approved or rejected photos of a contributor, sent with this API key, whose review was not seen yet. */
+    fun findUnseenReviewed(
+        apiKeyId: Int,
+        contributorId: String,
+    ): List<Photo>
+
     fun existsBySourceUrl(sourceUrl: String): Boolean
 
     fun save(photo: Photo): Photo

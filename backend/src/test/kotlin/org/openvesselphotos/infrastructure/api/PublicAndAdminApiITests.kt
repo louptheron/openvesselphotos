@@ -566,6 +566,39 @@ class PublicAndAdminApiITests {
                     .param("contributorId", contributorId),
             ).andExpect(status().isBadRequest)
 
+        // The application shows the agent the review of their photo, once
+        mockMvc.perform(get("/v1/submissions").param("contributorId", contributorId)).andExpect(status().isUnauthorized)
+        mockMvc
+            .perform(get("/v1/submissions").param("contributorId", contributorId).header("x-api-key", key))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(id.toInt()))
+            .andExpect(jsonPath("$[0].status").value("APPROVED"))
+            .andExpect(jsonPath("$[0].mmsi").value("227000666"))
+            .andExpect(jsonPath("$[0].urls.mmsi").value("http://localhost/v1/mmsi/227000666/photos/1.jpg"))
+        mockMvc
+            .perform(get("/v1/submissions").param("contributorId", "b".repeat(64)).header("x-api-key", key))
+            .andExpect(jsonPath("$.length()").value(0))
+        mockMvc.perform(post("/v1/submissions/$id/seen")).andExpect(status().isUnauthorized)
+        mockMvc.perform(post("/v1/submissions/$id/seen").header("x-api-key", key)).andExpect(status().isNoContent)
+        mockMvc.perform(post("/v1/submissions/$id/seen").header("x-api-key", key)).andExpect(status().isNoContent)
+        mockMvc
+            .perform(get("/v1/submissions").param("contributorId", contributorId).header("x-api-key", key))
+            .andExpect(jsonPath("$.length()").value(0))
+        // Not before review, and not for another key's photos
+        val pendingId =
+            Regex("\"id\":(\\d+)")
+                .find(
+                    upload(key, "contributorId" to contributorId, mmsi = "227000666")
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        mockMvc
+            .perform(post("/v1/submissions/$pendingId/seen").header("x-api-key", key))
+            .andExpect(status().isConflict)
+        mockMvc.perform(post("/v1/submissions/999999/seen").header("x-api-key", key)).andExpect(status().isNotFound)
+
         mockMvc.perform(post("/v1/admin/api-keys/$requestId/revoke").cookie(cookie)).andExpect(status().isNoContent)
         upload(key).andExpect(status().isUnauthorized)
 

@@ -35,6 +35,8 @@ data class Photo(
     val createdAt: ZonedDateTime? = null,
     val reviewedAt: ZonedDateTime? = null,
     val rejectReason: String? = null,
+    /** When the application of the API key the photo was sent with showed its review to the contributor */
+    val seenAt: ZonedDateTime? = null,
     /** The API key the photo was sent with, if any. */
     val apiKeyId: Int? = null,
     /** Page of the original photo, for an imported photo (Wikimedia Commons, Flickr…). */

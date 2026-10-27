@@ -18,6 +18,8 @@ const ENDPOINTS = [
   { method: 'GET', path: '/v1/vessels/filters' },
   { method: 'GET', path: '/v1/export.json' },
   { method: 'POST', path: '/v1/{cfr|mmsi}/{key}/photos' },
+  { method: 'GET', path: '/v1/submissions?contributorId={id}' },
+  { method: 'POST', path: '/v1/submissions/{id}/seen' },
   { method: 'POST', path: '/v1/{cfr|mmsi}/{key}/link' },
   { method: 'POST', path: '/v1/{cfr|mmsi}/{key}/photos/{n}/reports' },
   { method: 'POST', path: '/v1/api-key-requests' }

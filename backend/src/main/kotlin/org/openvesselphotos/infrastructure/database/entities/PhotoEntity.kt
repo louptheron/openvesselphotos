@@ -55,6 +55,8 @@ class PhotoEntity(
     val reviewedAt: ZonedDateTime?,
     @Column(name = "reject_reason")
     val rejectReason: String?,
+    @Column(name = "seen_at")
+    val seenAt: ZonedDateTime?,
     @Column(name = "api_key_id")
     val apiKeyId: Int?,
     @Column(name = "source_url")
@@ -81,6 +83,7 @@ class PhotoEntity(
             createdAt = createdAt,
             reviewedAt = reviewedAt,
             rejectReason = rejectReason,
+            seenAt = seenAt,
             apiKeyId = apiKeyId,
             sourceUrl = sourceUrl,
             note = note,
@@ -108,6 +111,7 @@ class PhotoEntity(
                 createdAt = photo.createdAt,
                 reviewedAt = photo.reviewedAt,
                 rejectReason = photo.rejectReason,
+                seenAt = photo.seenAt,
                 apiKeyId = photo.apiKeyId,
                 sourceUrl = photo.sourceUrl,
                 note = photo.note,
