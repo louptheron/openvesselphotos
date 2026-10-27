@@ -15,6 +15,13 @@ class LicenceUTests {
     }
 
     @Test
+    fun `fromSpdx Should accept the Licence Ouverte of French administrations`() {
+        assertThat(Licence.fromSpdx("etalab-2.0")).isEqualTo(Licence.ETALAB_2_0)
+        assertThat(Licence.fromSpdx("Licence Ouverte 2.0")).isEqualTo(Licence.ETALAB_2_0)
+        assertThat(Licence.ETALAB_2_0.requiresCredit).isTrue()
+    }
+
+    @Test
     fun `fromSpdx Should reject a non-free licence`() {
         assertThatThrownBy { Licence.fromSpdx("CC-BY-NC-4.0") }.isInstanceOf(BackendUsageException::class.java)
     }

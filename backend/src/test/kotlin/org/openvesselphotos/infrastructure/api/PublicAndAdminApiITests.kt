@@ -461,14 +461,19 @@ class PublicAndAdminApiITests {
 
     @Test
     fun `POST requests from outside the website Should need an active API key`() {
-        fun upload(apiKey: String?) =
-            mockMvc.perform(
-                multipart("/v1/mmsi/227000777/photos")
-                    .file(MockMultipartFile("file", "boat.jpg", "image/jpeg", TestImages.create(800, 600)))
-                    .param("credit", "Script")
-                    .param("licence", "CC0-1.0")
-                    .apply { apiKey?.let { header("x-api-key", it) } },
-            )
+        fun upload(
+            apiKey: String?,
+            vararg params: Pair<String, String>,
+            mmsi: String = "227000777",
+        ) = mockMvc.perform(
+            multipart("/v1/mmsi/$mmsi/photos")
+                .file(MockMultipartFile("file", "boat.jpg", "image/jpeg", TestImages.create(800, 600)))
+                .apply {
+                    (mapOf("credit" to "Script", "licence" to "CC0-1.0") + params).forEach { (name, value) ->
+                        param(name, value)
+                    }
+                }.apply { apiKey?.let { header("x-api-key", it) } },
+        )
 
         upload(
             null,
@@ -518,6 +523,48 @@ class PublicAndAdminApiITests {
             .perform(get("/v1/admin/api-keys").cookie(cookie))
             .andExpect(jsonPath("$[0].name").value("Fleet app"))
             .andExpect(jsonPath("$[0].lastUsedAt").isNotEmpty)
+
+        // A photo taken on duty by a State agent: Licence Ouverte 2.0, and a pseudonymous id of the agent
+        val contributorId = "a".repeat(64)
+        val id =
+            Regex("\"id\":(\\d+)")
+                .find(
+                    upload(
+                        key,
+                        "credit" to "DGAMPA",
+                        "licence" to "etalab-2.0",
+                        "contributorId" to contributorId,
+                        mmsi = "227000666",
+                    ).andExpect(status().isCreated)
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        mockMvc
+            .perform(get("/v1/admin/queue").cookie(cookie))
+            .andExpect(jsonPath("$.photos[?(@.photo.id == $id)].photo.contributorId").value(contributorId))
+            .andExpect(jsonPath("$.photos[?(@.photo.id == $id)].photo.licenceName").value("Licence Ouverte 2.0"))
+        mockMvc.perform(post("/v1/admin/photos/$id/approve").cookie(cookie)).andExpect(status().isNoContent)
+        mockMvc
+            .perform(get("/v1/mmsi/227000666"))
+            .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString(contributorId))))
+            .andExpect(
+                jsonPath(
+                    "$.photos[?(@.licence == 'etalab-2.0')].attribution",
+                ).value("Photo: DGAMPA / Open Vessel Photos, Licence Ouverte 2.0"),
+            )
+        upload(key, "contributorId" to "agent@example.org").andExpect(status().isBadRequest)
+        upload(key, "contributorId" to "a".repeat(65)).andExpect(status().isBadRequest)
+        // Not from the website, which has no API key
+        mockMvc
+            .perform(
+                multipart("/v1/mmsi/227000666/photos")
+                    .header("Sec-Fetch-Site", "same-origin")
+                    .file(MockMultipartFile("file", "boat.jpg", "image/jpeg", TestImages.create(800, 600)))
+                    .param("credit", "Someone")
+                    .param("licence", "CC0-1.0")
+                    .param("contributorId", contributorId),
+            ).andExpect(status().isBadRequest)
 
         mockMvc.perform(post("/v1/admin/api-keys/$requestId/revoke").cookie(cookie)).andExpect(status().isNoContent)
         upload(key).andExpect(status().isUnauthorized)

@@ -234,6 +234,9 @@ function PhotoReview({
         {t.admin.submitted(formatDate(photo.createdAt), photo.credit)}
         {photo.contributorEmail && ` (${photo.contributorEmail})`}
         {apiKeyName && t.admin.sentWithKey(apiKeyName)}
+        {photo.contributorId && (
+          <span title={photo.contributorId}>{t.admin.contributor(`${photo.contributorId.slice(0, 8)}…`)}</span>
+        )}
       </Muted>
       <Facts>
         <div>

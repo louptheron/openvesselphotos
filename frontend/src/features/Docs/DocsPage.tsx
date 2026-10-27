@@ -109,6 +109,10 @@ export function DocsPage() {
         <CodeBlock>{`curl -X POST -H "x-api-key: ovp_…" \\
   -F file=@boat.jpg -F credit="Jane Doe" -F licence=CC-BY-4.0 \\
   ${origin}/v1/cfr/FRA000123456/photos`}</CodeBlock>
+        <p>{t.docs.apiKeyContributorId}</p>
+        <CodeBlock>{`curl -X POST -H "x-api-key: ovp_…" \\
+  -F file=@boat.jpg -F credit=DGAMPA -F licence=etalab-2.0 -F contributorId=3f9a… \\
+  ${origin}/v1/cfr/FRA000123456/photos`}</CodeBlock>
       </Section>
 
       <Section id="rate-limits">
@@ -143,6 +147,12 @@ export function DocsPage() {
               CC0
             </a>{' '}
             {t.docs.licenceCc0}
+          </li>
+          <li>
+            <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" rel="noreferrer" target="_blank">
+              Licence Ouverte 2.0
+            </a>{' '}
+            {t.docs.licenceEtalab}
           </li>
         </ul>
         <p>{t.docs.licenceOlder}</p>

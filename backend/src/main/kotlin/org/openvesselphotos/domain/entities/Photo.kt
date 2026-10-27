@@ -25,6 +25,11 @@ data class Photo(
     val takenOn: LocalDate?,
     val place: String?,
     val contributorEmail: String?,
+    /**
+     * Pseudonymous identifier of the contributor in the application of the API key the photo was sent with (e.g. a
+     * HMAC of its user id), to group a contributor's photos without knowing who they are. Never public.
+     */
+    val contributorId: String? = null,
     val width: Int,
     val height: Int,
     val createdAt: ZonedDateTime? = null,

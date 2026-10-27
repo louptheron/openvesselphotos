@@ -14,6 +14,15 @@ enum class Licence(
     CC_BY_4_0("CC-BY-4.0", "CC BY 4.0", true, "https://creativecommons.org/licenses/by/4.0/"),
     CC_BY_SA_4_0("CC-BY-SA-4.0", "CC BY-SA 4.0", true, "https://creativecommons.org/licenses/by-sa/4.0/"),
 
+    // The licence French administrations publish under, for photos taken on duty, which belong to the State (sent
+    // through the API, e.g. credited "DGAMPA"). Compatible with CC BY 4.0.
+    ETALAB_2_0(
+        "etalab-2.0",
+        "Licence Ouverte 2.0",
+        true,
+        "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+    ),
+
     // Older versions and the public domain, for photos imported from Wikimedia Commons or Flickr: they keep their own
     // licence, which cannot be upgraded to 4.0 (a contributor's own photo is published under one of the above)
     CC_BY_3_0("CC-BY-3.0", "CC BY 3.0", true, "https://creativecommons.org/licenses/by/3.0/"),

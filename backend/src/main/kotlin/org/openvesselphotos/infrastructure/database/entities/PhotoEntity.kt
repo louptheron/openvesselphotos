@@ -45,6 +45,8 @@ class PhotoEntity(
     val place: String?,
     @Column(name = "contributor_email")
     val contributorEmail: String?,
+    @Column(name = "contributor_id")
+    val contributorId: String?,
     val width: Int,
     val height: Int,
     @Column(name = "created_at", insertable = false, updatable = false)
@@ -73,6 +75,7 @@ class PhotoEntity(
             takenOn = takenOn,
             place = place,
             contributorEmail = contributorEmail,
+            contributorId = contributorId,
             width = width,
             height = height,
             createdAt = createdAt,
@@ -99,6 +102,7 @@ class PhotoEntity(
                 takenOn = photo.takenOn,
                 place = photo.place,
                 contributorEmail = photo.contributorEmail,
+                contributorId = photo.contributorId,
                 width = photo.width,
                 height = photo.height,
                 createdAt = photo.createdAt,
