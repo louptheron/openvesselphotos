@@ -24,6 +24,8 @@ data class PhotoSubmission(
     val takenOn: LocalDate?,
     val place: String?,
     val contributorEmail: String?,
+    /** Pseudonymous identifier of the contributor in the API key's application, see [Photo.contributorId] */
+    val contributorId: String? = null,
     val vesselName: String?,
     val apiKeyId: Int? = null,
 )
@@ -49,6 +51,19 @@ class SubmitPhoto(
         val email = submission.contributorEmail?.trim()?.ifEmpty { null }
         if (email != null && (email.length > 254 || !email.contains("@"))) {
             throw BackendUsageException(BackendUsageErrorCode.INVALID_INPUT, "Invalid email.")
+        }
+        val contributorId = submission.contributorId?.trim()?.ifEmpty { null }
+        if (contributorId != null) {
+            // Only meaningful within the application of an API key, and never an email or a name
+            if (submission.apiKeyId == null) {
+                throw BackendUsageException(BackendUsageErrorCode.INVALID_INPUT, "A contributorId needs an API key.")
+            }
+            if (!CONTRIBUTOR_ID.matches(contributorId)) {
+                throw BackendUsageException(
+                    BackendUsageErrorCode.INVALID_INPUT,
+                    "A contributorId is 1 to 64 letters, digits, '-' or '_', e.g. a HMAC of your user id.",
+                )
+            }
         }
 
         if (submission.otherKey != null && submission.otherKey.type == submission.key.type) {
@@ -79,6 +94,7 @@ class SubmitPhoto(
                             ?.take(200)
                             ?.ifEmpty { null },
                     contributorEmail = email,
+                    contributorId = contributorId,
                     width = image.width,
                     height = image.height,
                     apiKeyId = submission.apiKeyId,
@@ -87,5 +103,9 @@ class SubmitPhoto(
         image.files.forEach { (size, content) -> photoRepository.saveFile(requireNotNull(photo.id), size, content) }
 
         return photo
+    }
+
+    companion object {
+        private val CONTRIBUTOR_ID = Regex("[A-Za-z0-9_-]{1,64}")
     }
 }

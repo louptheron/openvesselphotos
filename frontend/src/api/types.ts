@@ -151,6 +151,8 @@ export type AdminVessel = {
 
 export type AdminPhoto = {
   contributorEmail: string | null
+  /** Pseudonymous id of the contributor in the application of the API key */
+  contributorId: string | null
   createdAt: string | null
   credit: string
   height: number

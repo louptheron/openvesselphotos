@@ -378,7 +378,9 @@ export const en = {
       'All vessels with photos, by name, 100 per page, with the page count and total. Optional filters: flag (ISO alpha-3, from the CFR or else the MMSI), port, vesselType, mainGear.',
       'The values of these filters, with their number of vessels; flags also have their ISO alpha-2 countryCode.',
       'The whole dataset: every vessel with its photo URLs, credits and licences.',
-      'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, vesselName?, plus mmsi? under a CFR or cfr? under an MMSI), under whichever key you know. Published after review. Needs an API key.',
+      'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, contributorId?, vesselName?, plus mmsi? under a CFR or cfr? under an MMSI), under whichever key you know. Published after review. Needs an API key.',
+      'The photos of a contributorId sent with your key, published or rejected, whose review was not seen yet: id, status (APPROVED|REJECTED), reviewedAt, cfr, mmsi, vesselName, urls, rejectReason. Needs an API key.',
+      'Mark the review of a photo as seen by its contributor: it is no longer returned by the request above. Needs an API key.',
       'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review. Needs an API key.',
       'Report a photo: {"reason": "WRONG_VESSEL|COPYRIGHT|PRIVACY|OTHER", "message": "…"}. Needs an API key.',
       'Request an API key: {"name", "email", "organisation"?, "intendedUse"}. Sent by email once approved.'
@@ -390,6 +392,8 @@ export const en = {
     apiKeyText1: 'Every GET is open, without key. POST requests need an API key in the x-api-key header:',
     apiKeyLink: 'request one',
     apiKeyText2: ', it is free. Without it, they return a 401.',
+    apiKeyContributorId:
+      'To tell your users’ photos apart, send contributorId: a stable pseudonymous id of the author in your application (1 to 64 letters, digits, - or _), never an email or a name, e.g. a HMAC of your user id with a secret key that you keep. It is only seen by reviewers. A photo taken on duty by a French administration is sent under the Licence Ouverte 2.0:',
     rateLimitsTitle: 'Rate limits',
     rateLimitsText:
       'Up to 600 GET per minute per IP, and 1,000 POST per hour per API key. Every response tells where you stand in X-RateLimit-Limit, X-RateLimit-Remaining and X-RateLimit-Reset (seconds). Above the limit, requests return a 429 with a Retry-After header. Need more? Download the whole dataset from /v1/export.json, or ask for a higher limit.',
@@ -400,6 +404,8 @@ export const en = {
     licenceBy: '— reuse with credit.',
     licenceBySa: '— reuse with credit; changes shared under the same licence.',
     licenceCc0: '— public domain, no credit required.',
+    licenceEtalab:
+      '— the licence of French administrations, for photos taken on duty: reuse citing the source. Compatible with CC BY 4.0.',
     licenceOlder:
       'Photos imported from Wikimedia Commons or Flickr keep their own licence, which can also be an older version of these (CC BY or CC BY-SA 1.0 to 3.0) or the public domain.',
     selfHostTitle: 'Self-host it',
@@ -476,6 +482,7 @@ export const en = {
     newVessel: 'New vessel',
     submitted: (date: string, by: string) => `Submitted ${date} by ${by}`,
     sentWithKey: (name: string) => ` · sent with the API key of ${name}`,
+    contributor: (id: string) => ` · contributor ${id}`,
     submittedKey: 'Submitted key',
     licence: 'Licence',
     taken: 'Taken',
