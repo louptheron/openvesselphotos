@@ -28,7 +28,7 @@ RUN gradle :backend:bootJar --no-daemon
 ######################
 # Create final image #
 ######################
-FROM azul/zulu-openjdk-alpine:21-jre
+FROM azul/zulu-openjdk-alpine:26-jre
 
 RUN adduser -D openvesselphotos
 USER openvesselphotos
