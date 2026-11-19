@@ -30,7 +30,9 @@ export function VesselsPage() {
   const { language, t } = useTranslation()
   const { data, isError, isFetching } = useGetVesselsPageQuery({ ...filter, page }, { skip: !isValidPage })
   const { data: options } = useGetVesselFilterOptionsQuery()
-  const title = isFiltered ? t.vessels.filteredTitle : t.vessels.title
+  // The quartier d'immatriculation alone has its own page for search engines (see PagesController.vessels)
+  const quartier = Object.keys(filter).length === 1 ? filter.port : undefined
+  const title = quartier ? t.vessels.quartierTitle(quartier) : isFiltered ? t.vessels.filteredTitle : t.vessels.title
   usePageMeta(data && (isFiltered ? title : t.vessels.pageTitle(data.page, data.pageCount)))
 
   const countryNames = useMemo(() => new Intl.DisplayNames([language], { type: 'region' }), [language])

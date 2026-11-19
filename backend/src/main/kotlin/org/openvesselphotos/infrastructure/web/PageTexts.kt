@@ -108,6 +108,15 @@ sealed interface PageTexts {
 
     fun vesselsWithPhotos(filterText: String): String
 
+    /** Heading of a quartier d'immatriculation's directory, e.g. "Vessels registered in Lorient" */
+    fun vesselsOfQuartier(port: String): String
+
+    fun quartierDescription(
+        port: String,
+        total: Int,
+        pageText: String,
+    ): String
+
     fun pageOf(
         number: Int,
         count: Int,
@@ -257,6 +266,15 @@ sealed interface PageTexts {
         ).joinToString(", ")
 
         override fun vesselsWithPhotos(filterText: String) = "Vessels with photos: $filterText"
+
+        override fun vesselsOfQuartier(port: String) = "Vessels registered in $port"
+
+        override fun quartierDescription(
+            port: String,
+            total: Int,
+            pageText: String,
+        ) = "Free photos of the $total vessel${if (total == 1) "" else "s"} of the port of registration of $port " +
+            "on ${HtmlPageRenderer.SITE_NAME}, by name$pageText."
 
         override fun pageOf(
             number: Int,
@@ -408,6 +426,24 @@ sealed interface PageTexts {
         ).joinToString(", ")
 
         override fun vesselsWithPhotos(filterText: String) = "Navires avec photos$NBSP: $filterText"
+
+        override fun vesselsOfQuartier(port: String) = "Navires du quartier d’immatriculation ${of(port)}"
+
+        override fun quartierDescription(
+            port: String,
+            total: Int,
+            pageText: String,
+        ) = "Photos libres des $total navire${if (total == 1) "" else "s"} du quartier d’immatriculation ${of(port)} " +
+            "sur ${HtmlPageRenderer.SITE_NAME}, par nom$pageText."
+
+        /** "de Brest", "d’Auray", "du Guilvinec", "des Sables-d’Olonne" */
+        fun of(name: String): String =
+            when {
+                name.startsWith("Le ") -> "du ${name.drop(3)}"
+                name.startsWith("Les ") -> "des ${name.drop(4)}"
+                name.isNotEmpty() && name[0].lowercaseChar() in "aeiouyhàâäéèêëîïôöùûü" -> "d’$name"
+                else -> "de $name"
+            }
 
         override fun pageOf(
             number: Int,

@@ -8,6 +8,7 @@ import org.openvesselphotos.domain.entities.VesselKey
 import org.openvesselphotos.domain.images.ImageProcessor
 import org.openvesselphotos.domain.repositories.PhotoRepository
 import org.openvesselphotos.domain.repositories.VesselRepository
+import org.openvesselphotos.domain.search_engines.SearchEngineNotifier
 import org.openvesselphotos.domain.use_cases.findOrCreateVessel
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -33,6 +34,7 @@ class PublishImportedPhoto(
     private val vesselRepository: VesselRepository,
     private val photoRepository: PhotoRepository,
     private val imageProcessor: ImageProcessor,
+    private val searchEngineNotifier: SearchEngineNotifier,
 ) {
     @Transactional
     fun execute(
@@ -66,6 +68,7 @@ class PublishImportedPhoto(
                 ),
             )
         image.files.forEach { (size, content) -> photoRepository.saveFile(requireNotNull(saved.id), size, content) }
+        searchEngineNotifier.vesselChanged(vessel)
 
         return saved
     }

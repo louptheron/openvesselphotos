@@ -133,6 +133,10 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
     ? { key: vessel.cfr, keyType: 'cfr' as const }
     : { key: vessel.mmsi ?? '', keyType: 'mmsi' as const }
   const contributeQuery = vessel.cfr ? `cfr=${vessel.cfr}` : `mmsi=${vessel.mmsi}`
+  // The quartier's page lists vessels with photos: linked only when this vessel or a related one has some (as on the
+  // server, see PagesController.vessel)
+  const hasQuartierPage =
+    !!vessel.port && (vessel.photos.length > 0 || vessel.related.some(other => other.port === vessel.port))
 
   const imageUrls = photo ? [photo.urls.cfr, photo.urls.mmsi].filter(Boolean).map(url => `${url}?size=${size}`) : []
 
@@ -248,7 +252,15 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
               <Registration>{t.vessel.otherNames(vessel.wikidata.otherNames.join(', '))}</Registration>
             )}
             {(vessel.registration || vessel.port) && (
-              <Registration>{[vessel.registration, vessel.port].filter(Boolean).join(' · ')}</Registration>
+              <Registration>
+                {vessel.registration}
+                {vessel.registration && vessel.port && ' · '}
+                {vessel.port && hasQuartierPage ? (
+                  <Link to={`/vessels?${new URLSearchParams({ port: vessel.port })}`}>{vessel.port}</Link>
+                ) : (
+                  vessel.port
+                )}
+              </Registration>
             )}
           </Heading>
           {summary && <Summary>{summary}</Summary>}

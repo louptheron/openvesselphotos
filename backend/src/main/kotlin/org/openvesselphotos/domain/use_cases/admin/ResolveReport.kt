@@ -7,6 +7,8 @@ import org.openvesselphotos.domain.exceptions.BackendUsageErrorCode
 import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.repositories.PhotoRepository
 import org.openvesselphotos.domain.repositories.ReportRepository
+import org.openvesselphotos.domain.repositories.VesselRepository
+import org.openvesselphotos.domain.search_engines.SearchEngineNotifier
 import org.springframework.transaction.annotation.Transactional
 import java.time.ZonedDateTime
 
@@ -14,6 +16,8 @@ import java.time.ZonedDateTime
 class ResolveReport(
     private val photoRepository: PhotoRepository,
     private val reportRepository: ReportRepository,
+    private val vesselRepository: VesselRepository,
+    private val searchEngineNotifier: SearchEngineNotifier,
 ) {
     /** Either dismisses the report, or removes the photo (closing every open report on it). */
     @Transactional
@@ -42,5 +46,6 @@ class ResolveReport(
         reportRepository.findOpenByPhotoId(report.photoId).forEach {
             reportRepository.save(it.copy(status = ReportStatus.PHOTO_REMOVED, reviewedAt = now))
         }
+        photo.vesselId?.let { vesselRepository.findById(it) }?.let { searchEngineNotifier.vesselChanged(it) }
     }
 }

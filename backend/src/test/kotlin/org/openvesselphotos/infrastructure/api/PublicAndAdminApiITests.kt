@@ -7,10 +7,12 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.openvesselphotos.TestImages
 import org.openvesselphotos.config.AdminAuthentication
+import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.WikidataData
 import org.openvesselphotos.domain.images.ImageDownloader
 import org.openvesselphotos.domain.use_cases.public_api.RecordUsage
 import org.openvesselphotos.domain.wikidata.WikidataClient
+import org.openvesselphotos.infrastructure.web.IndexNowNotifier
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -19,6 +21,7 @@ import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
@@ -65,6 +68,10 @@ class PublicAndAdminApiITests {
     /** The Wikidata import would query the Wikidata Query Service */
     @MockitoBean
     lateinit var wikidataClient: WikidataClient
+
+    /** Disabled without key: records the vessels it is told of */
+    @MockitoSpyBean
+    lateinit var indexNowNotifier: IndexNowNotifier
 
     @Autowired
     lateinit var recordUsage: RecordUsage
@@ -969,6 +976,172 @@ class PublicAndAdminApiITests {
                     ),
                 ),
             )
+    }
+
+    @Test
+    fun `A quartier d'immatriculation with photos Should have its own indexed page, linked and in the sitemap`() {
+        val cookie = adminCookie()
+        mockMvc
+            .perform(
+                multipart("/v1/admin/vessels/import")
+                    .file(
+                        MockMultipartFile(
+                            "file",
+                            "fleet.csv",
+                            "text/csv",
+                            (
+                                "Country Code;CFR;Event Code;Ext. Marking;Vessel Name;Port Code;Port Name\n" +
+                                    "FRA;FRA000800001;CST;GV 800001;AR GWENILI;FRGVC;Le Guilvinec\n" +
+                                    "FRA;FRA000800002;CST;GV 800002;BREIZH IZEL;FRGVC;Le Guilvinec\n" +
+                                    "FRA;FRA000800003;CST;AY 800003;KAN AR MOR;FRAUY;Auray\n"
+                            ).toByteArray(),
+                        ),
+                    ).cookie(cookie),
+            ).andExpect(status().isOk)
+        submitPhoto("cfr", "FRA000800001")
+        val photoId =
+            Regex(""""id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000800001"""")
+                .find(
+                    mockMvc
+                        .perform(get("/v1/admin/queue").cookie(cookie))
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+
+        assertThat(
+            mockMvc
+                .perform(get("/vessels").param("port", "Le Guilvinec"))
+                .andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<h1>Vessels registered in Le Guilvinec</h1>")
+            .contains("""<link rel="canonical" href="http://localhost/vessels?port=Le+Guilvinec" />""")
+            .contains("""<link rel="alternate" hreflang="fr" href="http://localhost/fr/vessels?port=Le+Guilvinec" />""")
+            .contains(""""@type":"CollectionPage"""")
+            .contains("""<li><a href="/vessels/cfr/FRA000800001">AR GWENILI</a>""")
+            .doesNotContain("noindex")
+        assertThat(
+            mockMvc
+                .perform(get("/fr/vessels").param("port", "Le Guilvinec"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<h1>Navires du quartier d’immatriculation du Guilvinec</h1>")
+            .contains("""<link rel="canonical" href="http://localhost/fr/vessels?port=Le+Guilvinec" />""")
+        // Without vessel with photos, or with another filter: not indexed
+        assertThat(
+            mockMvc
+                .perform(get("/fr/vessels").param("port", "Auray"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<h1>Navires du quartier d’immatriculation d’Auray</h1>")
+            .contains("noindex")
+        assertThat(
+            mockMvc
+                .perform(get("/vessels").param("port", "Le Guilvinec").param("flag", "FRA"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("noindex")
+            .doesNotContain("""rel="canonical"""")
+
+        // Linked from the vessel pages of the quartier, with photos or with a related vessel with photos
+        assertThat(
+            mockMvc
+                .perform(get("/vessels/cfr/FRA000800001"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("""GV 800001, <a href="/vessels?port=Le+Guilvinec">Le Guilvinec</a>""")
+        assertThat(
+            mockMvc
+                .perform(get("/fr/vessels/cfr/FRA000800002"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("""GV 800002, <a href="/fr/vessels?port=Le+Guilvinec">Le Guilvinec</a>""")
+        assertThat(
+            mockMvc
+                .perform(get("/vessels/cfr/FRA000800003"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("AY 800003, Auray")
+            .doesNotContain("port=Auray")
+
+        assertThat(
+            mockMvc
+                .perform(get("/sitemap-pages.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<loc>http://localhost/vessels?port=Le+Guilvinec</loc>")
+            .contains("<loc>http://localhost/fr/vessels?port=Le+Guilvinec</loc>")
+            .doesNotContain("port=Auray")
+    }
+
+    @Test
+    fun `Search engines Should be told of a new photo, by the feed, the sitemap index and IndexNow`() {
+        val cookie = adminCookie()
+        submitPhoto("cfr", "FRA000810001", "FEED BOAT")
+        val photoId =
+            Regex(""""id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000810001"""")
+                .find(
+                    mockMvc
+                        .perform(get("/v1/admin/queue").cookie(cookie))
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+
+        // IndexNow: told, but disabled without key
+        assertThat(
+            org.mockito.Mockito
+                .mockingDetails(indexNowNotifier)
+                .invocations
+                .filter { it.method.name == "vesselChanged" }
+                .map { (it.arguments[0] as Vessel).cfr },
+        ).contains("FRA000810001")
+        mockMvc.perform(get("/indexnow-key.txt")).andExpect(status().isNotFound)
+
+        // Each sitemap with the day it last changed
+        val today = java.time.LocalDate.now()
+        assertThat(
+            mockMvc
+                .perform(get("/sitemap.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<sitemap><loc>http://localhost/sitemap-pages.xml</loc><lastmod>$today</lastmod></sitemap>")
+            .contains("<sitemap><loc>http://localhost/sitemap-vessels-1.xml</loc><lastmod>$today</lastmod></sitemap>")
+
+        // The feed of the latest photos, linked from every page
+        mockMvc
+            .perform(get("/feed.xml"))
+            .andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith("application/atom+xml"))
+        assertThat(
+            mockMvc
+                .perform(get("/feed.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("""<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">""")
+            .contains("<id>http://localhost/vessels/cfr/FRA000810001#photo-1</id>")
+            .contains("<title>FEED BOAT, by J. Le Bihan</title>")
+            .contains("""<link rel="alternate" type="text/html" href="http://localhost/vessels/cfr/FRA000810001"/>""")
+            .contains("/v1/cfr/FRA000810001/photos/1/feed-boat.jpg?size=800")
+        assertThat(
+            mockMvc
+                .perform(get("/fr/feed.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("""xml:lang="fr"""")
+            .contains("<id>http://localhost/fr/vessels/cfr/FRA000810001#photo-1</id>")
+        assertThat(
+            mockMvc
+                .perform(get("/fr/vessels/cfr/FRA000810001"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains(
+            """<link rel="alternate" type="application/atom+xml" title="Open Vessel Photos" """ +
+                """href="http://localhost/fr/feed.xml" />""",
+        )
     }
 
     @Test

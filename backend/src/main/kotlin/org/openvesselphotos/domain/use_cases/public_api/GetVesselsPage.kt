@@ -5,6 +5,7 @@ import org.openvesselphotos.domain.entities.VesselFilter
 import org.openvesselphotos.domain.entities.VesselFilterOptions
 import org.openvesselphotos.domain.entities.VesselWithPhotos
 import org.openvesselphotos.domain.repositories.VesselRepository
+import java.time.LocalDate
 
 /**
  * Vessels with approved photos by name, page by page: the sitemap and the vessel directory (pages without photo are
@@ -36,6 +37,19 @@ class GetVesselsPage(
                 filter,
             ),
         )
+
+    /**
+     * For each page from 1, the last day it changed. A vessel published in a page moves the following vessels down,
+     * to the next pages: a page changes with any photo published in it or before it.
+     */
+    fun lastModifiedByPage(pageSize: Int): List<LocalDate> {
+        val days = vesselRepository.findLastPhotoDayByPage(pageSize)
+
+        return (1..(days.keys.maxOrNull() ?: 0))
+            .runningFold(null as LocalDate?) { last, page -> listOfNotNull(last, days[page]).maxOrNull() }
+            .drop(1)
+            .filterNotNull()
+    }
 
     /** The values the directory can be filtered by */
     fun filterOptions(): VesselFilterOptions = vesselRepository.findFilterOptions()

@@ -15,6 +15,9 @@ server:
 openvesselphotos:
     # Canonical base URL (e.g. https://openvesselphotos.org) in canonical links and the sitemap. Empty = requested host.
     public-url: ${OPENVESSELPHOTOS_PUBLIC_URL:}
+    # IndexNow key (8 to 128 letters, digits or dashes, e.g. a UUID): vessel pages are sent to Bing, Yandex… as soon as
+    # their photos change. Needs public-url. Empty = disabled.
+    indexnow-key: ${OPENVESSELPHOTOS_INDEXNOW_KEY:}
     # Header holding the client IP, set by the proxy in front of the app (X-Real-IP on Scalingo).
     # Empty = the TCP address. Never set it without such a proxy: clients could then choose their IP.
     client-ip-header: ${OPENVESSELPHOTOS_CLIENT_IP_HEADER:}

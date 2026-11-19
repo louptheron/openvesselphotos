@@ -4,23 +4,30 @@ import styled from 'styled-components'
 import type { VesselSummary } from '../api/types'
 import { useTranslation } from '../i18n'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../theme'
-import { getPhotoUrl, getVesselPath } from '../utils/vesselKey'
+import { getNamedPhotoUrl, getPhotoSlug, getVesselPath } from '../utils/vesselKey'
 import { BoatPlaceholder } from './Logo'
 
 export function VesselCard({ index, vessel }: { index: number; vessel: VesselSummary }) {
   const { t } = useTranslation()
   const photo = vessel.mainPhoto
+  const name = vessel.name ?? t.common.unnamedVessel
+  // Named URLs, as on the vessel page: search engines read the words of an image's URL
+  const slug = getPhotoSlug(vessel)
 
   return (
     <Article>
       <Picture $sky={getSkyAndSea(SKIES[index % SKIES.length] ?? COLORS.info)}>
         {photo ? (
           <img
-            alt={t.vesselCard.photoAlt(vessel.name ?? t.common.unnamedVessel, photo.credit)}
+            alt={t.vesselCard.photoAlt(
+              vessel.registration ? `${name} (${vessel.registration})` : name,
+              vessel.port,
+              photo.credit
+            )}
             loading="lazy"
             sizes="(max-width: 600px) 100vw, 320px"
-            src={getPhotoUrl(photo.urls, '320')}
-            srcSet={`${getPhotoUrl(photo.urls, '320')} 320w, ${getPhotoUrl(photo.urls, '800')} 800w`}
+            src={getNamedPhotoUrl(photo.urls, slug, '320')}
+            srcSet={`${getNamedPhotoUrl(photo.urls, slug, '320')} 320w, ${getNamedPhotoUrl(photo.urls, slug, '800')} 800w`}
           />
         ) : (
           <BoatPlaceholder />

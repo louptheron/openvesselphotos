@@ -140,6 +140,17 @@ class PagesController(
                 vesselType?.let { " · $it" },
                 vessel.port?.let { " · $it" },
             ).joinToString("")
+        // The quartier's page lists vessels with photos: linked only when this vessel or a related one has some
+        val quartierLink =
+            vessel.port
+                ?.takeIf { port -> photos.isNotEmpty() || details.related.any { it.vessel.port == port } }
+                ?.let { """<a href="${escapeHtml(language.path(quartierPath(it)))}">${escapeHtml(it)}</a>""" }
+        val registrationHtml =
+            listOfNotNull(
+                vessel.registration?.let { escapeHtml(it) },
+                quartierLink ?: vessel.port?.let { escapeHtml(it) },
+            ).joinToString(", ")
+                .ifEmpty { null }
         val path = vesselPath(vessel)
         val canonicalPath = language.path(path)
         val contributeQuery = vessel.cfr?.let { "cfr=$it" } ?: "mmsi=${vessel.mmsi}"
@@ -242,7 +253,7 @@ class PagesController(
                 body =
                     """<main><p><a href="${language.path("/")}">${escapeHtml(texts.search)}</a> › """ +
                         """${escapeHtml(name)}</p><h1>${escapeHtml(name)}</h1>""" +
-                        """<p>${escapeHtml(identifiers)}${registration?.let { " · ${escapeHtml(it)}" } ?: ""}""" +
+                        """<p>${escapeHtml(identifiers)}${registrationHtml?.let { " · $it" } ?: ""}""" +
                         """${vessel.flag?.let { " · ${escapeHtml(texts.flagFact(it))}" } ?: ""}</p>""" +
                         summary?.let { """<p>${escapeHtml(it)}</p>""" }.orEmpty() +
                         wikidata.otherNames
@@ -311,8 +322,20 @@ class PagesController(
                 vesselType = filter.vesselType?.let { FaoCodes.vesselType(it, language) ?: it },
                 mainGear = filter.mainGear?.let { FaoCodes.gear(it, language) },
             )
-        val heading = if (filter.isEmpty) texts.allVesselsWithPhotos else texts.vesselsWithPhotos(filterText)
-        val description = texts.directoryDescription(total, pageText)
+        // The quartier d'immatriculation alone: people search the vessels of a port
+        val quartier = filter.port?.takeIf { filter == VesselFilter(port = it) }
+        val heading =
+            when {
+                filter.isEmpty -> texts.allVesselsWithPhotos
+                quartier != null -> texts.vesselsOfQuartier(quartier)
+                else -> texts.vesselsWithPhotos(filterText)
+            }
+        val description =
+            quartier?.let { texts.quartierDescription(it, total, pageText) }
+                ?: texts.directoryDescription(total, pageText)
+        // Other filtered pages repeat the directory's vessels: only the directory and the quartiers are indexed
+        val isIndexable = filter.isEmpty || (quartier != null && total > 0)
+        val indexedPath = directoryPath(number, filter).takeIf { isIndexable }
         val items = vessels.joinToString("") { (vessel, photos) -> vesselListItem(vessel, photos, language) }
         val previousLink =
             """<a href="${escapeHtml(language.path(directoryPath(number - 1, filter)))}" rel="prev">""" +
@@ -330,11 +353,10 @@ class PagesController(
             HtmlPage(
                 title = "$heading${if (pageCount > 1) " — ${texts.pageOf(number, pageCount)}" else ""} | $SITE_NAME",
                 description = description,
-                // Filtered pages repeat the directory's vessels: only the directory itself is indexed
-                canonicalPath = language.path(directoryPath(number)).takeIf { filter.isEmpty },
+                canonicalPath = indexedPath?.let { language.path(it) },
                 language = language,
-                pathInEveryLanguage = directoryPath(number).takeIf { filter.isEmpty },
-                isIndexable = filter.isEmpty,
+                pathInEveryLanguage = indexedPath,
+                isIndexable = isIndexable,
                 structuredData =
                     listOf(
                         mapOf(
@@ -342,10 +364,10 @@ class PagesController(
                             "@type" to "CollectionPage",
                             "name" to heading,
                             "description" to description,
-                            "url" to publicUrl.get() + language.path(directoryPath(number)),
+                            "url" to publicUrl.get() + language.path(directoryPath(number, filter)),
                             "inLanguage" to language.code,
                         ),
-                    ).takeIf { filter.isEmpty }
+                    ).takeIf { isIndexable }
                         .orEmpty(),
                 body =
                     """<main><h1>${escapeHtml(heading)}</h1><p>${escapeHtml(description)}</p>""" +
@@ -565,6 +587,9 @@ class PagesController(
 
             return "/vessels${if (query.isEmpty()) "" else "?$query"}"
         }
+
+        /** The directory of a quartier d'immatriculation (port of registration), e.g. "/vessels?port=Lorient" */
+        fun quartierPath(port: String): String = directoryPath(1, VesselFilter(port = port))
 
         /** A vessel's page is under its CFR when it has one, else its MMSI. In English: see [Language.path]. */
         fun vesselPath(vessel: Vessel): String =
