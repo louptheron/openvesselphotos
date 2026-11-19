@@ -97,6 +97,11 @@ class HtmlPageRenderer(
                 }
                 appendLine("""    <link rel="alternate" hreflang="x-default" href="${escapeHtml(baseUrl + path)}" />""")
             }
+            // The latest photos, for feed readers
+            val feedUrl = escapeHtml(baseUrl + page.language.path(CrawlersController.FEED_PATH))
+            appendLine(
+                """    <link rel="alternate" type="application/atom+xml" title="$SITE_NAME" href="$feedUrl" />""",
+            )
             appendLine("""    <meta property="og:site_name" content="$SITE_NAME" />""")
             appendLine("""    <meta property="og:locale" content="${page.language.ogLocale}" />""")
             appendLine("""    <meta property="og:type" content="website" />""")

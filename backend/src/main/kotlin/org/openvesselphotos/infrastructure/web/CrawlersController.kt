@@ -1,6 +1,8 @@
 package org.openvesselphotos.infrastructure.web
 
+import jakarta.servlet.http.HttpServletRequest
 import org.openvesselphotos.domain.entities.ImageSize
+import org.openvesselphotos.domain.use_cases.public_api.GetRecentVessels
 import org.openvesselphotos.domain.use_cases.public_api.GetVesselsPage
 import org.openvesselphotos.domain.use_cases.public_api.GetVesselsWithoutPhotosToIndex
 import org.springframework.http.CacheControl
@@ -11,11 +13,14 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 import java.time.Duration
 import java.time.LocalDate
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 @RestController
 class CrawlersController(
     private val publicUrl: PublicUrl,
     private val getVesselsPage: GetVesselsPage,
+    private val getRecentVessels: GetRecentVessels,
     private val getVesselsWithoutPhotosToIndex: GetVesselsWithoutPhotosToIndex,
     private val vesselsWithoutPhotosRelease: VesselsWithoutPhotosRelease,
     private val indexNowNotifier: IndexNowNotifier,
@@ -155,15 +160,72 @@ class CrawlersController(
         }
     }
 
-    private fun xml(body: String): ResponseEntity<String> =
+    /**
+     * Atom feed of the latest photos, one entry each: for people following the new photos, and for search engines,
+     * which find the changed pages faster from a feed than from the sitemap.
+     */
+    @GetMapping(FEED_PATH, "/fr$FEED_PATH")
+    fun feed(request: HttpServletRequest): ResponseEntity<String> {
+        val language = Language.of(request)
+        val texts = PageTexts.of(language)
+        val baseUrl = publicUrl.get()
+        val photos =
+            getRecentVessels
+                .execute(FEED_SIZE)
+                .flatMap { (vessel, photos) -> photos.map { vessel to it } }
+                .filter { (_, photo) -> photo.reviewedAt != null }
+                .sortedByDescending { (_, photo) -> photo.reviewedAt }
+                .take(FEED_SIZE)
+        val entries =
+            photos.joinToString("") { (vessel, photo) ->
+                val pageUrl = baseUrl + language.path(PagesController.vesselPath(vessel))
+                val caption = texts.photoCaption(PagesController.vesselName(vessel), photo.credit)
+                val imageUrl = PagesController.photoUrl(baseUrl, vessel, photo, ImageSize.MEDIUM)
+                val content =
+                    """<p><a href="${escapeHtml(pageUrl)}"><img src="${escapeHtml(imageUrl)}" """ +
+                        """alt="${escapeHtml(caption)}" /></a></p>""" +
+                        """<p>© ${escapeHtml(photo.credit)} · ${escapeHtml(photo.licence.label)}</p>"""
+
+                "<entry><id>${escapeHtml("$pageUrl#photo-${photo.number}")}</id>" +
+                    "<title>${escapeHtml(caption)}</title>" +
+                    """<link rel="alternate" type="text/html" href="${escapeHtml(pageUrl)}"/>""" +
+                    "<updated>${atomDate(photo.reviewedAt)}</updated>" +
+                    "<author><name>${escapeHtml(photo.credit)}</name></author>" +
+                    """<content type="html">${escapeHtml(content)}</content></entry>"""
+            }
+        val feedUrl = baseUrl + language.path(FEED_PATH)
+
+        return xml(
+            """<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="${language.code}">""" +
+                "<id>${escapeHtml(feedUrl)}</id>" +
+                "<title>${escapeHtml("${HtmlPageRenderer.SITE_NAME} — ${texts.recentlyAdded}")}</title>" +
+                "<subtitle>${escapeHtml(texts.homeDescription)}</subtitle>" +
+                """<link rel="self" type="application/atom+xml" href="${escapeHtml(feedUrl)}"/>""" +
+                """<link rel="alternate" type="text/html" href="${escapeHtml(baseUrl + language.path("/"))}"/>""" +
+                "<updated>${atomDate(photos.firstOrNull()?.second?.reviewedAt)}</updated>" +
+                entries +
+                "</feed>",
+            MediaType("application", "atom+xml", Charsets.UTF_8),
+        )
+    }
+
+    private fun xml(
+        body: String,
+        contentType: MediaType = MediaType.APPLICATION_XML,
+    ): ResponseEntity<String> =
         ResponseEntity
             .ok()
-            .contentType(MediaType.APPLICATION_XML)
+            .contentType(contentType)
             .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePublic())
             .body("""<?xml version="1.0" encoding="UTF-8"?>$body""")
 
+    private fun atomDate(date: ZonedDateTime?): String =
+        (date ?: ZonedDateTime.now()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+
     companion object {
         const val VESSELS_PER_SITEMAP = 10_000
+        const val FEED_PATH = "/feed.xml"
+        private const val FEED_SIZE = 48
         private const val URLSET_OPEN =
             """<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" """ +
                 """xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" """ +

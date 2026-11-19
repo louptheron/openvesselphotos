@@ -1077,7 +1077,7 @@ class PublicAndAdminApiITests {
     }
 
     @Test
-    fun `Search engines Should be told of a new photo, by the sitemap index and IndexNow`() {
+    fun `Search engines Should be told of a new photo, by the feed, the sitemap index and IndexNow`() {
         val cookie = adminCookie()
         submitPhoto("cfr", "FRA000810001", "FEED BOAT")
         val photoId =
@@ -1110,6 +1110,38 @@ class PublicAndAdminApiITests {
                 .response.contentAsString,
         ).contains("<sitemap><loc>http://localhost/sitemap-pages.xml</loc><lastmod>$today</lastmod></sitemap>")
             .contains("<sitemap><loc>http://localhost/sitemap-vessels-1.xml</loc><lastmod>$today</lastmod></sitemap>")
+
+        // The feed of the latest photos, linked from every page
+        mockMvc
+            .perform(get("/feed.xml"))
+            .andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith("application/atom+xml"))
+        assertThat(
+            mockMvc
+                .perform(get("/feed.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("""<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">""")
+            .contains("<id>http://localhost/vessels/cfr/FRA000810001#photo-1</id>")
+            .contains("<title>FEED BOAT, by J. Le Bihan</title>")
+            .contains("""<link rel="alternate" type="text/html" href="http://localhost/vessels/cfr/FRA000810001"/>""")
+            .contains("/v1/cfr/FRA000810001/photos/1/feed-boat.jpg?size=800")
+        assertThat(
+            mockMvc
+                .perform(get("/fr/feed.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("""xml:lang="fr"""")
+            .contains("<id>http://localhost/fr/vessels/cfr/FRA000810001#photo-1</id>")
+        assertThat(
+            mockMvc
+                .perform(get("/fr/vessels/cfr/FRA000810001"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains(
+            """<link rel="alternate" type="application/atom+xml" title="Open Vessel Photos" """ +
+                """href="http://localhost/fr/feed.xml" />""",
+        )
     }
 
     @Test

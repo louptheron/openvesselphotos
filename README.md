@@ -157,12 +157,12 @@ tags, schema.org data (`ImageObject` with licence and credit for each photo) and
 which React replaces once loaded (`PagesController`). Unknown vessels and pages return a real 404, search results are
 `noindex`. `/sitemap.xml` lists every vessel page and its images, and the directory of each quartier d'immatriculation
 with photos (`/vessels?port=…`, the only filtered directory indexed), each sitemap with the day it last changed;
-`/robots.txt` points to it.
+`/robots.txt` points to it. `/feed.xml` (and `/fr/feed.xml`) is an Atom feed of the latest photos.
 
 With a custom domain, set `OPENVESSELPHOTOS_PUBLIC_URL` so that canonical links never point to `*.scalingo.io`, and
-submit `https://<domain>/sitemap.xml` in Google Search Console. With `OPENVESSELPHOTOS_INDEXNOW_KEY` set too (e.g. a
-UUID), the pages of vessels whose photos change are sent every minute to the IndexNow search engines (Bing, Yandex…;
-not Google), which check the key at `/indexnow-key.txt`.
+submit `https://<domain>/sitemap.xml` and `https://<domain>/feed.xml` in Google Search Console. With
+`OPENVESSELPHOTOS_INDEXNOW_KEY` set too (e.g. a UUID), the pages of vessels whose photos change are sent every minute to
+the IndexNow search engines (Bing, Yandex…; not Google), which check the key at `/indexnow-key.txt`.
 
 ## Deployment on Scalingo
 
