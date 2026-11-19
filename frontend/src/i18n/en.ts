@@ -178,7 +178,9 @@ export const en = {
     creditsOutro: ', cropped, from Wikimedia Commons.'
   },
   vesselCard: {
-    photoAlt: (name: string, credit: string) => `${name}, by ${credit}`
+    /** e.g. "LOLA (LR 539755), La Rochelle, by Jean Dupont" */
+    photoAlt: (vessel: string, port: string | null, credit: string) =>
+      `${vessel}${port ? `, ${port}` : ''}, by ${credit}`
   },
   vessel: {
     source: 'Source',

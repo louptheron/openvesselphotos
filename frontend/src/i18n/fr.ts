@@ -192,7 +192,8 @@ export const fr: Messages = {
     creditsOutro: ', recadrées, depuis Wikimedia Commons.'
   },
   vesselCard: {
-    photoAlt: (name: string, credit: string) => `${name}, par ${credit}`
+    photoAlt: (vessel: string, port: string | null, credit: string) =>
+      `${vessel}${port ? `, ${port}` : ''}, par ${credit}`
   },
   vessel: {
     source: 'Source',
