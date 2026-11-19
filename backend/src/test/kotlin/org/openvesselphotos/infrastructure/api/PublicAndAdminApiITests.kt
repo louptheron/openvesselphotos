@@ -972,6 +972,104 @@ class PublicAndAdminApiITests {
     }
 
     @Test
+    fun `A quartier d'immatriculation with photos Should have its own indexed page, linked and in the sitemap`() {
+        val cookie = adminCookie()
+        mockMvc
+            .perform(
+                multipart("/v1/admin/vessels/import")
+                    .file(
+                        MockMultipartFile(
+                            "file",
+                            "fleet.csv",
+                            "text/csv",
+                            (
+                                "Country Code;CFR;Event Code;Ext. Marking;Vessel Name;Port Code;Port Name\n" +
+                                    "FRA;FRA000800001;CST;GV 800001;AR GWENILI;FRGVC;Le Guilvinec\n" +
+                                    "FRA;FRA000800002;CST;GV 800002;BREIZH IZEL;FRGVC;Le Guilvinec\n" +
+                                    "FRA;FRA000800003;CST;AY 800003;KAN AR MOR;FRAUY;Auray\n"
+                            ).toByteArray(),
+                        ),
+                    ).cookie(cookie),
+            ).andExpect(status().isOk)
+        submitPhoto("cfr", "FRA000800001")
+        val photoId =
+            Regex(""""id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000800001"""")
+                .find(
+                    mockMvc
+                        .perform(get("/v1/admin/queue").cookie(cookie))
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+
+        assertThat(
+            mockMvc
+                .perform(get("/vessels").param("port", "Le Guilvinec"))
+                .andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<h1>Vessels registered in Le Guilvinec</h1>")
+            .contains("""<link rel="canonical" href="http://localhost/vessels?port=Le+Guilvinec" />""")
+            .contains("""<link rel="alternate" hreflang="fr" href="http://localhost/fr/vessels?port=Le+Guilvinec" />""")
+            .contains(""""@type":"CollectionPage"""")
+            .contains("""<li><a href="/vessels/cfr/FRA000800001">AR GWENILI</a>""")
+            .doesNotContain("noindex")
+        assertThat(
+            mockMvc
+                .perform(get("/fr/vessels").param("port", "Le Guilvinec"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<h1>Navires du quartier d’immatriculation du Guilvinec</h1>")
+            .contains("""<link rel="canonical" href="http://localhost/fr/vessels?port=Le+Guilvinec" />""")
+        // Without vessel with photos, or with another filter: not indexed
+        assertThat(
+            mockMvc
+                .perform(get("/fr/vessels").param("port", "Auray"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<h1>Navires du quartier d’immatriculation d’Auray</h1>")
+            .contains("noindex")
+        assertThat(
+            mockMvc
+                .perform(get("/vessels").param("port", "Le Guilvinec").param("flag", "FRA"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("noindex")
+            .doesNotContain("""rel="canonical"""")
+
+        // Linked from the vessel pages of the quartier, with photos or with a related vessel with photos
+        assertThat(
+            mockMvc
+                .perform(get("/vessels/cfr/FRA000800001"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("""GV 800001, <a href="/vessels?port=Le+Guilvinec">Le Guilvinec</a>""")
+        assertThat(
+            mockMvc
+                .perform(get("/fr/vessels/cfr/FRA000800002"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("""GV 800002, <a href="/fr/vessels?port=Le+Guilvinec">Le Guilvinec</a>""")
+        assertThat(
+            mockMvc
+                .perform(get("/vessels/cfr/FRA000800003"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("AY 800003, Auray")
+            .doesNotContain("port=Auray")
+
+        assertThat(
+            mockMvc
+                .perform(get("/sitemap-pages.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<loc>http://localhost/vessels?port=Le+Guilvinec</loc>")
+            .contains("<loc>http://localhost/fr/vessels?port=Le+Guilvinec</loc>")
+            .doesNotContain("port=Auray")
+    }
+
+    @Test
     fun `Wikidata data Should complete a vessel with photos found by its MMSI, without its own name`() {
         submitPhoto("mmsi", "366904950", "USS Chiwawa")
         val cookie = adminCookie()

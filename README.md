@@ -154,7 +154,8 @@ limits.
 The backend serves the React app's `index.html` with, for each page, its title, description, canonical URL, Open Graph
 tags, schema.org data (`ImageObject` with licence and credit for each photo) and a server-rendered copy of its content,
 which React replaces once loaded (`PagesController`). Unknown vessels and pages return a real 404, search results are
-`noindex`. `/sitemap.xml` lists every vessel page and its images, `/robots.txt` points to it.
+`noindex`. `/sitemap.xml` lists every vessel page and its images, and the directory of each quartier d'immatriculation
+with photos (`/vessels?port=…`, the only filtered directory indexed); `/robots.txt` points to it.
 
 With a custom domain, set `OPENVESSELPHOTOS_PUBLIC_URL` so that canonical links never point to `*.scalingo.io`, and
 submit `https://<domain>/sitemap.xml` in Google Search Console.

@@ -4,6 +4,18 @@ import type { Messages } from './en'
 /** Non-breaking space, before « : ; ? ! » and inside « » in French */
 const _ = ' '
 
+/** "de Brest", "d’Auray", "du Guilvinec", "des Sables-d’Olonne", as on the server (PageTexts.French.of) */
+function of(name: string): string {
+  if (name.startsWith('Le ')) {
+    return `du ${name.slice(3)}`
+  }
+  if (name.startsWith('Les ')) {
+    return `des ${name.slice(4)}`
+  }
+
+  return /^[aeiouyhàâäéèêëîïôöùûü]/i.test(name) ? `d’${name}` : `de ${name}`
+}
+
 export const fr: Messages = {
   language: {
     switchLabel: 'Show the website in English',
@@ -405,6 +417,7 @@ export const fr: Messages = {
     next: 'Suivante →',
     pageOf: (page: number, pageCount: number) => `Page ${page} sur ${pageCount}`,
     filteredTitle: 'Navires avec photos',
+    quartierTitle: (port: string) => `Navires du quartier d’immatriculation ${of(port)}`,
     filters: 'Filtres',
     flag: 'Pavillon',
     any: 'Tous',

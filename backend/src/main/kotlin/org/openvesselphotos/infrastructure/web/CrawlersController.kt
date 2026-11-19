@@ -50,11 +50,15 @@ class CrawlersController(
         )
     }
 
-    /** The static pages, and each page of the vessel directory, in every language. */
+    /**
+     * The static pages, each page of the vessel directory, and the directory of each quartier d'immatriculation with
+     * vessels with photos, in every language.
+     */
     @GetMapping("/sitemap-pages.xml")
     fun pagesSitemap(): ResponseEntity<String> {
         val baseUrl = publicUrl.get()
         val directoryPages = getVesselsPage.pageCount(GetVesselsPage.DIRECTORY_PAGE_SIZE)
+        val quartiers = getVesselsPage.filterOptions().ports.map { PagesController.quartierPath(it.value) }
 
         return xml(
             URLSET_OPEN +
@@ -65,7 +69,7 @@ class CrawlersController(
                         "/docs",
                         "/contribute",
                         "/api-key",
-                    ) + (2..directoryPages).map { PagesController.directoryPath(it) }
+                    ) + (2..directoryPages).map { PagesController.directoryPath(it) } + quartiers
                 ).joinToString("") { urls(baseUrl, it) } +
                 "</urlset>",
         )

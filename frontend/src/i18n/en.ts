@@ -424,6 +424,8 @@ export const en = {
     next: 'Next →',
     pageOf: (page: number, pageCount: number) => `Page ${page} of ${pageCount}`,
     filteredTitle: 'Vessels with photos',
+    /** As on the server (PageTexts.vesselsOfQuartier) */
+    quartierTitle: (port: string) => `Vessels registered in ${port}`,
     filters: 'Filters',
     flag: 'Flag',
     any: 'All',
