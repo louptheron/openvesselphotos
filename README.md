@@ -215,6 +215,7 @@ See `/docs` on a running instance. In short:
 | GET    | `/v1/vessels/filters`                        | Values of these filters, with their counts    |
 | GET    | `/v1/export.json`                            | Whole dataset                                 |
 | POST   | `/v1/{cfr\|mmsi}/{key}/photos`                | Contribute a photo (multipart), API key       |
+| GET    | `/v1/submissions?contributorId=`             | Reviews of a contributor's photos, API key    |
 | POST   | `/v1/{cfr\|mmsi}/{key}/link`                  | Suggest the missing key                       |
 | POST   | `/v1/{cfr\|mmsi}/{key}/photos/{n}/reports`    | Report a photo                                |
 | POST   | `/v1/api-key-requests`                       | Request an API key (no key needed)            |

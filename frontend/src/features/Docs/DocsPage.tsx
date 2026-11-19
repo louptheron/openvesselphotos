@@ -115,6 +115,8 @@ export function DocsPage() {
         <CodeBlock>{`curl -X POST -H "x-api-key: ovp_…" \\
   -F file=@boat.jpg -F credit=DGAMPA -F licence=etalab-2.0 -F contributorId=3f9a… \\
   ${origin}/v1/cfr/FRA000123456/photos`}</CodeBlock>
+        <p>{t.docs.apiKeyContributeLink}</p>
+        <CodeBlock>{`${origin}/fr/contribute?cfr=FRA000123456&app=app_…&contributorId=3f9a…`}</CodeBlock>
       </Section>
 
       <Section id="rate-limits">

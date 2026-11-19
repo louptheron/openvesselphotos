@@ -36,6 +36,7 @@ class ApproveApiKeyRequest(
                     status = ApiKeyStatus.ACTIVE,
                     keyHash = ApiKey.hash(key),
                     keyPrefix = ApiKey.displayPrefix(key),
+                    publicId = request.publicId ?: ApiKey.generatePublicId(),
                     reviewedAt = ZonedDateTime.now(),
                 ),
             )

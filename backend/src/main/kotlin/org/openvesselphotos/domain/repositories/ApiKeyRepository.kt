@@ -10,6 +10,8 @@ interface ApiKeyRepository {
 
     fun findByKeyHash(keyHash: String): ApiKey?
 
+    fun findByPublicId(publicId: String): ApiKey?
+
     fun findByStatus(status: ApiKeyStatus): List<ApiKey>
 
     fun save(apiKey: ApiKey): ApiKey

@@ -158,6 +158,7 @@ class PublicVesselController(
         @RequestParam(required = false) place: String?,
         @RequestParam(required = false) email: String?,
         @RequestParam(required = false) contributorId: String?,
+        @RequestParam(required = false) app: String?,
         @RequestParam(required = false) vesselName: String?,
         @RequestParam(required = false) cfr: String?,
         @RequestParam(required = false) mmsi: String?,
@@ -184,6 +185,7 @@ class PublicVesselController(
                     contributorId = contributorId,
                     vesselName = vesselName,
                     apiKeyId = apiKeyId,
+                    appPublicId = app,
                 ),
             )
 

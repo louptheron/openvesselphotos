@@ -179,6 +179,8 @@ export type ApiKey = {
   lastUsedAt: string | null
   name: string
   organisation: string | null
+  /** Public id of the application, for ?app= on the contribute page */
+  publicId: string | null
   reviewedAt: string | null
   status: 'ACTIVE' | 'PENDING' | 'REJECTED' | 'REVOKED'
 }

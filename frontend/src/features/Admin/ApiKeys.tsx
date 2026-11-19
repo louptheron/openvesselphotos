@@ -16,7 +16,7 @@ export function ApprovedApiKeyBanner({ approved, onClose }: { approved: Approved
   const mailto =
     `mailto:${encodeURIComponent(apiKey.email)}` +
     `?subject=${encodeURIComponent(t.admin.emailSubject)}` +
-    `&body=${encodeURIComponent(t.admin.emailBody(apiKey.name, key, docsUrl))}`
+    `&body=${encodeURIComponent(t.admin.emailBody(apiKey.name, key, apiKey.publicId, docsUrl))}`
 
   const copy = async () => {
     await navigator.clipboard.writeText(key)
@@ -78,6 +78,12 @@ export function ActiveApiKeys({ isLoading, onRevoke }: { isLoading: boolean; onR
                   </td>
                   <td>
                     <code>{apiKey.keyPrefix}…</code>
+                    {apiKey.publicId && (
+                      <>
+                        {' '}
+                        · <code>{apiKey.publicId}</code>
+                      </>
+                    )}
                   </td>
                   <td>{formatDate(apiKey.reviewedAt)}</td>
                   <td>{formatDate(apiKey.lastUsedAt)}</td>

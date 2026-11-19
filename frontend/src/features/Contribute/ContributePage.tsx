@@ -41,6 +41,12 @@ export function ContributePage() {
     cfr: searchParams.get('cfr') ?? '',
     mmsi: searchParams.get('mmsi') ?? ''
   })
+  // From a partner application's link: its public id and the contributor's pseudonymous id in it, so that the
+  // application can follow the review of the photo (GET /v1/submissions)
+  const [partner] = useState(() => ({
+    app: searchParams.get('app')?.trim() ?? '',
+    contributorId: searchParams.get('contributorId')?.trim() ?? ''
+  }))
   const [vesselName, setVesselName] = useState('')
   const [file, setFile] = useState<File>()
   const [takenOn, setTakenOn] = useState('')
@@ -109,6 +115,12 @@ export function ContributePage() {
     }
     if (otherKey) {
       form.append(otherKeyType, otherKey)
+    }
+    if (partner.app) {
+      form.append('app', partner.app)
+      if (partner.contributorId) {
+        form.append('contributorId', partner.contributorId)
+      }
     }
     if (!vessel && vesselName.trim()) {
       form.append('vesselName', vesselName.trim())

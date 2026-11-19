@@ -19,6 +19,8 @@ class JpaApiKeyRepository(
 
     override fun findByKeyHash(keyHash: String): ApiKey? = dbApiKeyRepository.findByKeyHash(keyHash)?.toApiKey()
 
+    override fun findByPublicId(publicId: String): ApiKey? = dbApiKeyRepository.findByPublicId(publicId)?.toApiKey()
+
     override fun findByStatus(status: ApiKeyStatus): List<ApiKey> =
         dbApiKeyRepository.findByStatusOrderByCreatedAt(status).map { it.toApiKey() }
 
