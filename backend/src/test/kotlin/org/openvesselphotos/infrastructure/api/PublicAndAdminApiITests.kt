@@ -1070,6 +1070,32 @@ class PublicAndAdminApiITests {
     }
 
     @Test
+    fun `Search engines Should be told of a new photo, by the sitemap index`() {
+        val cookie = adminCookie()
+        submitPhoto("cfr", "FRA000810001", "FEED BOAT")
+        val photoId =
+            Regex(""""id":(\d+),"number":null,"submittedKeyType":"cfr","submittedKey":"FRA000810001"""")
+                .find(
+                    mockMvc
+                        .perform(get("/v1/admin/queue").cookie(cookie))
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+
+        // Each sitemap with the day it last changed
+        val today = java.time.LocalDate.now()
+        assertThat(
+            mockMvc
+                .perform(get("/sitemap.xml"))
+                .andReturn()
+                .response.contentAsString,
+        ).contains("<sitemap><loc>http://localhost/sitemap-pages.xml</loc><lastmod>$today</lastmod></sitemap>")
+            .contains("<sitemap><loc>http://localhost/sitemap-vessels-1.xml</loc><lastmod>$today</lastmod></sitemap>")
+    }
+
+    @Test
     fun `Wikidata data Should complete a vessel with photos found by its MMSI, without its own name`() {
         submitPhoto("mmsi", "366904950", "USS Chiwawa")
         val cookie = adminCookie()

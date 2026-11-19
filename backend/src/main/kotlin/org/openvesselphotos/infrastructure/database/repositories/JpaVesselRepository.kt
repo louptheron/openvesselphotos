@@ -91,6 +91,24 @@ class JpaVesselRepository(
                 java.sql.Date.valueOf(day),
             ).toMap()
 
+    override fun findLastPhotoDayByPage(pageSize: Int): Map<Int, LocalDate> =
+        jdbcTemplate
+            .query(
+                // Same order as findPageWithApprovedPhotos
+                """
+                SELECT page, max(last_photo)::date AS day FROM (
+                    SELECT (row_number() OVER (ORDER BY v.name NULLS LAST, v.id) - 1) / ? + 1 AS page,
+                        (SELECT max(p.reviewed_at) FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')
+                            AS last_photo
+                    FROM vessels v
+                    WHERE EXISTS (SELECT 1 FROM photos p WHERE p.vessel_id = v.id AND p.status = 'APPROVED')
+                ) pages
+                GROUP BY page
+                """.trimIndent(),
+                { row, _ -> row.getInt("page") to row.getDate("day").toLocalDate() },
+                pageSize,
+            ).toMap()
+
     override fun countWithApprovedPhotos(filter: VesselFilter): Int =
         dbVesselRepository
             .countWithApprovedPhotos(

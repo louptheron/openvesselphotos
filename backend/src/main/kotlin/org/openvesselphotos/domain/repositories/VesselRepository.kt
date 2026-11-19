@@ -68,6 +68,12 @@ interface VesselRepository {
     /** How many vessels come before this one in [findDescribedWithoutApprovedPhotos]. */
     fun countDescribedWithoutApprovedPhotosBefore(id: Int): Int
 
+    /**
+     * For each page of [pageSize] vessels of [findPageWithApprovedPhotos] (unfiltered), from 1, the day its latest
+     * photo was published.
+     */
+    fun findLastPhotoDayByPage(pageSize: Int): Map<Int, LocalDate>
+
     /** Vessels with at least one approved photo, by name (unnamed last). */
     fun findPageWithApprovedPhotos(
         offset: Int,

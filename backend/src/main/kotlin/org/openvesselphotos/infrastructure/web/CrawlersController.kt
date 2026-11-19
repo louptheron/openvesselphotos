@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 import java.time.Duration
+import java.time.LocalDate
 
 @RestController
 class CrawlersController(
@@ -33,19 +34,25 @@ class CrawlersController(
 
     /**
      * Sitemap index: the static pages, then every vessel page with photos by files of [VESSELS_PER_SITEMAP], then the
-     * vessels without photo released so far.
+     * vessels without photo released so far. Each with the day it last changed, so that search engines fetch again
+     * only the changed ones.
      */
     @GetMapping("/sitemap.xml")
     fun sitemapIndex(): ResponseEntity<String> {
         val baseUrl = publicUrl.get()
-        val vesselSitemaps = getVesselsPage.pageCount(VESSELS_PER_SITEMAP)
+        val vesselSitemapDays = getVesselsPage.lastModifiedByPage(VESSELS_PER_SITEMAP)
         val sitemaps =
-            listOf("$baseUrl/sitemap-pages.xml") + (1..vesselSitemaps).map { "$baseUrl/sitemap-vessels-$it.xml" } +
-                "$baseUrl/sitemap-vessels-without-photos.xml"
+            // The directory, the quartiers and the home page list the vessels with photos
+            listOf("$baseUrl/sitemap-pages.xml" to vesselSitemapDays.lastOrNull()) +
+                vesselSitemapDays.mapIndexed { index, day -> "$baseUrl/sitemap-vessels-${index + 1}.xml" to day } +
+                // A few more every day
+                ("$baseUrl/sitemap-vessels-without-photos.xml" to LocalDate.now())
 
         return xml(
             """<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">""" +
-                sitemaps.joinToString("") { "<sitemap><loc>$it</loc></sitemap>" } +
+                sitemaps.joinToString("") { (url, day) ->
+                    "<sitemap><loc>$url</loc>${day?.let { "<lastmod>$it</lastmod>" }.orEmpty()}</sitemap>"
+                } +
                 "</sitemapindex>",
         )
     }
