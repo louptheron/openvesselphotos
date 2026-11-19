@@ -18,6 +18,7 @@ class CrawlersController(
     private val getVesselsPage: GetVesselsPage,
     private val getVesselsWithoutPhotosToIndex: GetVesselsWithoutPhotosToIndex,
     private val vesselsWithoutPhotosRelease: VesselsWithoutPhotosRelease,
+    private val indexNowNotifier: IndexNowNotifier,
 ) {
     @GetMapping("/robots.txt", produces = [MediaType.TEXT_PLAIN_VALUE])
     fun robots(): String =
@@ -31,6 +32,11 @@ class CrawlersController(
         |Sitemap: ${publicUrl.get()}/sitemap.xml
         |
         """.trimMargin()
+
+    /** Proves to IndexNow search engines that the URLs come from this site (see [IndexNowNotifier]) */
+    @GetMapping(IndexNowNotifier.KEY_PATH, produces = [MediaType.TEXT_PLAIN_VALUE])
+    fun indexNowKey(): ResponseEntity<String> =
+        indexNowNotifier.key?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build()
 
     /**
      * Sitemap index: the static pages, then every vessel page with photos by files of [VESSELS_PER_SITEMAP], then the

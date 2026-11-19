@@ -7,10 +7,12 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.openvesselphotos.TestImages
 import org.openvesselphotos.config.AdminAuthentication
+import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.WikidataData
 import org.openvesselphotos.domain.images.ImageDownloader
 import org.openvesselphotos.domain.use_cases.public_api.RecordUsage
 import org.openvesselphotos.domain.wikidata.WikidataClient
+import org.openvesselphotos.infrastructure.web.IndexNowNotifier
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -19,6 +21,7 @@ import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
@@ -65,6 +68,10 @@ class PublicAndAdminApiITests {
     /** The Wikidata import would query the Wikidata Query Service */
     @MockitoBean
     lateinit var wikidataClient: WikidataClient
+
+    /** Disabled without key: records the vessels it is told of */
+    @MockitoSpyBean
+    lateinit var indexNowNotifier: IndexNowNotifier
 
     @Autowired
     lateinit var recordUsage: RecordUsage
@@ -1070,7 +1077,7 @@ class PublicAndAdminApiITests {
     }
 
     @Test
-    fun `Search engines Should be told of a new photo, by the sitemap index`() {
+    fun `Search engines Should be told of a new photo, by the sitemap index and IndexNow`() {
         val cookie = adminCookie()
         submitPhoto("cfr", "FRA000810001", "FEED BOAT")
         val photoId =
@@ -1083,6 +1090,16 @@ class PublicAndAdminApiITests {
                 )!!
                 .groupValues[1]
         mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+
+        // IndexNow: told, but disabled without key
+        assertThat(
+            org.mockito.Mockito
+                .mockingDetails(indexNowNotifier)
+                .invocations
+                .filter { it.method.name == "vesselChanged" }
+                .map { (it.arguments[0] as Vessel).cfr },
+        ).contains("FRA000810001")
+        mockMvc.perform(get("/indexnow-key.txt")).andExpect(status().isNotFound)
 
         // Each sitemap with the day it last changed
         val today = java.time.LocalDate.now()

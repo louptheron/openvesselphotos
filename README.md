@@ -75,6 +75,7 @@ Variables are listed in `backend/.env.example`.
 | `OPENVESSELPHOTOS_DATABASE_URL`                   | _(required otherwise)_     | `postgresql://user:password@host:port/db` or `jdbc:` |
 | `OPENVESSELPHOTOS_DATABASE_HIKARI_MAX_POOL_SIZE`  | `5`                        | Database connections per container                  |
 | `OPENVESSELPHOTOS_PUBLIC_URL`                     | _(requested host)_         | Canonical base URL, e.g. `https://example.org`      |
+| `OPENVESSELPHOTOS_INDEXNOW_KEY`                   | _(empty: disabled)_        | IndexNow key (8–128 letters, digits, dashes)        |
 | `OPENVESSELPHOTOS_ADMIN_PASSWORD`                 | _(empty: admin disabled)_  | Unique password of `/admin`                         |
 | `PORT`                                            | _(set by Scalingo)_        | HTTP port, takes precedence over the next one       |
 | `OPENVESSELPHOTOS_SERVER_PORT`                    | `8880`                     | HTTP port                                           |
@@ -159,7 +160,9 @@ with photos (`/vessels?port=…`, the only filtered directory indexed), each sit
 `/robots.txt` points to it.
 
 With a custom domain, set `OPENVESSELPHOTOS_PUBLIC_URL` so that canonical links never point to `*.scalingo.io`, and
-submit `https://<domain>/sitemap.xml` in Google Search Console.
+submit `https://<domain>/sitemap.xml` in Google Search Console. With `OPENVESSELPHOTOS_INDEXNOW_KEY` set too (e.g. a
+UUID), the pages of vessels whose photos change are sent every minute to the IndexNow search engines (Bing, Yandex…;
+not Google), which check the key at `/indexnow-key.txt`.
 
 ## Deployment on Scalingo
 
