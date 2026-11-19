@@ -277,6 +277,10 @@ class PublicAndAdminApiITests {
             ).contains("""<link rel="canonical" href="http://localhost/vessels/cfr/FRA000999888" />""")
             .contains(""""@type":"ImageObject"""")
             .contains(""""license":"https://creativecommons.org/licenses/by/4.0/"""")
+            .contains(""""acquireLicensePage":"http://localhost/docs#licences"""")
+            .contains(""""encodingFormat":"image/jpeg"""")
+            .containsPattern(""""copyrightNotice":"© [^"]+"""")
+            .contains(""""uploadDate":"""")
             .contains("\\u003c/script>\\u003cb>Evil")
             .contains("<h1>&lt;/script&gt;&lt;b&gt;Evil&lt;/b&gt;</h1>")
             .doesNotContain("<b>Evil</b>")
@@ -464,6 +468,29 @@ class PublicAndAdminApiITests {
         mockMvc
             .perform(get("/robots.txt"))
             .andExpect(content().string(org.hamcrest.Matchers.containsString("Sitemap: http://localhost/sitemap.xml")))
+        // AI crawlers have a group of their own, which repeats the disallowed paths
+        val robots =
+            mockMvc
+                .perform(get("/robots.txt"))
+                .andReturn()
+                .response.contentAsString
+        val (allCrawlers, aiCrawlers) = robots.split("\n\n")
+        assertThat(allCrawlers).startsWith("User-agent: *\nAllow: /\nDisallow: /admin\n")
+        assertThat(aiCrawlers)
+            .contains("User-agent: OAI-SearchBot\n", "User-agent: Claude-SearchBot\n", "User-agent: PerplexityBot\n")
+            .contains("Allow: /\nDisallow: /admin\n")
+
+        val llms =
+            mockMvc
+                .perform(get("/llms.txt"))
+                .andExpect(status().isOk)
+                .andExpect(content().contentTypeCompatibleWith("text/markdown"))
+                .andReturn()
+                .response.contentAsString
+        assertThat(llms)
+            .startsWith("# Open Vessel Photos\n\n> ")
+            .contains("[Vessel directory](http://localhost/vessels)")
+            .contains("[Latest photos](http://localhost/feed.xml)")
     }
 
     @Test

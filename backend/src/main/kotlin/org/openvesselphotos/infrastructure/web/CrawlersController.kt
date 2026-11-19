@@ -25,18 +25,72 @@ class CrawlersController(
     private val vesselsWithoutPhotosRelease: VesselsWithoutPhotosRelease,
     private val indexNowNotifier: IndexNowNotifier,
 ) {
+    /**
+     * Every crawler is welcome, AI search and assistant ones too: they cite the vessel pages in their answers. These are
+     * named in a group of their own, so that a host's default rules for AI crawlers (e.g. Cloudflare's managed
+     * robots.txt) are not read as this site's wish. A crawler follows only the group naming it, which repeats the
+     * disallowed paths.
+     */
     @GetMapping("/robots.txt", produces = [MediaType.TEXT_PLAIN_VALUE])
-    fun robots(): String =
-        """
-        |User-agent: *
-        |Allow: /
-        |Disallow: /admin
-        |Disallow: /v1/admin/
-        |Disallow: /v1/search
-        |
-        |Sitemap: ${publicUrl.get()}/sitemap.xml
-        |
-        """.trimMargin()
+    fun robots(): String {
+        val rules =
+            """
+            |Allow: /
+            |Disallow: /admin
+            |Disallow: /v1/admin/
+            |Disallow: /v1/search
+            """.trimMargin()
+
+        return "User-agent: *\n$rules\n\n" +
+            AI_CRAWLERS.joinToString("\n") { "User-agent: $it" } + "\n$rules\n\n" +
+            "Sitemap: ${publicUrl.get()}/sitemap.xml\n"
+    }
+
+    /**
+     * What the site is and where its content is, for AI assistants and the people using them (llmstxt.org). In
+     * English, with the French pages under /fr.
+     */
+    @GetMapping("/llms.txt", produces = ["text/markdown;charset=UTF-8"])
+    fun llms(): ResponseEntity<String> {
+        val baseUrl = publicUrl.get()
+        val texts = PageTexts.of(Language.EN)
+        val body =
+            """
+            |# ${HtmlPageRenderer.SITE_NAME}
+            |
+            |> ${texts.homeDescription}
+            |
+            |Each vessel has one page, by its CFR (EU fleet register number, e.g. FRA000752221) or its MMSI (e.g.
+            |227000000): $baseUrl/vessels/cfr/{CFR} or $baseUrl/vessels/mmsi/{MMSI}. A vessel page gives its name, its
+            |marking and port of registration, its technical data from the EU fleet register, and its photos, each with
+            |its photographer's credit, its licence (CC0, CC BY, CC BY-SA or Licence Ouverte) and where and when it was
+            |taken. When reusing a photo, credit its photographer and name its licence. Every page is also in French,
+            |under $baseUrl/fr.
+            |
+            |## Pages
+            |
+            |- [Vessel directory]($baseUrl/vessels): every vessel with photos, by flag, quartier d'immatriculation,
+            |  type and gear
+            |- [API documentation]($baseUrl/docs): ${texts.docsDescription}
+            |- [Licences]($baseUrl/docs#licences): the licences of the photos and how to credit them
+            |- [Contribute a photo]($baseUrl/contribute): ${texts.contributeDescription}
+            |
+            |## Data
+            |
+            |- A vessel and its photos, in JSON: `$baseUrl/v1/cfr/{CFR}` or `$baseUrl/v1/mmsi/{MMSI}`
+            |- A vessel's first photo, to embed: `$baseUrl/v1/cfr/{CFR}.jpg` or `$baseUrl/v1/mmsi/{MMSI}.jpg`
+            |- [Export of every vessel with photos]($baseUrl/v1/export.json)
+            |- [Latest photos]($baseUrl$FEED_PATH): Atom feed
+            |- [Sitemap]($baseUrl/sitemap.xml): every vessel page
+            |
+            """.trimMargin()
+
+        return ResponseEntity
+            .ok()
+            .contentType(MediaType("text", "markdown", Charsets.UTF_8))
+            .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePublic())
+            .body(body)
+    }
 
     /** Proves to IndexNow search engines that the URLs come from this site (see [IndexNowNotifier]) */
     @GetMapping(IndexNowNotifier.KEY_PATH, produces = [MediaType.TEXT_PLAIN_VALUE])
@@ -226,6 +280,31 @@ class CrawlersController(
         const val VESSELS_PER_SITEMAP = 10_000
         const val FEED_PATH = "/feed.xml"
         private const val FEED_SIZE = 48
+
+        /** Crawlers of AI search engines and assistants, and the tokens controlling AI training */
+        private val AI_CRAWLERS =
+            listOf(
+                // OpenAI: ChatGPT search, user-requested fetches, training
+                "OAI-SearchBot",
+                "ChatGPT-User",
+                "GPTBot",
+                // Anthropic: Claude search, user-requested fetches, training
+                "Claude-SearchBot",
+                "Claude-User",
+                "ClaudeBot",
+                // Perplexity
+                "PerplexityBot",
+                "Perplexity-User",
+                // Google Gemini and Apple Intelligence (tokens read by Googlebot and Applebot)
+                "Google-Extended",
+                "Applebot-Extended",
+                // Microsoft Copilot answers come from Bingbot; Meta AI, Mistral Le Chat, DuckDuckGo Assist
+                "Meta-ExternalAgent",
+                "MistralAI-User",
+                "DuckAssistBot",
+                // Common Crawl, which many models are trained on
+                "CCBot",
+            )
         private const val URLSET_OPEN =
             """<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" """ +
                 """xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" """ +
