@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest
 import org.openvesselphotos.domain.entities.Flags
 import org.openvesselphotos.domain.entities.ImageSize
 import org.openvesselphotos.domain.entities.KeyType
+import org.openvesselphotos.domain.entities.Licence
 import org.openvesselphotos.domain.entities.Photo
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselFilter
@@ -218,8 +219,8 @@ class PagesController(
                             "url" to baseUrl + canonicalPath,
                             "inLanguage" to language.code,
                             "primaryImageOfPage" to
-                                photos.firstOrNull()?.let { imageObject(baseUrl, vessel, it, texts) },
-                            "image" to photos.map { imageObject(baseUrl, vessel, it, texts) },
+                                photos.firstOrNull()?.let { imageObject(baseUrl, vessel, it, language) },
+                            "image" to photos.map { imageObject(baseUrl, vessel, it, language) },
                             "about" to
                                 wikidata.url?.let { url ->
                                     mapOf(
@@ -543,27 +544,45 @@ class PagesController(
         )
     }
 
+    /**
+     * A photo's licence and credit, which Google Images shows as a "Licensable" badge with a link to the licence page
+     * (image metadata: license, acquireLicensePage, creditText, creator, copyrightNotice).
+     */
     private fun imageObject(
         baseUrl: String,
         vessel: Vessel,
         photo: Photo,
-        texts: PageTexts,
-    ): Map<String, Any?> =
-        mapOf(
+        language: Language,
+    ): Map<String, Any?> {
+        val caption = PageTexts.of(language).photoCaption(vesselName(vessel), photo.credit)
+
+        return mapOf(
             "@type" to "ImageObject",
+            "name" to caption,
             "contentUrl" to photoUrl(baseUrl, vessel, photo, ImageSize.FULL),
             "thumbnailUrl" to photoUrl(baseUrl, vessel, photo, ImageSize.SMALL),
-            "caption" to texts.photoCaption(vesselName(vessel), photo.credit),
+            "encodingFormat" to "image/jpeg",
+            "caption" to caption,
             "width" to photo.width,
             "height" to photo.height,
             "license" to photo.licence.url,
-            "acquireLicensePage" to "$baseUrl/docs#licences",
+            "acquireLicensePage" to baseUrl + language.path("/docs") + "#licences",
             "creditText" to photo.credit,
-            "creator" to mapOf("@type" to "Person", "name" to photo.credit),
-            "copyrightNotice" to photo.credit,
+            // Photos under the Licence Ouverte are taken on duty by an administration, credited by its name
+            "creator" to
+                mapOf(
+                    "@type" to if (photo.licence == Licence.ETALAB_2_0) "Organization" else "Person",
+                    "name" to photo.credit,
+                ),
+            // Nobody holds a copyright on CC0 and public domain photos
+            "copyrightNotice" to photo.credit.takeIf { photo.licence.requiresCredit }?.let { "© $it" },
             "dateCreated" to photo.takenOn?.toString(),
+            "uploadDate" to photo.reviewedAt?.toOffsetDateTime()?.toString(),
             "contentLocation" to photo.place?.let { mapOf("@type" to "Place", "name" to it) },
+            // The original page of an imported photo (Wikimedia Commons, Flickr…)
+            "isBasedOn" to photo.sourceUrl,
         ).filterValues { it != null }
+    }
 
     companion object {
         fun vesselName(vessel: Vessel): String = vessel.name ?: vessel.cfr?.let { "CFR $it" } ?: "MMSI ${vessel.mmsi}"
