@@ -23,6 +23,8 @@ data class ApiKey(
     val status: ApiKeyStatus,
     val keyHash: String? = null,
     val keyPrefix: String? = null,
+    /** Public, non-secret id of the key's application, set on approval: `?app=` on the contribute page */
+    val publicId: String? = null,
     val createdAt: ZonedDateTime? = null,
     val reviewedAt: ZonedDateTime? = null,
     val lastUsedAt: ZonedDateTime? = null,
@@ -36,6 +38,13 @@ data class ApiKey(
             val bytes = ByteArray(24).also(random::nextBytes)
 
             return PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+        }
+
+        /** A new public id: "app_" + 12 random URL-safe characters. Not a secret. */
+        fun generatePublicId(): String {
+            val bytes = ByteArray(9).also(random::nextBytes)
+
+            return "app_" + Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
         }
 
         fun hash(key: String): String =

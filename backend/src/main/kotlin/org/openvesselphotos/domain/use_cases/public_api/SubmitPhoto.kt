@@ -1,6 +1,7 @@
 package org.openvesselphotos.domain.use_cases.public_api
 
 import org.openvesselphotos.config.UseCase
+import org.openvesselphotos.domain.entities.ApiKeyStatus
 import org.openvesselphotos.domain.entities.Licence
 import org.openvesselphotos.domain.entities.Photo
 import org.openvesselphotos.domain.entities.PhotoStatus
@@ -8,6 +9,7 @@ import org.openvesselphotos.domain.entities.VesselKey
 import org.openvesselphotos.domain.exceptions.BackendUsageErrorCode
 import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.images.ImageProcessor
+import org.openvesselphotos.domain.repositories.ApiKeyRepository
 import org.openvesselphotos.domain.repositories.PhotoRepository
 import org.openvesselphotos.domain.repositories.VesselRepository
 import org.openvesselphotos.domain.use_cases.findVesselByKeys
@@ -28,6 +30,8 @@ data class PhotoSubmission(
     val contributorId: String? = null,
     val vesselName: String?,
     val apiKeyId: Int? = null,
+    /** Public id of an API key's application, for a photo sent through the website from that application's link */
+    val appPublicId: String? = null,
 )
 
 @UseCase
@@ -35,6 +39,7 @@ class SubmitPhoto(
     private val vesselRepository: VesselRepository,
     private val photoRepository: PhotoRepository,
     private val imageProcessor: ImageProcessor,
+    private val apiKeyRepository: ApiKeyRepository,
 ) {
     @Transactional
     fun execute(submission: PhotoSubmission): Photo {
@@ -52,10 +57,11 @@ class SubmitPhoto(
         if (email != null && (email.length > 254 || !email.contains("@"))) {
             throw BackendUsageException(BackendUsageErrorCode.INVALID_INPUT, "Invalid email.")
         }
+        val apiKeyId = resolveApiKeyId(submission)
         val contributorId = submission.contributorId?.trim()?.ifEmpty { null }
         if (contributorId != null) {
             // Only meaningful within the application of an API key, and never an email or a name
-            if (submission.apiKeyId == null) {
+            if (apiKeyId == null) {
                 throw BackendUsageException(BackendUsageErrorCode.INVALID_INPUT, "A contributorId needs an API key.")
             }
             if (!CONTRIBUTOR_ID.matches(contributorId)) {
@@ -97,12 +103,28 @@ class SubmitPhoto(
                     contributorId = contributorId,
                     width = image.width,
                     height = image.height,
-                    apiKeyId = submission.apiKeyId,
+                    apiKeyId = apiKeyId,
                 ),
             )
         image.files.forEach { (size, content) -> photoRepository.saveFile(requireNotNull(photo.id), size, content) }
 
         return photo
+    }
+
+    /**
+     * The key sent in the header, or else the active key whose public id the website sent (?app= on the contribute
+     * page): the photo is then that application's, like one sent with its key.
+     */
+    private fun resolveApiKeyId(submission: PhotoSubmission): Int? {
+        val appPublicId = submission.appPublicId?.trim()?.ifEmpty { null } ?: return submission.apiKeyId
+        val apiKey =
+            apiKeyRepository.findByPublicId(appPublicId)?.takeIf { it.status == ApiKeyStatus.ACTIVE }
+                ?: throw BackendUsageException(BackendUsageErrorCode.INVALID_INPUT, "Unknown or inactive app.")
+        if (submission.apiKeyId != null && submission.apiKeyId != apiKey.id) {
+            throw BackendUsageException(BackendUsageErrorCode.INVALID_INPUT, "The app is not that of the API key.")
+        }
+
+        return apiKey.id
     }
 
     companion object {

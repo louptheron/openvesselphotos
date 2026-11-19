@@ -224,6 +224,8 @@ interface DBReportRepository : JpaRepository<ReportEntity, Int> {
 interface DBApiKeyRepository : JpaRepository<ApiKeyEntity, Int> {
     fun findByKeyHash(keyHash: String): ApiKeyEntity?
 
+    fun findByPublicId(publicId: String): ApiKeyEntity?
+
     fun findByStatusOrderByCreatedAt(status: ApiKeyStatus): List<ApiKeyEntity>
 
     @Modifying

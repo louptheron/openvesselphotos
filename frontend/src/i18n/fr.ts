@@ -363,7 +363,7 @@ export const fr: Messages = {
       `Tous les navires avec photos, par nom, 100 par page, avec le nombre de pages et le total. Filtres facultatifs${_}: flag (ISO alpha-3, d’après le CFR ou sinon le MMSI), port, vesselType, mainGear.`,
       `Les valeurs de ces filtres, avec leur nombre de navires${_}; les pavillons ont aussi leur code ISO alpha-2 countryCode.`,
       `Toutes les données${_}: chaque navire avec les URL, crédits et licences de ses photos.`,
-      `Envoyer une photo (multipart${_}: file, credit, licence, takenOn?, place?, email?, contributorId?, vesselName?, et mmsi? sous un CFR ou cfr? sous un MMSI), sous l’identifiant que vous connaissez. Publiée après vérification. Nécessite une clé d’API.`,
+      `Envoyer une photo (multipart${_}: file, credit, licence, takenOn?, place?, email?, contributorId?, app?, vesselName?, et mmsi? sous un CFR ou cfr? sous un MMSI), sous l’identifiant que vous connaissez. Publiée après vérification. Nécessite une clé d’API.`,
       `Les photos d’un contributorId envoyées avec votre clé, publiées ou refusées, dont la vérification n’a pas encore été vue${_}: id, status (APPROVED|REJECTED), reviewedAt, cfr, mmsi, vesselName, urls, rejectReason. Nécessite une clé d’API.`,
       `Marquer la vérification d’une photo comme vue par son contributeur${_}: elle n’est plus renvoyée par la requête précédente. Nécessite une clé d’API.`,
       'Proposer l’identifiant manquant, ex. {"keyType": "cfr", "key": "FRA000123456"}. Appliqué après vérification. Nécessite une clé d’API.',
@@ -378,6 +378,7 @@ export const fr: Messages = {
     apiKeyLink: 'demandez-en une',
     apiKeyText2: ', c’est gratuit. Sans elle, elles renvoient une erreur 401.',
     apiKeyContributorId: `Pour distinguer les photos de vos utilisateurs, envoyez contributorId${_}: un identifiant pseudonyme et stable de l’auteur dans votre application (1 à 64 lettres, chiffres, - ou _), jamais un e-mail ni un nom, par exemple un HMAC de votre identifiant interne avec une clé secrète que vous gardez. Seuls les relecteurs le voient. Une photo prise en service par une administration française est envoyée sous Licence Ouverte 2.0${_}:`,
+    apiKeyContributeLink: `Vos utilisateurs peuvent aussi envoyer leurs photos depuis ce site${_}: faites un lien vers la page de contribution avec l’identifiant public de votre application (donné avec votre clé, ce n’est pas un secret) et leur contributorId. Leurs photos sont alors les vôtres, comme celles envoyées avec votre clé, et leurs vérifications sont renvoyées par GET /v1/submissions?contributorId=. Quiconque connaît un contributorId peut envoyer des photos en son nom${_}: raison de plus pour un identifiant impossible à deviner${_}:`,
     rateLimitsTitle: 'Limites de débit',
     rateLimitsText: `Jusqu’à 600${_}GET par minute et par IP, et 1${_}000${_}POST par heure et par clé d’API. Chaque réponse indique où vous en êtes dans X-RateLimit-Limit, X-RateLimit-Remaining et X-RateLimit-Reset (en secondes). Au-delà, les requêtes renvoient une erreur 429 avec un en-tête Retry-After. Besoin de plus${_}? Téléchargez toutes les données depuis /v1/export.json, ou demandez une limite plus haute.`,
     chips: ['CORS activé', 'Lecture sans clé d’API', 'Toujours afficher le crédit'],
@@ -486,8 +487,11 @@ export const fr: Messages = {
     copyKey: 'Copier la clé',
     done: 'Terminé',
     emailSubject: 'Votre clé d’API Open Vessel Photos',
-    emailBody: (name: string, key: string, docsUrl: string) =>
-      `Bonjour ${name},\n\nVotre demande de clé d’API a été acceptée. Voici votre clé${_}:\n\n${key}\n\nEnvoyez-la dans l’en-tête x-api-key de vos requêtes POST, et gardez-la secrète. Documentation${_}: ${docsUrl}\n`,
+    emailBody: (name: string, key: string, publicId: string | null, docsUrl: string) =>
+      `Bonjour ${name},\n\nVotre demande de clé d’API a été acceptée. Voici votre clé${_}:\n\n${key}\n\nEnvoyez-la dans l’en-tête x-api-key de vos requêtes POST, et gardez-la secrète. Documentation${_}: ${docsUrl}\n` +
+      (publicId
+        ? `\nL’identifiant public de votre application, pour envoyer vos utilisateurs vers la page de contribution (ce n’est pas un secret)${_}: ${publicId}\n`
+        : ''),
     activeKeys: 'Clés d’API actives',
     noActiveKey: 'Aucune clé active.',
     keyColumns: {

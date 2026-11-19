@@ -378,7 +378,7 @@ export const en = {
       'All vessels with photos, by name, 100 per page, with the page count and total. Optional filters: flag (ISO alpha-3, from the CFR or else the MMSI), port, vesselType, mainGear.',
       'The values of these filters, with their number of vessels; flags also have their ISO alpha-2 countryCode.',
       'The whole dataset: every vessel with its photo URLs, credits and licences.',
-      'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, contributorId?, vesselName?, plus mmsi? under a CFR or cfr? under an MMSI), under whichever key you know. Published after review. Needs an API key.',
+      'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, contributorId?, app?, vesselName?, plus mmsi? under a CFR or cfr? under an MMSI), under whichever key you know. Published after review. Needs an API key.',
       'The photos of a contributorId sent with your key, published or rejected, whose review was not seen yet: id, status (APPROVED|REJECTED), reviewedAt, cfr, mmsi, vesselName, urls, rejectReason. Needs an API key.',
       'Mark the review of a photo as seen by its contributor: it is no longer returned by the request above. Needs an API key.',
       'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review. Needs an API key.',
@@ -394,6 +394,8 @@ export const en = {
     apiKeyText2: ', it is free. Without it, they return a 401.',
     apiKeyContributorId:
       'To tell your users’ photos apart, send contributorId: a stable pseudonymous id of the author in your application (1 to 64 letters, digits, - or _), never an email or a name, e.g. a HMAC of your user id with a secret key that you keep. It is only seen by reviewers. A photo taken on duty by a French administration is sent under the Licence Ouverte 2.0:',
+    apiKeyContributeLink:
+      'Your users can also send their photos through this website: link them to the contribute page with your app’s public id (given with your key, it is not a secret) and their contributorId. Their photos are then yours, like those sent with your key, and their reviews are returned by GET /v1/submissions?contributorId=. Anyone who knows a contributorId can send photos under it, which is another reason for an id that cannot be guessed:',
     rateLimitsTitle: 'Rate limits',
     rateLimitsText:
       'Up to 600 GET per minute per IP, and 1,000 POST per hour per API key. Every response tells where you stand in X-RateLimit-Limit, X-RateLimit-Remaining and X-RateLimit-Reset (seconds). Above the limit, requests return a 429 with a Retry-After header. Need more? Download the whole dataset from /v1/export.json, or ask for a higher limit.',
@@ -504,8 +506,11 @@ export const en = {
     copyKey: 'Copy the key',
     done: 'Done',
     emailSubject: 'Your Open Vessel Photos API key',
-    emailBody: (name: string, key: string, docsUrl: string) =>
-      `Hello ${name},\n\nYour API key request was approved. Here is your key:\n\n${key}\n\nSend it in the x-api-key header of your POST requests, and keep it secret. Documentation: ${docsUrl}\n`,
+    emailBody: (name: string, key: string, publicId: string | null, docsUrl: string) =>
+      `Hello ${name},\n\nYour API key request was approved. Here is your key:\n\n${key}\n\nSend it in the x-api-key header of your POST requests, and keep it secret. Documentation: ${docsUrl}\n` +
+      (publicId
+        ? `\nThe public id of your app, to link your users to the contribute page (not a secret): ${publicId}\n`
+        : ''),
     activeKeys: 'Active API keys',
     noActiveKey: 'No active key.',
     keyColumns: {

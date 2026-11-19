@@ -514,6 +514,7 @@ class PublicAndAdminApiITests {
                 .andReturn()
                 .response.contentAsString
         val key = Regex(""""key":"(ovp_[A-Za-z0-9_-]+)"""").find(approval)!!.groupValues[1]
+        val appId = Regex(""""publicId":"(app_[A-Za-z0-9_-]{12})"""").find(approval)!!.groupValues[1]
 
         upload(key).andExpect(status().isCreated)
         mockMvc
@@ -599,8 +600,46 @@ class PublicAndAdminApiITests {
             .andExpect(status().isConflict)
         mockMvc.perform(post("/v1/submissions/999999/seen").header("x-api-key", key)).andExpect(status().isNotFound)
 
+        // From the website, through the application's link to the contribute page (?app=&contributorId=)
+        fun uploadFromWebsite(vararg params: Pair<String, String>) =
+            mockMvc.perform(
+                multipart("/v1/mmsi/227000666/photos")
+                    .header("Sec-Fetch-Site", "same-origin")
+                    .file(MockMultipartFile("file", "boat.jpg", "image/jpeg", TestImages.create(800, 600)))
+                    .param("credit", "Someone")
+                    .param("licence", "CC0-1.0")
+                    .apply { params.forEach { (name, value) -> param(name, value) } },
+            )
+        val webContributorId = "w".repeat(64)
+        val webId =
+            Regex("\"id\":(\\d+)")
+                .find(
+                    uploadFromWebsite("app" to appId, "contributorId" to webContributorId)
+                        .andExpect(status().isCreated)
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        mockMvc
+            .perform(get("/v1/admin/queue").cookie(cookie))
+            .andExpect(jsonPath("$.photos[?(@.photo.id == $webId)].apiKeyName").value("Fleet app"))
+        mockMvc.perform(post("/v1/admin/photos/$webId/approve").cookie(cookie)).andExpect(status().isNoContent)
+        mockMvc
+            .perform(get("/v1/submissions").param("contributorId", webContributorId).header("x-api-key", key))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(webId.toInt()))
+            .andExpect(jsonPath("$[0].status").value("APPROVED"))
+        uploadFromWebsite("app" to "app_unknown00000", "contributorId" to webContributorId)
+            .andExpect(status().isBadRequest)
+        upload(key, "app" to "app_unknown00000").andExpect(status().isBadRequest)
+        upload(key, "app" to appId).andExpect(status().isCreated)
+        mockMvc
+            .perform(get("/v1/admin/api-keys").cookie(cookie))
+            .andExpect(jsonPath("$[0].publicId").value(appId))
+
         mockMvc.perform(post("/v1/admin/api-keys/$requestId/revoke").cookie(cookie)).andExpect(status().isNoContent)
         upload(key).andExpect(status().isUnauthorized)
+        uploadFromWebsite("app" to appId, "contributorId" to webContributorId).andExpect(status().isBadRequest)
 
         // GET requests stay open
         mockMvc.perform(get("/v1/vessels/recent")).andExpect(status().isOk)

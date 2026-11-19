@@ -29,6 +29,8 @@ class ApiKeyEntity(
     val keyHash: String?,
     @Column(name = "key_prefix")
     val keyPrefix: String?,
+    @Column(name = "public_id")
+    val publicId: String?,
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: ZonedDateTime? = null,
     @Column(name = "reviewed_at")
@@ -46,6 +48,7 @@ class ApiKeyEntity(
             status = status,
             keyHash = keyHash,
             keyPrefix = keyPrefix,
+            publicId = publicId,
             createdAt = createdAt,
             reviewedAt = reviewedAt,
             lastUsedAt = lastUsedAt,
@@ -62,6 +65,7 @@ class ApiKeyEntity(
                 status = apiKey.status,
                 keyHash = apiKey.keyHash,
                 keyPrefix = apiKey.keyPrefix,
+                publicId = apiKey.publicId,
                 createdAt = apiKey.createdAt,
                 reviewedAt = apiKey.reviewedAt,
                 lastUsedAt = apiKey.lastUsedAt,
