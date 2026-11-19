@@ -289,11 +289,16 @@ data class SubmissionDataOutput(
     val status: String,
 )
 
-/** The review of a photo sent with an API key, e.g. to tell its contributor "Your photo of LOLA was published". */
+/**
+ * A photo sent with an API key, waiting for review or with a review not seen yet, e.g. to tell its contributor "Your
+ * photo of LOLA was received", then "was published".
+ */
 data class ReviewedSubmissionDataOutput(
     val id: Int,
-    /** APPROVED or REJECTED */
+    /** PENDING, APPROVED or REJECTED */
     val status: String,
+    val submittedAt: ZonedDateTime?,
+    /** Null while pending */
     val reviewedAt: ZonedDateTime?,
     val cfr: String?,
     val mmsi: String?,
@@ -313,6 +318,7 @@ data class ReviewedSubmissionDataOutput(
             return ReviewedSubmissionDataOutput(
                 id = requireNotNull(photo.id),
                 status = photo.status.name,
+                submittedAt = photo.createdAt,
                 reviewedAt = photo.reviewedAt,
                 cfr = vessel?.keyValue(KeyType.CFR) ?: submittedKeys.find { it.type == KeyType.CFR }?.value,
                 mmsi = vessel?.keyValue(KeyType.MMSI) ?: submittedKeys.find { it.type == KeyType.MMSI }?.value,

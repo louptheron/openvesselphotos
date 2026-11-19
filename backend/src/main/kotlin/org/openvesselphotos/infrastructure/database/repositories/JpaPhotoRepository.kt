@@ -44,15 +44,15 @@ class JpaPhotoRepository(
 
     override fun countByStatus(status: PhotoStatus): Int = dbPhotoRepository.countByStatus(status).toInt()
 
-    override fun findUnseenReviewed(
+    override fun findUnseen(
         apiKeyId: Int,
         contributorId: String,
     ): List<Photo> =
         dbPhotoRepository
-            .findByApiKeyIdAndContributorIdAndStatusInAndSeenAtIsNullOrderByReviewedAt(
+            .findByApiKeyIdAndContributorIdAndStatusInAndSeenAtIsNullOrderByCreatedAt(
                 apiKeyId,
                 contributorId,
-                listOf(PhotoStatus.APPROVED, PhotoStatus.REJECTED),
+                listOf(PhotoStatus.PENDING, PhotoStatus.APPROVED, PhotoStatus.REJECTED),
             ).map { it.toPhoto() }
 
     override fun existsBySourceUrl(sourceUrl: String): Boolean = dbPhotoRepository.existsBySourceUrl(sourceUrl)
