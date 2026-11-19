@@ -545,6 +545,15 @@ class PublicAndAdminApiITests {
             .perform(get("/v1/admin/queue").cookie(cookie))
             .andExpect(jsonPath("$.photos[?(@.photo.id == $id)].photo.contributorId").value(contributorId))
             .andExpect(jsonPath("$.photos[?(@.photo.id == $id)].photo.licenceName").value("Licence Ouverte 2.0"))
+        // Sent: the application can tell the agent it was received, before any review
+        mockMvc
+            .perform(get("/v1/submissions").param("contributorId", contributorId).header("x-api-key", key))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(id.toInt()))
+            .andExpect(jsonPath("$[0].status").value("PENDING"))
+            .andExpect(jsonPath("$[0].submittedAt").isNotEmpty)
+            .andExpect(jsonPath("$[0].reviewedAt").isEmpty)
+            .andExpect(jsonPath("$[0].urls").isEmpty)
         mockMvc.perform(post("/v1/admin/photos/$id/approve").cookie(cookie)).andExpect(status().isNoContent)
         mockMvc
             .perform(get("/v1/mmsi/227000666"))
@@ -598,6 +607,12 @@ class PublicAndAdminApiITests {
         mockMvc
             .perform(post("/v1/submissions/$pendingId/seen").header("x-api-key", key))
             .andExpect(status().isConflict)
+        // Still returned, until it is reviewed
+        mockMvc
+            .perform(get("/v1/submissions").param("contributorId", contributorId).header("x-api-key", key))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(pendingId.toInt()))
+            .andExpect(jsonPath("$[0].status").value("PENDING"))
         mockMvc.perform(post("/v1/submissions/999999/seen").header("x-api-key", key)).andExpect(status().isNotFound)
 
         // From the website, through the application's link to the contribute page (?app=&contributorId=)

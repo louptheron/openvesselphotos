@@ -379,7 +379,7 @@ export const en = {
       'The values of these filters, with their number of vessels; flags also have their ISO alpha-2 countryCode.',
       'The whole dataset: every vessel with its photo URLs, credits and licences.',
       'Contribute a photo (multipart: file, credit, licence, takenOn?, place?, email?, contributorId?, app?, vesselName?, plus mmsi? under a CFR or cfr? under an MMSI), under whichever key you know. Published after review. Needs an API key.',
-      'The photos of a contributorId sent with your key, published or rejected, whose review was not seen yet: id, status (APPROVED|REJECTED), reviewedAt, cfr, mmsi, vesselName, urls, rejectReason. Needs an API key.',
+      'The photos of a contributorId sent with your key, oldest first: those waiting for review (until they are reviewed), and those published or rejected whose review was not seen yet: id, status (PENDING|APPROVED|REJECTED), submittedAt, reviewedAt, cfr, mmsi, vesselName, urls, rejectReason. Needs an API key.',
       'Mark the review of a photo as seen by its contributor: it is no longer returned by the request above. Needs an API key.',
       'Suggest the missing key, e.g. {"keyType": "cfr", "key": "FRA000123456"}. Applied after review. Needs an API key.',
       'Report a photo: {"reason": "WRONG_VESSEL|COPYRIGHT|PRIVACY|OTHER", "message": "…"}. Needs an API key.',
@@ -395,7 +395,7 @@ export const en = {
     apiKeyContributorId:
       'To tell your users’ photos apart, send contributorId: a stable pseudonymous id of the author in your application (1 to 64 letters, digits, - or _), never an email or a name, e.g. a HMAC of your user id with a secret key that you keep. It is only seen by reviewers. A photo taken on duty by a French administration is sent under the Licence Ouverte 2.0:',
     apiKeyContributeLink:
-      'Your users can also send their photos through this website: link them to the contribute page with your app’s public id (given with your key, it is not a secret) and their contributorId. Their photos are then yours, like those sent with your key, and their reviews are returned by GET /v1/submissions?contributorId=. Anyone who knows a contributorId can send photos under it, which is another reason for an id that cannot be guessed:',
+      'Your users can also send their photos through this website: link them to the contribute page with your app’s public id (given with your key, it is not a secret) and their contributorId. Their photos are then yours, like those sent with your key, and they are returned by GET /v1/submissions?contributorId= as soon as they are sent, then with their review. Anyone who knows a contributorId can send photos under it, which is another reason for an id that cannot be guessed:',
     rateLimitsTitle: 'Rate limits',
     rateLimitsText:
       'Up to 600 GET per minute per IP, and 1,000 POST per hour per API key. Every response tells where you stand in X-RateLimit-Limit, X-RateLimit-Remaining and X-RateLimit-Reset (seconds). Above the limit, requests return a 429 with a Retry-After header. Need more? Download the whole dataset from /v1/export.json, or ask for a higher limit.',

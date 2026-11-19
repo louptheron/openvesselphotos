@@ -8,13 +8,14 @@ import org.openvesselphotos.domain.repositories.VesselRepository
 
 data class ReviewedSubmission(
     val photo: Photo,
-    /** Set for an approved photo, and for a rejected one sent under a known key */
+    /** Set for an approved photo, and for a pending or rejected one sent under a known key */
     val vessel: Vessel?,
 )
 
 /**
- * The reviews a contributor has not seen yet, for the application of an API key to show them ("Your photo of LOLA was
- * published"), until it marks them as seen with [MarkSubmissionSeen].
+ * A contributor's photos waiting for review ("Your photo of LOLA was received"), and the reviews they have not seen yet
+ * ("Your photo of LOLA was published"), for the application of an API key to show them. A pending photo is returned
+ * until it is reviewed; a reviewed one until the application marks it as seen with [MarkSubmissionSeen].
  */
 @UseCase
 class GetUnseenSubmissions(
@@ -25,7 +26,7 @@ class GetUnseenSubmissions(
         apiKeyId: Int,
         contributorId: String,
     ): List<ReviewedSubmission> {
-        val photos = photoRepository.findUnseenReviewed(apiKeyId, contributorId.trim())
+        val photos = photoRepository.findUnseen(apiKeyId, contributorId.trim())
         val vesselsById = vesselRepository.findByIds(photos.mapNotNull { it.vesselId }.distinct()).associateBy { it.id }
 
         return photos.map { ReviewedSubmission(it, it.vesselId?.let(vesselsById::get)) }

@@ -182,7 +182,7 @@ interface DBPhotoRepository : JpaRepository<PhotoEntity, Int> {
 
     fun countByStatus(status: PhotoStatus): Long
 
-    fun findByApiKeyIdAndContributorIdAndStatusInAndSeenAtIsNullOrderByReviewedAt(
+    fun findByApiKeyIdAndContributorIdAndStatusInAndSeenAtIsNullOrderByCreatedAt(
         apiKeyId: Int,
         contributorId: String,
         statuses: Collection<PhotoStatus>,
