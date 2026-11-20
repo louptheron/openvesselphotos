@@ -26,11 +26,13 @@ const KEY_TYPES: KeyType[] = ['cfr', 'mmsi']
 
 const KEY_PLACEHOLDERS: Record<KeyType, string> = { cfr: 'FRA000123456', mmsi: '227000101' }
 
-const LICENCES = [
-  { label: 'CC BY 4.0', value: 'CC-BY-4.0' },
+// CC BY 4.0 is the suggested choice, the others stay available but smaller
+const PRIMARY_LICENCE = { label: 'CC BY 4.0', value: 'CC-BY-4.0' }
+const OTHER_LICENCES = [
   { label: 'CC BY-SA 4.0', value: 'CC-BY-SA-4.0' },
   { label: 'CC0', value: 'CC0-1.0' }
 ]
+const LICENCES = [PRIMARY_LICENCE, ...OTHER_LICENCES]
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024
 
@@ -90,8 +92,7 @@ export function ContributePage() {
 
   const fileError = file && file.size > MAX_FILE_SIZE ? t.contribute.fileTooLarge : undefined
   const licenceLabel = LICENCES.find(item => item.value === licence)?.label
-  const canSubmit =
-    isKeyValid && !hasKeyConflict && !!file && !fileError && credit.trim().length > 0 && hasRights && !isLoading
+  const canSubmit = isKeyValid && !hasKeyConflict && !!file && !fileError && hasRights && !isLoading
 
   const pickFile = (event: ChangeEvent<HTMLInputElement>) => setFile(event.target.files?.[0])
 
@@ -102,6 +103,7 @@ export function ContributePage() {
     }
     const form = new FormData()
     form.append('file', file)
+    // Empty for an anonymous contribution, credited by the backend
     form.append('credit', credit.trim())
     form.append('licence', licence)
     if (takenOn) {
@@ -295,24 +297,43 @@ export function ContributePage() {
                 id="credit"
                 maxLength={100}
                 onChange={event => setCredit(event.target.value)}
+                aria-describedby="credit-hint"
                 placeholder={t.contribute.creditPlaceholder}
                 value={credit}
               />
+              <Muted id="credit-hint">{t.contribute.creditHint}</Muted>
             </Field>
             <Licences aria-label={t.contribute.licence} role="radiogroup">
-              {LICENCES.map(item => (
-                <LicenceOption key={item.value} $active={licence === item.value}>
-                  <input
-                    checked={licence === item.value}
-                    name="licence"
-                    onChange={() => setLicence(item.value)}
-                    type="radio"
-                    value={item.value}
-                  />
-                  <strong>{item.label}</strong>
-                  <span>{t.contribute.licences[item.value]}</span>
-                </LicenceOption>
-              ))}
+              <LicenceOption $active={licence === PRIMARY_LICENCE.value}>
+                <input
+                  checked={licence === PRIMARY_LICENCE.value}
+                  name="licence"
+                  onChange={() => setLicence(PRIMARY_LICENCE.value)}
+                  type="radio"
+                  value={PRIMARY_LICENCE.value}
+                />
+                <strong>{PRIMARY_LICENCE.label}</strong>
+                <span>{t.contribute.licences[PRIMARY_LICENCE.value]}</span>
+              </LicenceOption>
+              <OtherLicences>
+                <Muted>{t.contribute.otherLicences}</Muted>
+                {OTHER_LICENCES.map(item => (
+                  <SmallLicenceOption
+                    key={item.value}
+                    $active={licence === item.value}
+                    title={t.contribute.licences[item.value]}
+                  >
+                    <input
+                      checked={licence === item.value}
+                      name="licence"
+                      onChange={() => setLicence(item.value)}
+                      type="radio"
+                      value={item.value}
+                    />
+                    {item.label}
+                  </SmallLicenceOption>
+                ))}
+              </OtherLicences>
             </Licences>
             <Checkbox>
               <input checked={hasRights} onChange={event => setHasRights(event.target.checked)} type="checkbox" />
@@ -512,9 +533,33 @@ const Optional = styled.span`
 `
 
 const Licences = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+`
+
+const OtherLicences = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+`
+
+const SmallLicenceOption = styled.label<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid ${p => (p.$active ? COLORS.accent : COLORS.cardBorder)};
+  background: ${p => (p.$active ? COLORS.accentSoft : COLORS.white)};
+  font-size: 13px;
+  cursor: pointer;
+
+  input {
+    margin: 0;
+    accent-color: ${COLORS.accent};
+  }
 `
 
 const LicenceOption = styled.label<{ $active: boolean }>`

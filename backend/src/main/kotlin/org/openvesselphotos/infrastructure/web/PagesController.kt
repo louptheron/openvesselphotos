@@ -177,11 +177,11 @@ class PagesController(
                         vessel = name + vessel.registration?.let { " ($it)" }.orEmpty(),
                         vesselType = vesselType,
                         place = photo.place,
-                        credit = photo.credit,
+                        credit = photo.displayedCredit,
                     )
                 val caption =
                     listOfNotNull(
-                        "© ${escapeHtml(photo.credit)}",
+                        "© ${escapeHtml(photo.displayedCredit)}",
                         escapeHtml(photo.licence.label),
                         photo.takenOn?.let { escapeHtml(texts.taken(it)) },
                         photo.place?.let { escapeHtml(it) },
@@ -554,7 +554,7 @@ class PagesController(
         photo: Photo,
         language: Language,
     ): Map<String, Any?> {
-        val caption = PageTexts.of(language).photoCaption(vesselName(vessel), photo.credit)
+        val caption = PageTexts.of(language).photoCaption(vesselName(vessel), photo.displayedCredit)
 
         return mapOf(
             "@type" to "ImageObject",
@@ -567,15 +567,15 @@ class PagesController(
             "height" to photo.height,
             "license" to photo.licence.url,
             "acquireLicensePage" to baseUrl + language.path("/docs") + "#licences",
-            "creditText" to photo.credit,
+            "creditText" to photo.displayedCredit,
             // Photos under the Licence Ouverte are taken on duty by an administration, credited by its name
             "creator" to
                 mapOf(
                     "@type" to if (photo.licence == Licence.ETALAB_2_0) "Organization" else "Person",
-                    "name" to photo.credit,
+                    "name" to photo.displayedCredit,
                 ),
             // Nobody holds a copyright on CC0 and public domain photos
-            "copyrightNotice" to photo.credit.takeIf { photo.licence.requiresCredit }?.let { "© $it" },
+            "copyrightNotice" to photo.displayedCredit.takeIf { photo.licence.requiresCredit }?.let { "© $it" },
             "dateCreated" to photo.takenOn?.toString(),
             "uploadDate" to photo.reviewedAt?.toOffsetDateTime()?.toString(),
             "contentLocation" to photo.place?.let { mapOf("@type" to "Place", "name" to it) },

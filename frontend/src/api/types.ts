@@ -232,7 +232,14 @@ export type UsageStatistics = {
   activeApiKeysTotal: number
   apiCalls: number
   apiCallsWithKey: number
-  apiKeys: { calls: number; id: number; lastUsedAt: string | null; name: string; organisation: string | null }[]
+  apiKeys: {
+    calls: number
+    id: number
+    imageViews: number
+    lastUsedAt: string | null
+    name: string
+    organisation: string | null
+  }[]
   apiSources: SourceUsage[]
   daily: DailyUsage[]
   days: number

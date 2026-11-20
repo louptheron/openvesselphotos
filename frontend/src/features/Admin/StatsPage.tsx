@@ -105,6 +105,7 @@ export function StatsPage() {
                     <tr>
                       <th>{t.stats.key}</th>
                       <th>{t.stats.calls}</th>
+                      <th>{t.stats.imageViews}</th>
                       <th>{t.stats.lastUsed}</th>
                     </tr>
                   </thead>
@@ -116,6 +117,7 @@ export function StatsPage() {
                           {key.organisation && <Muted> · {key.organisation}</Muted>}
                         </td>
                         <td>{format(key.calls)}</td>
+                        <td>{format(key.imageViews)}</td>
                         <td>{formatDate(key.lastUsedAt)}</td>
                       </tr>
                     ))}

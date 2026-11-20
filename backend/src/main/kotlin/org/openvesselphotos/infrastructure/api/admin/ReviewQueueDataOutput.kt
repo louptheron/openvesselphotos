@@ -45,7 +45,7 @@ data class AdminPhotoDataOutput(
                 submittedKey = photo.submittedKey.value,
                 submittedOtherKey = photo.submittedOtherKey?.value,
                 submittedVesselName = photo.submittedVesselName,
-                credit = photo.credit,
+                credit = photo.displayedCredit,
                 licence = photo.licence.spdx,
                 licenceName = photo.licence.label,
                 takenOn = photo.takenOn,

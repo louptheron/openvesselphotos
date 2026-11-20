@@ -58,14 +58,17 @@ data class PhotoDataOutput(
         ) = PhotoDataOutput(
             n = requireNotNull(photo.number),
             urls = PhotoUrlsDataOutput.from(baseUrl, vessel, photo),
-            credit = photo.credit,
+            credit = photo.displayedCredit,
             licence = photo.licence.spdx,
             licenceName = photo.licence.label,
+            // An anonymous credit already names Open Vessel Photos
             attribution =
-                if (photo.licence.requiresCredit) {
-                    "Photo: ${photo.credit} / Open Vessel Photos, ${photo.licence.label}"
-                } else {
-                    "Photo: ${photo.credit} / Open Vessel Photos (${photo.licence.label})"
+                (if (photo.isAnonymous) photo.displayedCredit else "${photo.credit} / Open Vessel Photos").let {
+                    if (photo.licence.requiresCredit) {
+                        "Photo: $it, ${photo.licence.label}"
+                    } else {
+                        "Photo: $it (${photo.licence.label})"
+                    }
                 },
             takenOn = photo.takenOn,
             place = photo.place,

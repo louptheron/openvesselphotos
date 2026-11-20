@@ -111,6 +111,8 @@ export function DocsPage() {
         <CodeBlock>{`curl -X POST -H "x-api-key: ovp_…" \\
   -F file=@boat.jpg -F credit="Jane Doe" -F licence=CC-BY-4.0 \\
   ${origin}/v1/cfr/FRA000123456/photos`}</CodeBlock>
+        <p>{t.docs.apiKeyGet}</p>
+        <CodeBlock>{`curl -H "x-api-key: ovp_…" ${origin}/v1/cfr/FRA000123456`}</CodeBlock>
         <p>{t.docs.apiKeyContributorId}</p>
         <CodeBlock>{`curl -X POST -H "x-api-key: ovp_…" \\
   -F file=@boat.jpg -F credit=DGAMPA -F licence=etalab-2.0 -F contributorId=3f9a… \\

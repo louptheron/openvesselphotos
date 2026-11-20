@@ -20,6 +20,7 @@ data class Photo(
     /** The vessel's key of the other type, when the contributor knows both. */
     val submittedOtherKey: VesselKey? = null,
     val submittedVesselName: String?,
+    /** Empty for an anonymous contribution: shown as [displayedCredit]. */
     val credit: String,
     val licence: Licence,
     val takenOn: LocalDate?,
@@ -43,4 +44,13 @@ data class Photo(
     val sourceUrl: String? = null,
     /** Shown with the photo, e.g. "Photographed under its former name LE CRI DES FLOTS". */
     val note: String? = null,
-)
+) {
+    val isAnonymous: Boolean get() = credit.isEmpty()
+
+    /** The credit shown and returned by the API, never empty. */
+    val displayedCredit: String get() = credit.ifEmpty { ANONYMOUS_CREDIT }
+
+    companion object {
+        const val ANONYMOUS_CREDIT = "Contributeur openvesselphotos"
+    }
+}
