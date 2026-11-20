@@ -28,7 +28,7 @@ RUN gradle :backend:bootJar --no-daemon
 ######################
 # Create final image #
 ######################
-FROM azul/zulu-openjdk-alpine:21-jre
+FROM azul/zulu-openjdk-alpine:27-jre
 
 # Java draws the share images of the ports site (ShareImageRenderer) with FreeType, missing from Alpine
 RUN apk add --no-cache fontconfig freetype \
