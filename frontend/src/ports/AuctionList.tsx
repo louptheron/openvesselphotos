@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import type { Port } from '../api/types'
 import { COLORS, FONTS } from '../theme'
 import { AUCTION_COLOR } from './PortsMap'
-import { formatNumber } from './texts'
+import { formatNumber, getPortPath } from './texts'
 
 const SHOWN_AT_FIRST = 8
 
@@ -45,7 +45,7 @@ export function AuctionList({ onHighlight, ports, search }: Props) {
               onFocus={() => onHighlight(port.locode)}
               onMouseEnter={() => onHighlight(port.locode)}
               onMouseLeave={() => onHighlight(undefined)}
-              to={{ pathname: `/${port.locode}`, search }}
+              to={{ pathname: getPortPath(port), search }}
             >
               <Rank>{index + 1}</Rank>
               <Name>

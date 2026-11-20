@@ -44,6 +44,9 @@ interface PortRepository {
     /** French vessels of the EU fleet register (by their CFR) without home port */
     fun findHomePortCandidates(): List<HomePortCandidate>
 
+    /** The day the home ports last changed, by an import or from Global Fishing Watch; null without home port */
+    fun findLastHomePortsUpdate(): LocalDate?
+
     /** Adds home ports to vessels without one; the ones with a home port already keep it */
     fun addHomePorts(homePorts: List<HomePort>)
 }

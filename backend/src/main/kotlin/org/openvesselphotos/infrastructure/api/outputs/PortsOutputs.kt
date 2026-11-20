@@ -20,6 +20,8 @@ data class PortDataOutput(
     val gearCounts: Map<String, Int>,
     /** The fish auction of the port, when it has one: its sales of all species in its last year */
     val auction: AuctionTotalDataOutput?,
+    /** In the URL of its page on the ports site, e.g. "le-guilvinec" for /ports/le-guilvinec; null in a port's details */
+    val slug: String? = null,
 ) {
     companion object {
         fun from(portWithVesselCount: PortWithVesselCount) =
@@ -28,7 +30,7 @@ data class PortDataOutput(
                 portWithVesselCount.vesselCount,
                 portWithVesselCount.vesselCountByGear,
                 portWithVesselCount.auction,
-            )
+            ).copy(slug = portWithVesselCount.slug)
 
         fun from(
             port: Port,

@@ -1,5 +1,11 @@
 export const SITE_NAME = 'La Pêche française'
-export const SITE_TAGLINE = 'La flotte, les ports, les criées'
+/** "Pêche" alone mostly means angling on French search engines: the site is about the fishing industry */
+export const SITE_TAGLINE = 'Chiffres et données de la pêche professionnelle'
+
+/** The page of a port, e.g. /ports/le-guilvinec (see PortsPagesController); by LOCODE until the API gives slugs */
+export function getPortPath(port: { locode: string; slug?: string | null }): string {
+  return port.slug ? `/ports/${port.slug}` : `/${port.locode}`
+}
 
 export function vessels(count: number): string {
   return count === 1 ? '1 navire' : `${count} navires`

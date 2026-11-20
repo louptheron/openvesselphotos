@@ -1530,44 +1530,117 @@ class PublicAndAdminApiITests {
         mockMvc.perform(get("/v1/ports/FRLRH-0015")).andExpect(jsonPath("$.vessels[0].name").value("ARIEL"))
 
         // The ports site, on its own host: its pages are forwarded to /_ports
-        mockMvc.perform(onPortsHost("/FRQUY")).andExpect(forwardedUrl("/_ports/FRQUY"))
+        mockMvc.perform(onPortsHost("/ports/erquy")).andExpect(forwardedUrl("/_ports/ports/erquy"))
         mockMvc.perform(onPortsHost("/v1/ports")).andExpect(status().isOk)
         // Called directly, the ports pages are not found, on any host
-        mockMvc.perform(get("/_ports/FRQUY")).andExpect(status().isNotFound)
-        mockMvc.perform(onPortsHost("/_ports/FRQUY")).andExpect(status().isNotFound)
+        mockMvc.perform(get("/_ports/ports/erquy")).andExpect(status().isNotFound)
+        mockMvc.perform(onPortsHost("/_ports/ports/erquy")).andExpect(status().isNotFound)
+        // Each port has a slug, for the URL of its page
+        mockMvc
+            .perform(get("/v1/ports"))
+            .andExpect(jsonPath("$[0].slug").value("chef-de-baie"))
+            .andExpect(jsonPath("$[2].slug").value("erquy"))
 
         // As forwarded: MockMvc does not follow forwards, so the pages are called without the filters
         val pages = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
         val portPage =
             pages
-                .perform(onPortsHost("/_ports/FRQUY"))
+                .perform(onPortsHost("/_ports/ports/erquy"))
                 .andExpect(status().isOk)
                 .andReturn()
                 .response.contentAsString
         assertThat(portPage)
             .contains("""<html lang="fr">""")
-            .contains("""<link rel="canonical" href="http://ports.localhost/FRQUY" />""")
+            .contains("""<link rel="canonical" href="http://ports.localhost/ports/erquy" />""")
             .contains("""<meta property="og:site_name" content="La Pêche française" />""")
             .contains("""<a href="http://localhost/vessels/cfr/FRA000900001">KER ARMOR</a>""")
             .contains("<li>TROUZ AR MOR (CFR FRA000900002)</li>")
-            .contains("<title>Port de pêche d’Erquy : 2 navires et sa criée | La Pêche française</title>")
-            .contains("<h1>Port de pêche d’Erquy</h1>")
-            .contains("basés au port d’Erquy : chalut de fond (1). Criée : 120 t vendues en 2025 pour 400 k€ (bar).")
+            .contains(
+                "<title>Port de pêche d’Erquy : 2 navires, criée et chiffres 2025 | La Pêche française</title>",
+            ).contains("<h1>Port de pêche d’Erquy</h1>")
+            .contains(
+                "basés au port d’Erquy : chalut de fond (1). Criée : 120 t vendues en 2025 pour 400 k€ (bar).",
+            ).contains("<h2>Criée d’Erquy : ventes et prix 2025</h2>")
+            .contains("""<li><a href="/especes/bar">Bar</a> : """)
+            .contains("<h3>Combien de bateaux de pêche au port d’Erquy ?</h3>")
+            .contains("\"@type\":\"FAQPage\"")
             .contains("\"@type\":\"BreadcrumbList\"")
+            .contains("Mis à jour le <time datetime=")
             .doesNotContain("feed.xml")
-        pages.perform(onPortsHost("/_ports/frquy")).andExpect(status().isMovedPermanently)
-        pages.perform(onPortsHost("/_ports/FRXXX")).andExpect(status().isNotFound)
-        pages.perform(onPortsHost("/_ports/vessels/cfr/FRA000900001")).andExpect(status().isNotFound)
+        // The old URLs, by LOCODE, are moved to the slugs
         pages
-            .perform(onPortsHost("/_ports/"))
-            .andExpect(status().isOk)
-            .andExpect(content().string(containsString("""<a href="/FRQUY">Erquy</a> : 2 navires""")))
+            .perform(onPortsHost("/_ports/FRQUY"))
+            .andExpect(status().isMovedPermanently)
+            .andExpect(header().string("Location", "/ports/erquy"))
+        pages
+            .perform(onPortsHost("/_ports/frquy"))
+            .andExpect(header().string("Location", "/ports/erquy"))
+        pages
+            .perform(onPortsHost("/_ports/ports/Erquy"))
+            .andExpect(header().string("Location", "/ports/erquy"))
+        pages.perform(onPortsHost("/_ports/FRXXX")).andExpect(status().isNotFound)
+        pages.perform(onPortsHost("/_ports/ports/nowhere")).andExpect(status().isNotFound)
+        pages.perform(onPortsHost("/_ports/vessels/cfr/FRA000900001")).andExpect(status().isNotFound)
+        val home =
+            pages
+                .perform(onPortsHost("/_ports/"))
+                .andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString
+        assertThat(home)
+            .contains("<title>La Pêche française — chiffres et données de la pêche professionnelle</title>")
+            .contains("""<a href="/ports/erquy">Erquy</a> : 2 navires""")
+            .contains("<h3>Combien de bateaux de pêche en France ?</h3>")
+            .contains("\"@type\":\"Dataset\"")
+            .contains("\"contentUrl\":\"http://ports.localhost/donnees/ports.csv\"")
+            .contains("\"@type\":\"FAQPage\"")
         pages
             .perform(onPortsHost("/_ports/robots.txt"))
             .andExpect(content().string(containsString("Disallow: /v1/")))
             .andExpect(content().string(containsString("Sitemap: http://ports.localhost/sitemap.xml")))
         pages
             .perform(onPortsHost("/_ports/sitemap.xml"))
-            .andExpect(content().string(containsString("<loc>http://ports.localhost/FRCBT</loc>")))
+            .andExpect(content().string(containsString("<loc>http://ports.localhost/ports/capbreton</loc><lastmod>")))
+            .andExpect(content().string(containsString("<loc>http://ports.localhost/especes/bar</loc>")))
+            .andExpect(content().string(containsString("<loc>http://ports.localhost/methodologie</loc>")))
+
+        // The species sold in the auctions, each with its page
+        pages
+            .perform(onPortsHost("/_ports/especes"))
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("""<a href="/especes/bar">Bar</a>""")))
+        val speciesPage =
+            pages
+                .perform(onPortsHost("/_ports/especes/bar"))
+                .andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString
+        assertThat(speciesPage)
+            .contains("<title>Bar : prix en criée, ports et saisons 2025 | La Pêche française</title>")
+            .contains("""<link rel="canonical" href="http://ports.localhost/especes/bar" />""")
+            .contains("<h3>Quel est le prix du kilo de bar en criée ?</h3>")
+            .contains("""<a href="/ports/erquy">Erquy</a>""")
+            .contains("\"@type\":\"FAQPage\"")
+        pages.perform(onPortsHost("/_ports/especes/autres-especes")).andExpect(status().isNotFound)
+        pages
+            .perform(onPortsHost("/_ports/methodologie"))
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("<h1>Méthodologie et sources</h1>")))
+
+        // The data, as CSV
+        pages
+            .perform(onPortsHost("/_ports/donnees/ports.csv"))
+            .andExpect(content().contentTypeCompatibleWith("text/csv"))
+            .andExpect(content().string(startsWith("locode,slug,name,country,latitude,longitude,vessels,")))
+            .andExpect(content().string(containsString("\nFRQUY,erquy,Erquy,FR,48.633,-2.467,2,1,")))
+        pages
+            .perform(onPortsHost("/_ports/donnees/criees.csv"))
+            .andExpect(content().string(startsWith("auction,port_locode,port_slug,year,species,")))
+            .andExpect(content().string(containsString("\nErquy,FRQUY,erquy,2025,Bar,bar,")))
+        pages
+            .perform(onPortsHost("/_ports/llms.txt"))
+            .andExpect(content().string(startsWith("# La Pêche française")))
+            .andExpect(content().string(containsString("http://ports.localhost/ports/{slug}")))
+            .andExpect(content().string(containsString("Combien de bateaux de pêche en France ?")))
     }
 }

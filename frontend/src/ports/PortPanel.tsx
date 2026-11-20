@@ -16,7 +16,7 @@ import { type GearFamily, GearIcon, countVessels, hasGear } from './gears'
 import { FactPill, INDUSTRIAL_LENGTH } from './impacts'
 import { type Extent, REGIONS, isInExtent } from './regions'
 import { TrawlerLogo } from './TrawlerLogo'
-import { formatNumber, normalize, SITE_NAME, SITE_TAGLINE } from './texts'
+import { formatNumber, getPortPath, normalize, SITE_NAME, SITE_TAGLINE } from './texts'
 
 const OPEN_VESSEL_PHOTOS_URL = 'https://openvesselphotos.org/fr'
 /** In the URL of a port, the CFR of the vessel found by the search, e.g. ?navire=FRA000123456 */
@@ -85,7 +85,7 @@ export function PortPanel({ gear, isError, isLoading, locode, onFitExtent, onHig
         />
       )}
       <Footer>
-        Photos de{' '}
+        <a href="/especes">Espèces et prix</a> · <a href="/methodologie">Méthodologie et sources</a> · Photos de{' '}
         <a href={OPEN_VESSEL_PHOTOS_URL} rel="noopener" target="_blank">
           Open Vessel Photos
         </a>{' '}
@@ -169,7 +169,12 @@ function PortsView({ gear, isError, isLoading, onFitExtent, onHighlight, onSelec
               {foundVessels.map(vessel => (
                 <li key={vessel.cfr}>
                   <Link
-                    to={{ pathname: `/${vessel.portLocode}`, search: withParam(urlSearch, VESSEL_PARAM, vessel.cfr) }}
+                    to={{
+                      pathname: getPortPath(
+                        ports.find(port => port.locode === vessel.portLocode) ?? { locode: vessel.portLocode }
+                      ),
+                      search: withParam(urlSearch, VESSEL_PARAM, vessel.cfr)
+                    }}
                   >
                     <RowIcon>
                       <BoatIcon />
@@ -228,7 +233,7 @@ function PortsView({ gear, isError, isLoading, onFitExtent, onHighlight, onSelec
                   onFocus={() => onHighlight(port.locode)}
                   onMouseEnter={() => onHighlight(port.locode)}
                   onMouseLeave={() => onHighlight(undefined)}
-                  to={{ pathname: `/${port.locode}`, search: urlSearch }}
+                  to={{ pathname: getPortPath(port), search: urlSearch }}
                 >
                   <PortName>
                     <span>{port.name}</span>
@@ -257,7 +262,7 @@ function PortsView({ gear, isError, isLoading, onFitExtent, onHighlight, onSelec
 
 function PortView({ gear, locode }: { gear: GearFamily | undefined; locode: string }) {
   const { data, isError, isLoading } = useGetPortQuery(locode)
-  const { search: urlSearch } = useLocation()
+  const { pathname, search: urlSearch } = useLocation()
   const [searchParams] = useSearchParams()
   // A vessel found by the search: shown even when the gear filter would hide it, and scrolled to
   const targetCfr = searchParams.get(VESSEL_PARAM)
@@ -334,7 +339,7 @@ function PortView({ gear, locode }: { gear: GearFamily | undefined; locode: stri
                     {gearVesselCount > 1 ? 'navires pêchent' : 'navire pêche'} avec cet engin ·{' '}
                     {gear.label.toLowerCase()}
                   </span>
-                  <Link to={{ pathname: `/${locode}` }}>Toute la flotte</Link>
+                  <Link to={{ pathname }}>Toute la flotte</Link>
                 </FilterNote>
               )}
               <PortPortrait vessels={portVessels} />

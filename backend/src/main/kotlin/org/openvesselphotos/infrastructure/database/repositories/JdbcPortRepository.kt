@@ -103,6 +103,9 @@ class JdbcPortRepository(
         )
     }
 
+    override fun findLastHomePortsUpdate(): LocalDate? =
+        jdbcTemplate.queryForObject("SELECT max(imported_on) FROM vessel_home_ports", Date::class.java)?.toLocalDate()
+
     override fun savePositions(ports: List<Port>): Int =
         jdbcTemplate
             .batchUpdate(

@@ -9,6 +9,8 @@ data class AuctionSpeciesSales(
     val species: String?,
     val quantityTonnes: Double,
     val valueThousandEuros: Double,
+    /** The port of the auction (LOCODE), when matched; only read by AuctionSalesRepository.findSpeciesSales */
+    val portLocode: String? = null,
 ) {
     /** Average price, in € per kg */
     val priceEurosPerKg: Double? get() = if (quantityTonnes > 0) valueThousandEuros / quantityTonnes else null
@@ -45,3 +47,22 @@ data class AuctionTotal(
     val quantityTonnes: Double,
     val valueThousandEuros: Double,
 )
+
+/** A species sold in the French auctions in its last year, compared with the year before (FranceAgriMer) */
+data class SpeciesSales(
+    /** e.g. Sole commune */
+    val name: String,
+    /** In the URL of its page, e.g. "sole-commune" */
+    val slug: String,
+    val year: Int,
+    val quantityTonnes: Double,
+    val valueThousandEuros: Double,
+    val previousQuantityTonnes: Double?,
+    val previousValueThousandEuros: Double?,
+    /** Its sales at each auction in [year], the largest first */
+    val auctions: List<AuctionSpeciesSales>,
+    /** Its sales in all French auctions by month of [year], when known */
+    val monthlySales: List<SpeciesMonthlySales>,
+) {
+    val priceEurosPerKg: Double? get() = if (quantityTonnes > 0) valueThousandEuros / quantityTonnes else null
+}

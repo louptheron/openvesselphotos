@@ -18,6 +18,8 @@ openvesselphotos:
     # Base URL of the ports site (e.g. https://ports-de-peche.fr), the map of the French fishing vessels by home port:
     # it is served on this host only. Empty = the ports site is served on ports.localhost only, for local development.
     ports-public-url: ${OPENVESSELPHOTOS_PORTS_PUBLIC_URL:}
+    # Other domains of the ports site, comma-separated (e.g. lapechefrancaise.com): redirected to ports-public-url
+    ports-alias-hosts: ${OPENVESSELPHOTOS_PORTS_ALIAS_HOSTS:}
     # Global Fishing Watch API token (https://globalfishingwatch.org/our-apis/tokens), for the fishing activity map and the
     # home ports found from port visits. Never sent to browsers. Empty = disabled.
     gfw-token: ${OPENVESSELPHOTOS_GFW_TOKEN:}

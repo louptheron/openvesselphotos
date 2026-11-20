@@ -315,6 +315,8 @@ export type Port = {
   gearCounts: Record<string, number>
   /** The fish auction of the port: its sales of all species in its last year (missing from older responses) */
   auction?: AuctionTotal | null
+  /** In the URL of its page, e.g. "le-guilvinec" for /ports/le-guilvinec; null in a port's details */
+  slug?: string | null
 }
 
 export type AuctionTotal = {

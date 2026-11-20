@@ -4,6 +4,7 @@ import org.openvesselphotos.config.UseCase
 import org.openvesselphotos.domain.entities.PortWithVesselCount
 import org.openvesselphotos.domain.repositories.AuctionSalesRepository
 import org.openvesselphotos.domain.repositories.PortRepository
+import java.time.LocalDate
 
 /** The ports with vessels based at them, by name. */
 @UseCase
@@ -15,6 +16,30 @@ class GetPorts(
     fun execute(): List<PortWithVesselCount> {
         val auctionsByPort = auctionSalesRepository.findTotals().associateBy { it.portLocode }
 
-        return portRepository.findAllWithVessels().map { it.copy(auction = auctionsByPort[it.port.locode]) }
+        return withUniqueSlugs(
+            portRepository.findAllWithVessels().map { it.copy(auction = auctionsByPort[it.port.locode]) },
+        )
+    }
+
+    /** The day the home ports last changed, to date the pages */
+    fun lastUpdate(): LocalDate? = portRepository.findLastHomePortsUpdate()
+
+    companion object {
+        /**
+         * Ports of the same name (e.g. two "Saint-Pierre") get their LOCODE in their slug, e.g. "saint-pierre-frxyz",
+         * except the one with the most vessels: so its URL does not change when another one comes.
+         */
+        fun withUniqueSlugs(ports: List<PortWithVesselCount>): List<PortWithVesselCount> {
+            val keptByPlainSlug =
+                ports
+                    .groupBy { it.slug }
+                    .mapValues { (_, samePorts) ->
+                        samePorts.maxWith(compareBy({ it.vesselCount }, { it.port.locode }))
+                    }
+
+            return ports.map {
+                if (keptByPlainSlug[it.slug] === it) it else it.copy(slug = "${it.slug}-${it.port.locode.lowercase()}")
+            }
+        }
     }
 }
