@@ -2,11 +2,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
-val springBootVersion = "4.1.1"
+val springBootVersion = "4.1.2"
 val kotlinVersion = "2.4.21"
 
 plugins {
-    id("org.springframework.boot") version "4.1.1"
+    id("org.springframework.boot") version "4.1.2"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.jetbrains.kotlin.plugin.spring") version "2.4.21"
 
@@ -57,12 +57,12 @@ dependencies {
     implementation("tools.jackson.module:jackson-module-kotlin")
 
     // Data / persistence
-    implementation("org.flywaydb:flyway-core:13.9.0")
-    implementation("org.flywaydb:flyway-database-postgresql:13.9.0")
+    implementation("org.flywaydb:flyway-core:13.11.1")
+    implementation("org.flywaydb:flyway-database-postgresql:13.11.1")
     runtimeOnly("org.postgresql:postgresql:42.7.14")
 
     // Images: EXIF orientation
-    implementation("com.drewnoakes:metadata-extractor:2.21.0")
+    implementation("com.drewnoakes:metadata-extractor:2.22.0")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
