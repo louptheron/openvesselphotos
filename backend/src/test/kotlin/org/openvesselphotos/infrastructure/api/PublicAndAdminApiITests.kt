@@ -1603,6 +1603,7 @@ class PublicAndAdminApiITests {
             .andExpect(content().string(containsString("<loc>http://ports.localhost/ports/capbreton</loc><lastmod>")))
             .andExpect(content().string(containsString("<loc>http://ports.localhost/especes/bar</loc>")))
             .andExpect(content().string(containsString("<loc>http://ports.localhost/methodologie</loc>")))
+            .andExpect(content().string(containsString("<loc>http://ports.localhost/petite-peche-cotiere</loc>")))
 
         // The species sold in the auctions, each with its page
         pages
@@ -1626,6 +1627,13 @@ class PublicAndAdminApiITests {
             .perform(onPortsHost("/_ports/methodologie"))
             .andExpect(status().isOk)
             .andExpect(content().string(containsString("<h1>Méthodologie et sources</h1>")))
+        pages
+            .perform(onPortsHost("/_ports/petite-peche-cotiere"))
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("<h3>Combien d’emplois dans la petite pêche ?</h3>")))
+            .andExpect(content().string(containsString("<h2>Les limites et les contreparties</h2>")))
+            .andExpect(content().string(containsString("financé par la Fondation 2050 et par l’association BLOOM")))
+            .andExpect(content().string(containsString("\"@type\":\"FAQPage\"")))
 
         // The data, as CSV
         pages

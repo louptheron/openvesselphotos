@@ -377,7 +377,13 @@ class PortsPagesController(
         val baseUrl = publicUrl.get(Site.PORTS)
         val lastModified = getPorts.lastUpdate()?.let { "<lastmod>$it</lastmod>" } ?: ""
         val paths =
-            listOf("/", PortsSeo.SPECIES_PATH, PortsSeo.METHODOLOGY_PATH, PortsSeo.CHANGELOG_PATH) +
+            listOf(
+                "/",
+                PortsSeo.SPECIES_PATH,
+                PortsSeo.SMALL_SCALE_PATH,
+                PortsSeo.METHODOLOGY_PATH,
+                PortsSeo.CHANGELOG_PATH,
+            ) +
                 getPorts.execute().map { PortsSeo.portPath(it.slug) } +
                 getSpecies.execute().map { PortsSeo.speciesPath(it.slug) }
         val urls = paths.joinToString("") { "<url><loc>${escapeHtml(baseUrl + it)}</loc>$lastModified</url>" }
@@ -443,6 +449,7 @@ class PortsPagesController(
         fun links(): String =
             "<nav><h2>Aller plus loin</h2><ul>" +
                 """<li><a href="${PortsSeo.SPECIES_PATH}">Les espèces vendues en criée : prix et saisons</a></li>""" +
+                """<li><a href="${PortsSeo.SMALL_SCALE_PATH}">La petite pêche côtière en chiffres</a></li>""" +
                 """<li><a href="${PortsSeo.METHODOLOGY_PATH}">Méthodologie et sources</a></li>""" +
                 """<li><a href="${PortsSeo.CHANGELOG_PATH}">Historique des mises à jour</a></li>""" +
                 """<li><a href="${PortsSeo.PORTS_CSV_PATH}">Télécharger les ports et leur flotte (CSV)</a></li>""" +
