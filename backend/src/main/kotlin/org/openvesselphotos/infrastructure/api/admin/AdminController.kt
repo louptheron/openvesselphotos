@@ -5,15 +5,22 @@ import org.openvesselphotos.config.AdminAuthentication
 import org.openvesselphotos.domain.entities.ImageSize
 import org.openvesselphotos.domain.use_cases.admin.ApproveApiKeyRequest
 import org.openvesselphotos.domain.use_cases.admin.ApprovePhoto
+import org.openvesselphotos.domain.use_cases.admin.AuctionSalesImportResult
 import org.openvesselphotos.domain.use_cases.admin.GetActiveApiKeys
 import org.openvesselphotos.domain.use_cases.admin.GetPendingPhotoImage
 import org.openvesselphotos.domain.use_cases.admin.GetReviewQueue
 import org.openvesselphotos.domain.use_cases.admin.GetUsageStatistics
+import org.openvesselphotos.domain.use_cases.admin.HomePortImportResult
+import org.openvesselphotos.domain.use_cases.admin.ImportAuctionSales
+import org.openvesselphotos.domain.use_cases.admin.ImportHomePorts
 import org.openvesselphotos.domain.use_cases.admin.ImportPhotos
+import org.openvesselphotos.domain.use_cases.admin.ImportPortPositions
+import org.openvesselphotos.domain.use_cases.admin.ImportVesselOwners
 import org.openvesselphotos.domain.use_cases.admin.ImportVessels
 import org.openvesselphotos.domain.use_cases.admin.ImportWikidata
 import org.openvesselphotos.domain.use_cases.admin.PhotoImportStatus
 import org.openvesselphotos.domain.use_cases.admin.PhotoNotesResult
+import org.openvesselphotos.domain.use_cases.admin.PortPositionImportResult
 import org.openvesselphotos.domain.use_cases.admin.RejectApiKeyRequest
 import org.openvesselphotos.domain.use_cases.admin.RejectPhoto
 import org.openvesselphotos.domain.use_cases.admin.ResolveReport
@@ -22,6 +29,7 @@ import org.openvesselphotos.domain.use_cases.admin.RevokeApiKey
 import org.openvesselphotos.domain.use_cases.admin.SetPhotoNotes
 import org.openvesselphotos.domain.use_cases.admin.UsageStatistics
 import org.openvesselphotos.domain.use_cases.admin.VesselImportResult
+import org.openvesselphotos.domain.use_cases.admin.VesselOwnerImportResult
 import org.openvesselphotos.domain.use_cases.admin.WikidataImportStatus
 import org.openvesselphotos.infrastructure.api.inputs.ApprovePhotoDataInput
 import org.openvesselphotos.infrastructure.api.inputs.LoginDataInput
@@ -64,6 +72,10 @@ class AdminController(
     private val importWikidata: ImportWikidata,
     private val setPhotoNotes: SetPhotoNotes,
     private val getUsageStatistics: GetUsageStatistics,
+    private val importHomePorts: ImportHomePorts,
+    private val importPortPositions: ImportPortPositions,
+    private val importVesselOwners: ImportVesselOwners,
+    private val importAuctionSales: ImportAuctionSales,
 ) {
     @PostMapping("/login")
     fun login(
@@ -186,6 +198,35 @@ class AdminController(
     fun importVesselsFromCsv(
         @RequestPart file: MultipartFile,
     ): VesselImportResult = importVessels.execute(VesselsCsvParser.parse(String(file.bytes, Charsets.UTF_8)))
+
+    /** Replaces the home ports of the vessels, shown on the ports site, with the ones of a CSV file. */
+    @PostMapping("/ports/home-ports/import", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun importHomePortsFromCsv(
+        @RequestPart file: MultipartFile,
+    ): HomePortImportResult = importHomePorts.execute(PortsCsvParser.parseHomePorts(String(file.bytes, Charsets.UTF_8)))
+
+    /** Sets the positions of the ports on the map of the ports site, from a CSV file (locode, latitude, longitude). */
+    @PostMapping("/ports/positions/import", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun importPortPositionsFromCsv(
+        @RequestPart file: MultipartFile,
+    ): PortPositionImportResult =
+        importPortPositions.execute(PortsCsvParser.parsePositions(String(file.bytes, Charsets.UTF_8)))
+
+    /**
+     * Replaces the sales of the fish auctions, shown on the ports site, with FranceAgriMer's yearly workbook "Ventes
+     * déclarées en halles à marée" (BIL-MER-VENTES_HAM-Axx.xlsm), as published.
+     */
+    @PostMapping("/ports/auction-sales/import", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun importAuctionSalesFromWorkbook(
+        @RequestPart file: MultipartFile,
+    ): AuctionSalesImportResult = importAuctionSales.execute(AuctionSalesWorkbookParser.parse(file.bytes))
+
+    /** Replaces the owners (armements) of the vessels, shown on the ports site, from a CSV file. */
+    @PostMapping("/ports/owners/import", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun importVesselOwnersFromCsv(
+        @RequestPart file: MultipartFile,
+    ): VesselOwnerImportResult =
+        importVesselOwners.execute(PortsCsvParser.parseOwners(String(file.bytes, Charsets.UTF_8)))
 
     /**
      * Completes the vessels with photos with what Wikidata knows of them, found by their MMSI: starts a background

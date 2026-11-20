@@ -35,6 +35,10 @@ run-back:
 	docker compose up -d --quiet-pull --wait db
 	@bash -c 'set -a; source ./backend/.env.local.defaults; if [ -f .env ]; then source .env; fi; ./gradlew :backend:bootRun'
 
+.PHONY: load-dummy-fleet-register ##LOCAL 🚢 Fill the local database with dummy fleet register data for the ports site
+load-dummy-fleet-register:
+	docker compose exec -T db psql -U ovp -d ovp -v ON_ERROR_STOP=1 < ./backend/local/dummy-fleet-register.sql
+
 .PHONY: run-front ##LOCAL ▶️  Run frontend for development, on http://localhost:3000
 run-front:
 	cd ./frontend && npm run dev

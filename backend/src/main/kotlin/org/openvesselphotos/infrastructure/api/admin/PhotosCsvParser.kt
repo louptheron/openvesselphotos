@@ -106,7 +106,7 @@ object PhotosCsvParser {
     }
 
     /** The records of a comma-separated file with their line number, quoted fields included ("a,b", "say ""hi"""). */
-    private fun readRecords(content: String): List<Pair<Int, List<String>>> {
+    internal fun readRecords(content: String): List<Pair<Int, List<String>>> {
         val records = mutableListOf<Pair<Int, List<String>>>()
         var cells = mutableListOf<String>()
         val current = StringBuilder()
@@ -158,7 +158,7 @@ object PhotosCsvParser {
         return records
     }
 
-    private fun normalize(value: String) = value.lowercase().replace(Regex("[^a-z0-9]"), "")
+    internal fun normalize(value: String) = value.lowercase().replace(Regex("[^a-z0-9]"), "")
 
     private fun invalid(message: String) = BackendUsageException(BackendUsageErrorCode.INVALID_INPUT, message)
 }

@@ -19,6 +19,8 @@ interface VesselRepository {
 
     fun findByIds(ids: Collection<Int>): List<Vessel>
 
+    fun findByCfrs(cfrs: Collection<String>): List<Vessel>
+
     fun search(
         query: String,
         limit: Int,

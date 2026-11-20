@@ -282,7 +282,7 @@ class CrawlersController(
         private const val FEED_SIZE = 48
 
         /** Crawlers of AI search engines and assistants, and the tokens controlling AI training */
-        private val AI_CRAWLERS =
+        internal val AI_CRAWLERS =
             listOf(
                 // OpenAI: ChatGPT search, user-requested fetches, training
                 "OAI-SearchBot",

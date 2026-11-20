@@ -1,0 +1,388 @@
+import { useState } from 'react'
+import styled from 'styled-components'
+
+import type { AuctionSpecies, PortAuction } from '../api/types'
+import { of } from '../i18n/fr'
+import { COLORS, FONTS } from '../theme'
+import { formatNumber } from './texts'
+
+const MONTH_INITIALS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
+const CURRENT_MONTH = new Date().getMonth()
+const FRANCE_AGRIMER_URL = 'https://www.franceagrimer.fr'
+
+/**
+ * What the fish auction of the port sells, and when: FranceAgriMer's yearly figures of the sales declared at the
+ * auctions (halles à marée), with the season of each species in all French auctions.
+ */
+export function AuctionSales({ auction, isFloating = false }: { auction: PortAuction; isFloating?: boolean }) {
+  const [isFolded, setIsFolded] = useState(false)
+  const change =
+    auction.previousQuantityTonnes && auction.previousQuantityTonnes > 0
+      ? auction.quantityTonnes / auction.previousQuantityTonnes - 1
+      : undefined
+  const maxQuantity = Math.max(1, ...auction.species.map(species => species.quantityTonnes))
+
+  return (
+    <Card $isFloating={isFloating} aria-label={`Criée ${of(auction.name)}`}>
+      <Header>
+        <h3>Criée {of(auction.name)}</h3>
+        <Year>{auction.year}</Year>
+        {isFloating && (
+          <FoldButton
+            aria-expanded={!isFolded}
+            aria-label={isFolded ? 'Afficher les espèces' : 'Réduire'}
+            onClick={() => setIsFolded(!isFolded)}
+            title={isFolded ? 'Afficher les espèces' : 'Réduire'}
+            type="button"
+          >
+            <svg
+              aria-hidden
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              width="16"
+            >
+              <path d={isFolded ? 'M6 9l6 6 6-6' : 'M6 15l6-6 6 6'} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </FoldButton>
+        )}
+      </Header>
+      <Figures>
+        <Figure>
+          <strong>{formatNumber(Math.round(auction.quantityTonnes))} t</strong>
+          <span>vendues</span>
+          {change !== undefined && (
+            <Change>
+              {change >= 0 ? '+' : '−'}
+              {Math.abs(Math.round(change * 100))} % sur un an
+            </Change>
+          )}
+        </Figure>
+        <Figure>
+          <strong>{formatMillions(auction.valueThousandEuros)}</strong>
+          <span>de ventes</span>
+        </Figure>
+        {auction.priceEurosPerKg !== null && (
+          <Figure>
+            <strong>{formatPrice(auction.priceEurosPerKg)}</strong>
+            <span>prix moyen</span>
+          </Figure>
+        )}
+      </Figures>
+
+      {!isFolded && auction.species.length > 0 && (
+        <>
+          <Subtitle>
+            <span>Principales espèces</span>
+            <Months aria-hidden>
+              {MONTH_INITIALS.map((initial, index) => (
+                <i data-current={index === CURRENT_MONTH} key={index}>
+                  {initial}
+                </i>
+              ))}
+            </Months>
+          </Subtitle>
+          <SpeciesList>
+            {auction.species.map(species => (
+              <SpeciesRow key={species.name} maxQuantity={maxQuantity} species={species} />
+            ))}
+          </SpeciesList>
+        </>
+      )}
+      {!isFolded && (
+        <Note>
+          Ventes déclarées à la criée en {auction.year}, y compris par des navires d’autres ports. Saisons : ventes
+          mensuelles dans toutes les criées françaises. Source :{' '}
+          <a href={FRANCE_AGRIMER_URL} rel="noopener" target="_blank">
+            FranceAgriMer
+          </a>
+          .
+        </Note>
+      )}
+    </Card>
+  )
+}
+
+function SpeciesRow({ maxQuantity, species }: { maxQuantity: number; species: AuctionSpecies }) {
+  const months = species.monthlyQuantitiesTonnes
+  const maxMonth = months ? Math.max(...months) : 0
+  const averageMonth = months ? months.reduce((sum, value) => sum + value, 0) / 12 : 0
+  const isInSeason = months !== null && maxMonth > 0 && (months[CURRENT_MONTH] ?? 0) >= averageMonth
+
+  return (
+    <li>
+      <SpeciesMain>
+        <SpeciesName>
+          {capitalize(species.name)}
+          {isInSeason && <InSeason title="Plus vendue que la moyenne ce mois-ci">de saison</InSeason>}
+        </SpeciesName>
+        <Quantity>
+          <span>
+            <span style={{ width: `${(species.quantityTonnes / maxQuantity) * 100}%` }} />
+          </span>
+          <b>{formatNumber(Math.round(species.quantityTonnes))} t</b>
+          {species.priceEurosPerKg !== null && <small>{formatPrice(species.priceEurosPerKg)}</small>}
+        </Quantity>
+      </SpeciesMain>
+      {months ? (
+        <Season aria-label={`Saison : ventes de ${species.name} par mois en France`}>
+          {months.map((value, index) => (
+            <i
+              data-current={index === CURRENT_MONTH}
+              key={index}
+              style={{ opacity: maxMonth > 0 ? 0.12 + (value / maxMonth) * 0.88 : 0.12 }}
+              title={`${MONTH_INITIALS[index]} : ${formatNumber(Math.round(value))} t en France`}
+            />
+          ))}
+        </Season>
+      ) : (
+        <NoSeason />
+      )}
+    </li>
+  )
+}
+
+/** "thon germon" → "Thon germon": the workbook does not always capitalize */
+function capitalize(name: string): string {
+  return name.charAt(0).toUpperCase() + name.slice(1)
+}
+
+/** e.g. "44,6 M€", "830 k€" */
+function formatMillions(thousandEuros: number): string {
+  return thousandEuros >= 1000
+    ? `${(thousandEuros / 1000).toLocaleString('fr', { maximumFractionDigits: 1 })} M€`
+    : `${Math.round(thousandEuros).toLocaleString('fr')} k€`
+}
+
+/** e.g. "7,39 €/kg" */
+function formatPrice(eurosPerKg: number): string {
+  return `${eurosPerKg.toLocaleString('fr', { maximumFractionDigits: 2, minimumFractionDigits: 2 })} €/kg`
+}
+
+const SEASON_WIDTH = 96
+
+const Card = styled.section<{ $isFloating: boolean }>`
+  flex: none;
+  margin-top: ${({ $isFloating }) => ($isFloating ? 0 : 14)}px;
+  padding: 14px;
+  border: 1px solid ${({ $isFloating }) => ($isFloating ? 'rgba(255, 255, 255, 0.7)' : COLORS.cardBorder)};
+  border-radius: ${({ $isFloating }) => ($isFloating ? 18 : 14)}px;
+  background: ${({ $isFloating }) => ($isFloating ? 'rgba(250, 249, 246, 0.92)' : COLORS.white)};
+  box-shadow: ${({ $isFloating }) =>
+    $isFloating ? '0 1px 2px rgba(11, 34, 51, 0.06), 0 12px 32px rgba(11, 34, 51, 0.16)' : 'none'};
+  backdrop-filter: ${({ $isFloating }) => ($isFloating ? 'blur(20px) saturate(1.4)' : 'none')};
+`
+
+const FoldButton = styled.button`
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: 2px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: ${COLORS.muted};
+  cursor: pointer;
+
+  &:hover {
+    background: ${COLORS.divider};
+    color: ${COLORS.ink};
+  }
+`
+
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  h3 {
+    flex: 1;
+    margin: 0;
+    color: ${COLORS.ink};
+    font-family: ${FONTS.display};
+    font-size: 16px;
+  }
+`
+
+const Year = styled.span`
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: ${COLORS.info};
+  color: ${COLORS.link};
+  font-size: 11.5px;
+  font-weight: 600;
+`
+
+const Figures = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+`
+
+const Figure = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  strong {
+    color: ${COLORS.ink};
+    font-family: ${FONTS.display};
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  span {
+    color: ${COLORS.muted};
+    font-size: 11.5px;
+  }
+`
+
+const Change = styled.span`
+  color: ${COLORS.text} !important;
+  font-size: 11px !important;
+`
+
+const Subtitle = styled.div`
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 14px 0 6px;
+  color: ${COLORS.muted};
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+`
+
+const Months = styled.span`
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(12, 1fr);
+  width: ${SEASON_WIDTH}px;
+  letter-spacing: 0;
+  text-align: center;
+
+  i {
+    font-size: 9px;
+    font-style: normal;
+  }
+
+  i[data-current='true'] {
+    color: ${COLORS.accent};
+  }
+`
+
+const SpeciesList = styled.ul`
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+`
+
+const SpeciesMain = styled.div`
+  flex: 1;
+  min-width: 0;
+`
+
+const SpeciesName = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  color: ${COLORS.ink};
+  font-size: 13px;
+  font-weight: 600;
+`
+
+const InSeason = styled.span`
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e3f2e8;
+  color: #14532d;
+  font-size: 10.5px;
+  font-weight: 600;
+`
+
+const Quantity = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  color: ${COLORS.muted};
+  font-size: 11.5px;
+
+  > span {
+    flex: 1;
+    max-width: 70px;
+    height: 5px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: ${COLORS.divider};
+  }
+
+  > span > span {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: ${COLORS.link};
+  }
+
+  b {
+    color: ${COLORS.ink};
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  small {
+    font-size: 11px;
+  }
+`
+
+/** A strip of 12 months, darker when more is sold */
+const Season = styled.span`
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1px;
+  width: ${SEASON_WIDTH}px;
+  height: 14px;
+
+  i {
+    border-radius: 2px;
+    background: ${COLORS.link};
+  }
+
+  i[data-current='true'] {
+    outline: 1.5px solid ${COLORS.accent};
+    outline-offset: 0;
+  }
+`
+
+const NoSeason = styled.span`
+  flex: none;
+  width: ${SEASON_WIDTH}px;
+`
+
+const Note = styled.p`
+  margin: 12px 0 0;
+  color: ${COLORS.muted};
+  font-size: 11px;
+  line-height: 1.45;
+
+  a {
+    color: ${COLORS.muted};
+  }
+`

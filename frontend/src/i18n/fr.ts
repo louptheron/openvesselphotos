@@ -5,7 +5,7 @@ import type { Messages } from './en'
 const _ = ' '
 
 /** "de Brest", "d’Auray", "du Guilvinec", "des Sables-d’Olonne", as on the server (PageTexts.French.of) */
-function of(name: string): string {
+export function of(name: string): string {
   if (name.startsWith('Le ')) {
     return `du ${name.slice(3)}`
   }
@@ -544,6 +544,23 @@ export const fr: Messages = {
     setNotes: 'Définir les notes',
     photoNotesResult: r =>
       `${r.read}${_}lignes lues${_}: ${r.updated}${_}notes définies, ${r.unchanged}${_}déjà à jour, ${r.errors.length}${_}erreurs.`,
+    portsImportTitle: 'Site des ports',
+    portsImportText: `La carte des navires de pêche français par port d’attache, sur son propre domaine. Ports d’attache${_}: un CSV avec les colonnes cfr, vessel_name, port_locode, port_name, port_country, observations_total, observations_at_port et mean_distance_km, qui remplace tous les ports d’attache. Positions${_}: un CSV avec les colonnes locode, latitude et longitude, pour placer les ports sur la carte. Armateurs${_}: un CSV avec les colonnes cfr, armateur, groupe et source (un lien), qui remplace tous les armateurs.`,
+    homePortsFile: 'Ports d’attache',
+    portPositionsFile: 'Positions',
+    vesselOwnersFile: 'Armateurs',
+    vesselOwnersResult: r => `${r.read}${_}lignes lues${_}: ${r.imported}${_}armateurs, ${r.skipped}${_}ignorées.`,
+    auctionSalesFile: 'Ventes en criée',
+    auctionSalesHelp:
+      'Le classeur annuel de FranceAgriMer «${_}Ventes déclarées en halles à marée${_}» (BIL-MER-VENTES_HAM-Axx.xlsm), tel que téléchargé${_}: il remplace toutes les ventes en criée.',
+    auctionSalesResult: r =>
+      `${r.year}${_}: ${r.auctions}${_}criées, ${r.matched.length}${_}rattachées à un port, ${r.seasonalSpecies}${_}espèces avec saisons.${
+        r.unmatched.length > 0 ? ` Sans port${_}: ${r.unmatched.join(', ')}.` : ''
+      }`,
+    homePortsResult: r =>
+      `${r.read}${_}lignes lues${_}: ${r.imported}${_}navires dans ${r.ports}${_}ports, ${r.withoutPort}${_}sans port, ${r.skipped}${_}ignorées.`,
+    portPositionsResult: r =>
+      `${r.read}${_}lignes lues${_}: ${r.updated}${_}ports placés, ${r.unknown}${_}ports inconnus, ${r.skipped}${_}ignorées.`,
     importResult: r =>
       `${r.read}${_}lignes lues${_}: ${r.created}${_}navires créés, ${r.updated}${_}complétés, ${r.unchanged}${_}déjà à jour, ${r.outOfFleet}${_}sortis de la flotte, ${r.skipped}${_}ignorés.`
   },

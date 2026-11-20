@@ -24,6 +24,7 @@ import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
 import { ReviewQueuePanel } from './ReviewQueuePanel'
 import { PhotoImport } from './PhotoImport'
+import { PortsImport } from './PortsImport'
 import { PhotoNotes } from './PhotoNotes'
 import { VesselImport } from './VesselImport'
 import { WikidataImport } from './WikidataImport'
@@ -64,6 +65,7 @@ export function AdminPage() {
       <WikidataImport />
       <PhotoImport />
       <PhotoNotes />
+      <PortsImport />
     </Page>
   )
 }

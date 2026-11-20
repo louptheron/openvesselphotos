@@ -15,6 +15,9 @@ server:
 openvesselphotos:
     # Canonical base URL (e.g. https://openvesselphotos.org) in canonical links and the sitemap. Empty = requested host.
     public-url: ${OPENVESSELPHOTOS_PUBLIC_URL:}
+    # Base URL of the ports site (e.g. https://ports-de-peche.fr), the map of the French fishing vessels by home port:
+    # it is served on this host only. Empty = the ports site is served on ports.localhost only, for local development.
+    ports-public-url: ${OPENVESSELPHOTOS_PORTS_PUBLIC_URL:}
     # IndexNow key (8 to 128 letters, digits or dashes, e.g. a UUID): vessel pages are sent to Bing, Yandex… as soon as
     # their photos change. Needs public-url. Empty = disabled.
     indexnow-key: ${OPENVESSELPHOTOS_INDEXNOW_KEY:}

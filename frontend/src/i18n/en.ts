@@ -566,6 +566,31 @@ export const en = {
     setNotes: 'Set the notes',
     photoNotesResult: (r: { read: number; updated: number; unchanged: number; errors: string[] }) =>
       `${r.read} lines read: ${r.updated} notes set, ${r.unchanged} already up to date, ${r.errors.length} errors.`,
+    portsImportTitle: 'Ports site',
+    portsImportText:
+      'The map of the French fishing vessels by home port, on its own domain. Home ports: a CSV with the columns cfr, vessel_name, port_locode, port_name, port_country, observations_total, observations_at_port and mean_distance_km, which replaces all the home ports. Positions: a CSV with the columns locode, latitude and longitude, for the ports on the map. Owners: a CSV with the columns cfr, armateur, groupe and source (a link), which replaces all the owners.',
+    homePortsFile: 'Home ports',
+    portPositionsFile: 'Positions',
+    vesselOwnersFile: 'Owners',
+    vesselOwnersResult: (r: { read: number; imported: number; skipped: number }) =>
+      `${r.read} lines read: ${r.imported} owners, ${r.skipped} skipped.`,
+    auctionSalesFile: 'Auction sales',
+    auctionSalesHelp:
+      'FranceAgriMer’s yearly workbook “Ventes déclarées en halles à marée” (BIL-MER-VENTES_HAM-Axx.xlsm), as downloaded: it replaces all the auction sales.',
+    auctionSalesResult: (r: {
+      year: number
+      auctions: number
+      matched: string[]
+      unmatched: string[]
+      seasonalSpecies: number
+    }) =>
+      `${r.year}: ${r.auctions} auctions, ${r.matched.length} matched to a port, ${r.seasonalSpecies} species with seasons.${
+        r.unmatched.length > 0 ? ` No port for: ${r.unmatched.join(', ')}.` : ''
+      }`,
+    homePortsResult: (r: { read: number; imported: number; ports: number; withoutPort: number; skipped: number }) =>
+      `${r.read} lines read: ${r.imported} vessels in ${r.ports} ports, ${r.withoutPort} without a port, ${r.skipped} skipped.`,
+    portPositionsResult: (r: { read: number; updated: number; unknown: number; skipped: number }) =>
+      `${r.read} lines read: ${r.updated} ports placed, ${r.unknown} unknown ports, ${r.skipped} skipped.`,
     importResult: (r: {
       read: number
       created: number

@@ -51,6 +51,8 @@ interface FilterOptionCount {
 interface DBVesselRepository : JpaRepository<VesselEntity, Int> {
     fun findByCfr(cfr: String): VesselEntity?
 
+    fun findByCfrIn(cfrs: Collection<String>): List<VesselEntity>
+
     fun findByMmsi(mmsi: String): VesselEntity?
 
     @Query(

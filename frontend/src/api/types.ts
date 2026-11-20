@@ -302,3 +302,99 @@ export type ReviewQueue = {
     vessel: AdminVessel
   }>
 }
+
+/** A port of the ports site, with the vessels based at it (see PortsController) */
+export type Port = {
+  country: string
+  latitude: number | null
+  locode: string
+  longitude: number | null
+  name: string
+  vesselCount: number
+  /** Vessels by main gear (FAO code, e.g. OTB), for those whose gear is known */
+  gearCounts: Record<string, number>
+  /** The fish auction of the port: its sales of all species in its last year (missing from older responses) */
+  auction?: AuctionTotal | null
+}
+
+export type AuctionTotal = {
+  name: string
+  quantityTonnes: number
+  valueThousandEuros: number
+  year: number
+}
+
+export type PortVessel = {
+  cfr: string
+  lengthMeters: number | null
+  mainGear: string | null
+  mainPhoto: Photo | null
+  meanDistanceKm: number | null
+  name: string | null
+  observationsAtPort: number
+  observationsTotal: number
+  /** The vessel's page on Open Vessel Photos, when it has one */
+  pageUrl: string | null
+  photoCount: number
+  /** The company owning the vessel, from a public source */
+  owner: { group: string | null; name: string; sourceUrl: string } | null
+  registration: string | null
+  /** Gross tonnage */
+  tonnageGt: number | null
+  vesselType: string | null
+  yearBuilt: number | null
+}
+
+/** A vessel of the ports site found by its name or CFR */
+export type PortVesselSearchResult = {
+  cfr: string
+  name: string | null
+  portLocode: string
+  portName: string
+}
+
+export type PortDetails = {
+  /** The fish auction of the port, when it has one (FranceAgriMer) */
+  auction: PortAuction | null
+  port: Port
+  vessels: PortVessel[]
+}
+
+/** Sales declared at the fish auction of a port in its last year */
+export type PortAuction = {
+  name: string
+  previousQuantityTonnes: number | null
+  priceEurosPerKg: number | null
+  quantityTonnes: number
+  /** The main species sold, by value */
+  species: AuctionSpecies[]
+  valueThousandEuros: number
+  year: number
+}
+
+export type AuctionSpecies = {
+  /** Its sales in all French auctions by month, from January: its season */
+  monthlyQuantitiesTonnes: number[] | null
+  name: string
+  previousQuantityTonnes: number | null
+  priceEurosPerKg: number | null
+  quantityTonnes: number
+  valueThousandEuros: number
+}
+
+export type HomePortImportResult = {
+  errors: string[]
+  imported: number
+  ports: number
+  read: number
+  skipped: number
+  withoutPort: number
+}
+
+export type PortPositionImportResult = {
+  errors: string[]
+  read: number
+  skipped: number
+  unknown: number
+  updated: number
+}

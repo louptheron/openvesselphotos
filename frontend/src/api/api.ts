@@ -6,9 +6,14 @@ import type {
   ApiKey,
   ApiKeyRequest,
   ApprovedApiKey,
+  HomePortImportResult,
   KeyType,
   PhotoImportStatus,
   PhotoNotesResult,
+  Port,
+  PortDetails,
+  PortPositionImportResult,
+  PortVesselSearchResult,
   ReportReason,
   ReviewQueue,
   VesselImportResult,
@@ -35,6 +40,18 @@ export const api = createApi({
     getVessel: builder.query<Vessel, VesselKeyParams>({
       providesTags: ['Vessels'],
       query: ({ key, keyType }) => `/${keyType}/${encodeURIComponent(key)}`
+    }),
+    getPort: builder.query<PortDetails, string>({
+      providesTags: ['Ports'],
+      query: locode => `/ports/${encodeURIComponent(locode)}`
+    }),
+    searchPortVessels: builder.query<PortVesselSearchResult[], string>({
+      providesTags: ['Ports'],
+      query: q => ({ params: { q }, url: '/ports/vessels' })
+    }),
+    getPorts: builder.query<Port[], void>({
+      providesTags: ['Ports'],
+      query: () => '/ports'
     }),
     getVesselFilterOptions: builder.query<VesselFilterOptions, void>({
       providesTags: ['Vessels'],
@@ -89,6 +106,28 @@ export const api = createApi({
       providesTags: ['ApiKeys'],
       query: () => '/admin/api-keys'
     }),
+    importHomePorts: builder.mutation<HomePortImportResult, FormData>({
+      invalidatesTags: ['Ports'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/ports/home-ports/import' })
+    }),
+    importPortPositions: builder.mutation<PortPositionImportResult, FormData>({
+      invalidatesTags: ['Ports'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/ports/positions/import' })
+    }),
+    importAuctionSales: builder.mutation<
+      { auctions: number; matched: string[]; seasonalSpecies: number; unmatched: string[]; year: number },
+      FormData
+    >({
+      invalidatesTags: ['Ports'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/ports/auction-sales/import' })
+    }),
+    importVesselOwners: builder.mutation<
+      { errors: string[]; imported: number; read: number; skipped: number },
+      FormData
+    >({
+      invalidatesTags: ['Ports'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/ports/owners/import' })
+    }),
     importVessels: builder.mutation<VesselImportResult, FormData>({
       invalidatesTags: ['Vessels'],
       query: form => ({ body: form, method: 'POST', url: '/admin/vessels/import' })
@@ -134,7 +173,7 @@ export const api = createApi({
     })
   }),
   reducerPath: 'api',
-  tagTypes: ['ApiKeys', 'PhotoImport', 'Queue', 'Vessels', 'WikidataImport']
+  tagTypes: ['ApiKeys', 'PhotoImport', 'Ports', 'Queue', 'Vessels', 'WikidataImport']
 })
 
 export const {
@@ -143,6 +182,8 @@ export const {
   useCancelPhotoImportMutation,
   useGetActiveApiKeysQuery,
   useGetPhotoImportQuery,
+  useGetPortQuery,
+  useGetPortsQuery,
   useGetRecentVesselsQuery,
   useGetReviewQueueQuery,
   useGetUsageQuery,
@@ -150,7 +191,11 @@ export const {
   useGetVesselQuery,
   useGetVesselsPageQuery,
   useGetWikidataImportQuery,
+  useImportAuctionSalesMutation,
+  useImportHomePortsMutation,
   useImportPhotosMutation,
+  useImportPortPositionsMutation,
+  useImportVesselOwnersMutation,
   useImportVesselsMutation,
   useImportWikidataMutation,
   useLazyGetVesselQuery,
@@ -158,6 +203,7 @@ export const {
   useLogoutMutation,
   useReportPhotoMutation,
   useRequestApiKeyMutation,
+  useSearchPortVesselsQuery,
   useSearchVesselsQuery,
   useSetPhotoNotesMutation,
   useSubmitPhotoMutation,

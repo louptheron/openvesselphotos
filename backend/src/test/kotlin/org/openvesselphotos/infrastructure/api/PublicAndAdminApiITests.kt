@@ -2,10 +2,12 @@ package org.openvesselphotos.infrastructure.api
 
 import jakarta.servlet.http.Cookie
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.openvesselphotos.TestImages
+import org.openvesselphotos.TestWorkbooks
 import org.openvesselphotos.config.AdminAuthentication
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.WikidataData
@@ -13,6 +15,7 @@ import org.openvesselphotos.domain.images.ImageDownloader
 import org.openvesselphotos.domain.use_cases.public_api.RecordUsage
 import org.openvesselphotos.domain.wikidata.WikidataClient
 import org.openvesselphotos.infrastructure.web.IndexNowNotifier
+import org.openvesselphotos.infrastructure.web.Site
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -27,9 +30,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
@@ -60,6 +66,9 @@ class PublicAndAdminApiITests {
 
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    @Autowired
+    lateinit var webApplicationContext: WebApplicationContext
 
     /** Imports would download from Wikimedia Commons */
     @MockitoBean
@@ -456,15 +465,15 @@ class PublicAndAdminApiITests {
             .andExpect(header().string("Location", "/vessels?flag=NOR"))
         mockMvc
             .perform(get("/sitemap-pages.xml"))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("<loc>http://localhost/vessels</loc>")))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("<loc>http://localhost/fr</loc>")))
+            .andExpect(content().string(containsString("<loc>http://localhost/vessels</loc>")))
+            .andExpect(content().string(containsString("<loc>http://localhost/fr</loc>")))
 
         mockMvc
             .perform(get("/sitemap.xml"))
             .andExpect(status().isOk)
             .andExpect(
                 content().string(
-                    org.hamcrest.Matchers.containsString("<loc>http://localhost/sitemap-vessels-1.xml</loc>"),
+                    containsString("<loc>http://localhost/sitemap-vessels-1.xml</loc>"),
                 ),
             )
         mockMvc
@@ -472,30 +481,30 @@ class PublicAndAdminApiITests {
             .andExpect(status().isOk)
             .andExpect(
                 content().string(
-                    org.hamcrest.Matchers.containsString("<loc>http://localhost/vessels/cfr/FRA000999888</loc>"),
+                    containsString("<loc>http://localhost/vessels/cfr/FRA000999888</loc>"),
                 ),
             ).andExpect(
                 content().string(
-                    org.hamcrest.Matchers.containsString(
+                    containsString(
                         "<image:loc>http://localhost/v1/cfr/FRA000999888/photos/1/script-b-evil-b.jpg?size=full</image:loc>",
                     ),
                 ),
             ).andExpect(
                 content().string(
-                    org.hamcrest.Matchers.containsString(
+                    containsString(
                         "<loc>http://localhost/fr/vessels/cfr/FRA000999888</loc>",
                     ),
                 ),
             ).andExpect(
                 content().string(
-                    org.hamcrest.Matchers.containsString(
+                    containsString(
                         """<xhtml:link rel="alternate" hreflang="fr" href="http://localhost/fr/vessels/cfr/FRA000999888"/>""",
                     ),
                 ),
             )
         mockMvc
             .perform(get("/robots.txt"))
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("Sitemap: http://localhost/sitemap.xml")))
+            .andExpect(content().string(containsString("Sitemap: http://localhost/sitemap.xml")))
         // AI crawlers have a group of their own, which repeats the disallowed paths
         val robots =
             mockMvc
@@ -541,7 +550,7 @@ class PublicAndAdminApiITests {
             null,
         ).andExpect(
             status().isUnauthorized,
-        ).andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("/api-key")))
+        ).andExpect(jsonPath("$.message").value(containsString("/api-key")))
         upload("ovp_wrong").andExpect(status().isUnauthorized)
 
         // Request a key (open to everyone), then the admin approves it
@@ -619,7 +628,7 @@ class PublicAndAdminApiITests {
         mockMvc.perform(post("/v1/admin/photos/$id/approve").cookie(cookie)).andExpect(status().isNoContent)
         mockMvc
             .perform(get("/v1/mmsi/227000666"))
-            .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString(contributorId))))
+            .andExpect(content().string(org.hamcrest.Matchers.not(containsString(contributorId))))
             .andExpect(
                 jsonPath(
                     "$.photos[?(@.licence == 'etalab-2.0')].attribution",
@@ -750,7 +759,7 @@ class PublicAndAdminApiITests {
             .andExpect(jsonPath("$.created").value(2))
             .andExpect(jsonPath("$.outOfFleet").value(1))
             .andExpect(jsonPath("$.skipped").value(1))
-            .andExpect(jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("Line 5")))
+            .andExpect(jsonPath("$.errors[0]").value(containsString("Line 5")))
         mockMvc.perform(get("/v1/cfr/FRA000111111")).andExpect(status().isNotFound)
 
         mockMvc
@@ -1026,7 +1035,7 @@ class PublicAndAdminApiITests {
             .perform(get("/sitemap.xml"))
             .andExpect(
                 content().string(
-                    org.hamcrest.Matchers.containsString(
+                    containsString(
                         "<loc>http://localhost/sitemap-vessels-without-photos.xml</loc>",
                     ),
                 ),
@@ -1356,5 +1365,177 @@ class PublicAndAdminApiITests {
         ).contains("\"source\":\"website\"")
 
         mockMvc.perform(get("/v1/admin/usage")).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `Imported home ports Should be on the ports API and the ports site, served on its own host only`() {
+        val cookie = adminCookie()
+
+        fun import(
+            path: String,
+            csv: String,
+        ) = mockMvc
+            .perform(
+                multipart(path)
+                    .file(MockMultipartFile("file", "ports.csv", "text/csv", csv.toByteArray()))
+                    .cookie(cookie),
+            ).andExpect(status().isOk)
+
+        fun onPortsHost(path: String) = get(path).with { it.apply { serverName = Site.PORTS_LOCAL_HOST } }
+
+        mockMvc
+            .perform(
+                multipart("/v1/admin/vessels/import")
+                    .file(
+                        MockMultipartFile(
+                            "file",
+                            "f.csv",
+                            "text/csv",
+                            "cfr,name,Main fishing gear\nFRA000900001,KER ARMOR,OTB".toByteArray(),
+                        ),
+                    ).cookie(cookie),
+            ).andExpect(status().isOk)
+        import(
+            "/v1/admin/ports/home-ports/import",
+            """
+            cfr,vessel_name,port_locode,port_name,port_country,observations_total,observations_at_port,share,mean_distance_km,other_ports
+            FRA000900001,KER ARMOR,FRQUY,Erquy,FR,5,5,1.0,1.25,
+            FRA000900002,"TROUZ AR MOR",FRQUY,Erquy,FR,5,4,1.0,0.8,
+            FRA000900003,LE VIEUX LOUP,FRCBT,Capbreton,FR,5,5,1.0,2.32,
+            FRA000900005,ARIEL,FRLRH-0015,CHEF-DE-BAIE,FR,5,5,1.0,0.5,
+            FRA000900004,NOWHERE,,,,1,1,0,,
+            NOT-A-CFR,BAD,FRQUY,Erquy,FR,5,5,1.0,1.0,
+            """.trimIndent(),
+        ).andExpect(jsonPath("$.imported").value(4))
+            .andExpect(jsonPath("$.ports").value(3))
+            .andExpect(jsonPath("$.withoutPort").value(1))
+            .andExpect(jsonPath("$.skipped").value(1))
+        import(
+            "/v1/admin/ports/positions/import",
+            "locode,latitude,longitude\nFRQUY,48.633,-2.467\nFRZZZ,1,1\nFRCBT,x,1",
+        ).andExpect(jsonPath("$.updated").value(1))
+            .andExpect(jsonPath("$.unknown").value(1))
+            .andExpect(jsonPath("$.skipped").value(1))
+
+        mockMvc
+            .perform(get("/v1/ports"))
+            .andExpect(jsonPath("$.length()").value(3))
+            .andExpect(jsonPath("$[0].name").value("CHEF-DE-BAIE"))
+            .andExpect(jsonPath("$[1].name").value("Capbreton"))
+            .andExpect(jsonPath("$[1].latitude").doesNotExist())
+            .andExpect(jsonPath("$[2].locode").value("FRQUY"))
+            .andExpect(jsonPath("$[2].latitude").value(48.633))
+            .andExpect(jsonPath("$[2].vesselCount").value(2))
+            // By main gear, from the fleet register, for the vessels known by Open Vessel Photos
+            .andExpect(jsonPath("$[2].gearCounts.OTB").value(1))
+            .andExpect(jsonPath("$[1].gearCounts").isEmpty)
+        mockMvc
+            .perform(get("/v1/ports/frquy"))
+            .andExpect(jsonPath("$.port.name").value("Erquy"))
+            .andExpect(jsonPath("$.vessels[0].name").value("KER ARMOR"))
+            .andExpect(jsonPath("$.vessels[0].pageUrl").value("http://localhost/vessels/cfr/FRA000900001"))
+            .andExpect(jsonPath("$.vessels[1].name").value("TROUZ AR MOR"))
+            .andExpect(jsonPath("$.vessels[1].pageUrl").doesNotExist())
+            .andExpect(jsonPath("$.vessels[1].observationsAtPort").value(4))
+        // Vessels by name or CFR prefix, with their port; at least 2 characters
+        mockMvc
+            .perform(get("/v1/ports/vessels").param("q", "armor"))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].name").value("KER ARMOR"))
+            .andExpect(jsonPath("$[0].portLocode").value("FRQUY"))
+            .andExpect(jsonPath("$[0].portName").value("Erquy"))
+        mockMvc.perform(get("/v1/ports/vessels").param("q", "fra0009000")).andExpect(jsonPath("$.length()").value(4))
+        mockMvc.perform(get("/v1/ports/vessels").param("q", "k")).andExpect(jsonPath("$.length()").value(0))
+
+        // Fish auction sales, from FranceAgriMer's workbook: Erquy matches its port by name, La Rochelle by its alias
+        mockMvc
+            .perform(
+                multipart("/v1/admin/ports/auction-sales/import")
+                    .file(
+                        MockMultipartFile(
+                            "file",
+                            "ventes.xlsm",
+                            "application/octet-stream",
+                            TestWorkbooks.auctionSales(),
+                        ),
+                    ).cookie(cookie),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.year").value(2025))
+            .andExpect(jsonPath("$.auctions").value(2))
+            .andExpect(jsonPath("$.unmatched.length()").value(0))
+        mockMvc
+            .perform(get("/v1/ports/FRQUY"))
+            .andExpect(jsonPath("$.auction.name").value("Erquy"))
+            .andExpect(jsonPath("$.auction.quantityTonnes").value(120.0))
+            .andExpect(jsonPath("$.auction.previousQuantityTonnes").value(100.0))
+            // "Autres espèces" is not a species
+            .andExpect(jsonPath("$.auction.species.length()").value(1))
+            .andExpect(jsonPath("$.auction.species[0].name").value("Bar"))
+            .andExpect(jsonPath("$.auction.species[0].priceEurosPerKg").value(15.0))
+            .andExpect(jsonPath("$.auction.species[0].monthlyQuantitiesTonnes.length()").value(12))
+        mockMvc.perform(get("/v1/ports/FRLRH-0015")).andExpect(jsonPath("$.auction.name").value("La Rochelle"))
+        // On the map: the ports with an auction
+        mockMvc
+            .perform(get("/v1/ports"))
+            .andExpect(jsonPath("$[0].auction.name").value("La Rochelle"))
+            .andExpect(jsonPath("$[1].auction").doesNotExist())
+            .andExpect(jsonPath("$[2].auction.name").value("Erquy"))
+            .andExpect(jsonPath("$[2].auction.valueThousandEuros").value(400.0))
+        mockMvc.perform(get("/v1/ports/FRCBT")).andExpect(jsonPath("$.auction").doesNotExist())
+
+        // Owners, each with its source; a row without source is skipped
+        import(
+            "/v1/admin/ports/owners/import",
+            """
+            cfr,armateur,groupe,source
+            FRA000900002,France Pélagique,Cornelis Vrolijk,https://bloomassociation.org/rapport.pdf
+            FRA000900001,Sans source,,
+            """.trimIndent(),
+        ).andExpect(jsonPath("$.imported").value(1))
+            .andExpect(jsonPath("$.skipped").value(1))
+        mockMvc
+            .perform(get("/v1/ports/FRQUY"))
+            .andExpect(jsonPath("$.vessels[0].owner").doesNotExist())
+            .andExpect(jsonPath("$.vessels[1].owner.name").value("France Pélagique"))
+            .andExpect(jsonPath("$.vessels[1].owner.group").value("Cornelis Vrolijk"))
+        mockMvc.perform(get("/v1/ports/FRXXX")).andExpect(status().isNotFound)
+        mockMvc.perform(get("/v1/ports/FRLRH-0015")).andExpect(jsonPath("$.vessels[0].name").value("ARIEL"))
+
+        // The ports site, on its own host: its pages are forwarded to /_ports
+        mockMvc.perform(onPortsHost("/FRQUY")).andExpect(forwardedUrl("/_ports/FRQUY"))
+        mockMvc.perform(onPortsHost("/v1/ports")).andExpect(status().isOk)
+        // Called directly, the ports pages are not found, on any host
+        mockMvc.perform(get("/_ports/FRQUY")).andExpect(status().isNotFound)
+        mockMvc.perform(onPortsHost("/_ports/FRQUY")).andExpect(status().isNotFound)
+
+        // As forwarded: MockMvc does not follow forwards, so the pages are called without the filters
+        val pages = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
+        val portPage =
+            pages
+                .perform(onPortsHost("/_ports/FRQUY"))
+                .andExpect(status().isOk)
+                .andReturn()
+                .response.contentAsString
+        assertThat(portPage)
+            .contains("""<html lang="fr">""")
+            .contains("""<link rel="canonical" href="http://ports.localhost/FRQUY" />""")
+            .contains("""<meta property="og:site_name" content="Ports de pêche" />""")
+            .contains("""<a href="http://localhost/vessels/cfr/FRA000900001">KER ARMOR</a>""")
+            .contains("<li>TROUZ AR MOR (CFR FRA000900002)</li>")
+            .doesNotContain("feed.xml")
+        pages.perform(onPortsHost("/_ports/frquy")).andExpect(status().isMovedPermanently)
+        pages.perform(onPortsHost("/_ports/FRXXX")).andExpect(status().isNotFound)
+        pages.perform(onPortsHost("/_ports/vessels/cfr/FRA000900001")).andExpect(status().isNotFound)
+        pages
+            .perform(onPortsHost("/_ports/"))
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("""<a href="/FRQUY">Erquy</a> (2 navires)""")))
+        pages
+            .perform(onPortsHost("/_ports/robots.txt"))
+            .andExpect(content().string(containsString("Disallow: /v1/")))
+            .andExpect(content().string(containsString("Sitemap: http://ports.localhost/sitemap.xml")))
+        pages
+            .perform(onPortsHost("/_ports/sitemap.xml"))
+            .andExpect(content().string(containsString("<loc>http://ports.localhost/FRCBT</loc>")))
     }
 }
