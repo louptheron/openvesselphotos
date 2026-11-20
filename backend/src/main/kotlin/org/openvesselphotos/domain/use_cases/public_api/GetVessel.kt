@@ -36,7 +36,7 @@ class GetVessel(
                         date = it,
                         type = HistoryEventType.PHOTO_PUBLISHED,
                         description = "Photo ${photo.number} published (${photo.licence.label})",
-                        by = photo.credit,
+                        by = photo.displayedCredit,
                         photoNumber = photo.number,
                         licence = photo.licence.label,
                     )

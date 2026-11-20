@@ -213,6 +213,34 @@ class PublicAndAdminApiITests {
     }
 
     @Test
+    fun `An anonymous photo Should be credited to an Open Vessel Photos contributor`() {
+        mockMvc
+            .perform(
+                multipart("/v1/mmsi/227000444/photos")
+                    .header("Sec-Fetch-Site", "same-origin")
+                    .file(MockMultipartFile("file", "boat.jpg", "image/jpeg", TestImages.create(800, 600)))
+                    .param("credit", "  ")
+                    .param("licence", "CC-BY-4.0"),
+            ).andExpect(status().isCreated)
+        val cookie = adminCookie()
+        val photoId =
+            Regex(""""id":(\d+),"number":null,"submittedKeyType":"mmsi","submittedKey":"227000444"""")
+                .find(
+                    mockMvc
+                        .perform(get("/v1/admin/queue").cookie(cookie))
+                        .andReturn()
+                        .response.contentAsString,
+                )!!
+                .groupValues[1]
+        mockMvc.perform(post("/v1/admin/photos/$photoId/approve").cookie(cookie)).andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(get("/v1/mmsi/227000444"))
+            .andExpect(jsonPath("$.photos[0].credit").value("Contributeur openvesselphotos"))
+            .andExpect(jsonPath("$.photos[0].attribution").value("Photo: Contributeur openvesselphotos, CC BY 4.0"))
+    }
+
+    @Test
     fun `Invalid requests Should return explicit errors`() {
         mockMvc
             .perform(

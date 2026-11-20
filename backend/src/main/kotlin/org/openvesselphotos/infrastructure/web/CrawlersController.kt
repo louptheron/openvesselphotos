@@ -233,18 +233,18 @@ class CrawlersController(
         val entries =
             photos.joinToString("") { (vessel, photo) ->
                 val pageUrl = baseUrl + language.path(PagesController.vesselPath(vessel))
-                val caption = texts.photoCaption(PagesController.vesselName(vessel), photo.credit)
+                val caption = texts.photoCaption(PagesController.vesselName(vessel), photo.displayedCredit)
                 val imageUrl = PagesController.photoUrl(baseUrl, vessel, photo, ImageSize.MEDIUM)
                 val content =
                     """<p><a href="${escapeHtml(pageUrl)}"><img src="${escapeHtml(imageUrl)}" """ +
                         """alt="${escapeHtml(caption)}" /></a></p>""" +
-                        """<p>© ${escapeHtml(photo.credit)} · ${escapeHtml(photo.licence.label)}</p>"""
+                        """<p>© ${escapeHtml(photo.displayedCredit)} · ${escapeHtml(photo.licence.label)}</p>"""
 
                 "<entry><id>${escapeHtml("$pageUrl#photo-${photo.number}")}</id>" +
                     "<title>${escapeHtml(caption)}</title>" +
                     """<link rel="alternate" type="text/html" href="${escapeHtml(pageUrl)}"/>""" +
                     "<updated>${atomDate(photo.reviewedAt)}</updated>" +
-                    "<author><name>${escapeHtml(photo.credit)}</name></author>" +
+                    "<author><name>${escapeHtml(photo.displayedCredit)}</name></author>" +
                     """<content type="html">${escapeHtml(content)}</content></entry>"""
             }
         val feedUrl = baseUrl + language.path(FEED_PATH)

@@ -44,10 +44,11 @@ class SubmitPhoto(
     @Transactional
     fun execute(submission: PhotoSubmission): Photo {
         val credit = submission.credit.trim()
-        if (credit.isEmpty() || credit.length > 100) {
+        // An empty credit is an anonymous contribution, see Photo.displayedCredit
+        if (credit.length > 100) {
             throw BackendUsageException(
                 BackendUsageErrorCode.INVALID_INPUT,
-                "A credit (1 to 100 characters) is required.",
+                "The credit is limited to 100 characters.",
             )
         }
         if (submission.takenOn != null && submission.takenOn.isAfter(LocalDate.now().plusDays(1))) {
