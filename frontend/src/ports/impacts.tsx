@@ -88,8 +88,8 @@ export const ImpactPill = styled.span<{ $impact: Impact }>`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 1px 6px;
+  border-radius: 3px;
   background: ${({ $impact }) => IMPACT_COLORS[$impact].background};
   color: ${({ $impact }) => IMPACT_COLORS[$impact].text};
   font-size: 11px;
@@ -111,11 +111,11 @@ export const FactPill = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: ${COLORS.ink};
-  color: ${COLORS.white};
+  padding: 1px 6px;
+  border: 1px solid ${COLORS.ink};
+  border-radius: 3px;
+  color: ${COLORS.ink};
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.35;
 `

@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
-import styled, { css, keyframes } from 'styled-components'
+import styled, { css } from 'styled-components'
 
 import { useGetPortQuery, useSearchPortVesselsQuery } from '../api/api'
 import type { Port, PortVessel } from '../api/types'
@@ -16,7 +16,7 @@ import { type GearFamily, GearIcon, countVessels, hasGear } from './gears'
 import { FactPill, INDUSTRIAL_LENGTH } from './impacts'
 import { type Extent, REGIONS, isInExtent } from './regions'
 import { TrawlerLogo } from './TrawlerLogo'
-import { formatNumber, normalize } from './texts'
+import { formatNumber, normalize, SITE_NAME, SITE_TAGLINE } from './texts'
 
 const OPEN_VESSEL_PHOTOS_URL = 'https://openvesselphotos.org/fr'
 /** In the URL of a port, the CFR of the vessel found by the search, e.g. ?navire=FRA000123456 */
@@ -66,8 +66,8 @@ export function PortPanel({ gear, isError, isLoading, locode, onFitExtent, onHig
             <TrawlerLogo size={32} />
           </BrandMark>
           <span>
-            <BrandName>Ports de pêche</BrandName>
-            <BrandTagline>La flotte de pêche française, port par port</BrandTagline>
+            <BrandName>{SITE_NAME}</BrandName>
+            <BrandTagline>{SITE_TAGLINE}</BrandTagline>
           </span>
         </BrandLink>
       </Brand>
@@ -144,15 +144,6 @@ function PortsView({ gear, isError, isLoading, onFitExtent, onHighlight, onSelec
         />
       </SearchBar>
       <Scroll>
-        {!query && (
-          <Intro>
-            <Title>Où sont basés les navires de pêche français&nbsp;?</Title>
-            <Lead>
-              Chaque navire est rattaché au port où il a été le plus souvent observé à quai. Choisissez un port sur la
-              carte pour voir sa flotte.
-            </Lead>
-          </Intro>
-        )}
         {!query && (
           <Section>
             <SectionHeader>
@@ -444,16 +435,24 @@ function getVesselPageUrl(vessel: PortVessel): string | undefined {
   return vessel.pageUrl?.replace('/vessels/', '/fr/vessels/')
 }
 
-/** Whether it is an industrial vessel (24 m or more), and its owner when known */
+/** Whether it is an industrial vessel (24 m or more), its owner when known, and when its home port was deduced */
 function VesselBadges({ vessel }: { vessel: PortVessel }) {
   const isIndustrial = vessel.lengthMeters !== null && vessel.lengthMeters >= INDUSTRIAL_LENGTH
-  if (!isIndustrial && !vessel.owner) {
+  const isFromPortVisits = vessel.homePortSource === 'GFW'
+  if (!isIndustrial && !vessel.owner && !isFromPortVisits) {
     return null
   }
 
   return (
     <Badges>
       {isIndustrial && <FactPill title="Navire de 24 m ou plus">Pêche industrielle</FactPill>}
+      {isFromPortVisits && (
+        <PortVisitsNote
+          title={`Port de ${vessel.observationsAtPort} de ses ${vessel.observationsTotal} escales en un an, d’après ses positions AIS (Global Fishing Watch)`}
+        >
+          Port déduit de ses escales
+        </PortVisitsNote>
+      )}
       {vessel.owner && (
         <FactPill title={`Source : ${vessel.owner.sourceUrl}`}>
           {vessel.owner.name}
@@ -669,11 +668,6 @@ function BoatIcon() {
 
 /* Layout */
 
-const slideIn = keyframes`
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
-`
-
 const Panel = styled.aside<{ $isExpanded: boolean }>`
   position: absolute;
   top: ${PANEL_MARGIN}px;
@@ -684,14 +678,10 @@ const Panel = styled.aside<{ $isExpanded: boolean }>`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 22px;
-  background: rgba(250, 249, 246, 0.9);
-  box-shadow:
-    0 1px 2px rgba(11, 34, 51, 0.06),
-    0 18px 48px rgba(11, 34, 51, 0.18);
-  backdrop-filter: blur(20px) saturate(1.4);
-  animation: ${slideIn} 0.4s ease-out;
+  border: 1px solid ${COLORS.border};
+  border-radius: 6px;
+  background: #fbfaf6;
+  box-shadow: 0 1px 2px rgba(11, 34, 51, 0.1);
 
   @media (max-width: 760px) {
     top: auto;
@@ -700,13 +690,8 @@ const Panel = styled.aside<{ $isExpanded: boolean }>`
     left: 0;
     width: auto;
     height: ${({ $isExpanded }) => ($isExpanded ? '88dvh' : `${SHEET_HEIGHT * 100}dvh`)};
-    border-radius: 22px 22px 0 0;
+    border-radius: 6px 22px 0 0;
     transition: height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-    transition: none;
   }
 `
 
@@ -758,8 +743,8 @@ const BrandMark = styled.span`
   place-items: center;
   width: 40px;
   height: 40px;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #12385a, ${COLORS.ink});
+  border-radius: 4px;
+  background: ${COLORS.ink};
 `
 
 const BrandName = styled.span`
@@ -792,7 +777,7 @@ const SearchLabel = styled.label`
   height: 42px;
   padding: 0 14px;
   border: 1px solid ${COLORS.border};
-  border-radius: 12px;
+  border-radius: 4px;
   background: ${COLORS.white};
   color: ${COLORS.muted};
   transition:
@@ -822,7 +807,7 @@ const BackLink = styled(Link)`
   width: 42px;
   height: 42px;
   border: 1px solid ${COLORS.border};
-  border-radius: 12px;
+  border-radius: 4px;
   background: ${COLORS.white};
   color: ${COLORS.ink};
   transition: background 0.15s;
@@ -840,11 +825,6 @@ const Scroll = styled.div`
   overscroll-behavior: contain;
   padding-bottom: 12px;
   scrollbar-width: thin;
-  animation: ${slideIn} 0.3s ease-out;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
 `
 
 const Footer = styled.footer`
@@ -870,8 +850,6 @@ const Eyebrow = styled.p`
   color: ${COLORS.accent};
   font-size: 12.5px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 `
 
 const Title = styled.h1`
@@ -905,13 +883,15 @@ const SectionHeader = styled.div`
   margin-bottom: 10px;
 `
 
+/** A label over a thin rule, as in a printed table */
 const SectionTitle = styled.h2`
+  flex: 1;
   margin: 0;
-  color: ${COLORS.muted};
-  font-size: 12px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid ${COLORS.border};
+  color: ${COLORS.ink};
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 `
 
 const Chips = styled.div`
@@ -926,7 +906,7 @@ const Chip = styled.button`
   gap: 6px;
   padding: 6px 6px 6px 12px;
   border: 1px solid ${COLORS.border};
-  border-radius: 999px;
+  border-radius: 6px;
   background: ${COLORS.white};
   color: ${COLORS.ink};
   font: 500 13px ${FONTS.sans};
@@ -944,7 +924,7 @@ const Chip = styled.button`
 const ChipCount = styled.span`
   min-width: 22px;
   padding: 1px 7px;
-  border-radius: 999px;
+  border-radius: 6px;
   background: ${COLORS.divider};
   color: ${COLORS.muted};
   font-size: 11.5px;
@@ -956,7 +936,7 @@ const SegmentedGroup = styled.fieldset`
   border: none;
   display: inline-flex;
   padding: 3px;
-  border-radius: 10px;
+  border-radius: 4px;
   background: ${COLORS.divider};
 `
 
@@ -974,7 +954,7 @@ const SegmentButton = styled.button<{ $isActive: boolean }>`
     $isActive &&
     css`
       background: ${COLORS.white};
-      box-shadow: 0 1px 3px rgba(11, 34, 51, 0.14);
+      box-shadow: inset 0 0 0 1px ${COLORS.border};
       color: ${COLORS.ink};
     `}
 `
@@ -992,7 +972,7 @@ const PortRow = styled(Link)`
   justify-content: space-between;
   gap: 12px;
   padding: 10px 8px 12px;
-  border-radius: 10px;
+  border-radius: 4px;
   color: ${COLORS.ink};
   text-decoration: none;
   transition: background 0.12s;
@@ -1039,7 +1019,7 @@ const Bar = styled.span`
   max-width: calc(100% - 16px);
   height: 3px;
   border-radius: 2px;
-  background: linear-gradient(90deg, ${COLORS.link}, #4f8db3);
+  background: ${COLORS.link};
   opacity: 0.55;
 `
 
@@ -1062,7 +1042,7 @@ const Card = styled.div<{ $isLink?: boolean }>`
   }
   overflow: hidden;
   border: 1px solid ${COLORS.cardBorder};
-  border-radius: 14px;
+  border-radius: 6px;
   background: ${COLORS.white};
   color: inherit;
   text-decoration: none;
@@ -1075,8 +1055,7 @@ const Card = styled.div<{ $isLink?: boolean }>`
     css`
       &:hover {
         color: inherit;
-        box-shadow: 0 10px 24px rgba(11, 34, 51, 0.14);
-        transform: translateY(-2px);
+        border-color: ${COLORS.link};
       }
     `}
 `
@@ -1097,12 +1076,11 @@ const FilterNote = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
+  gap: 6px 10px;
   margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: ${COLORS.ink};
-  color: ${COLORS.inkSoft};
+  padding: 2px 0 2px 10px;
+  border-left: 3px solid ${COLORS.ink};
+  color: ${COLORS.text};
   font-size: 13px;
 
   span {
@@ -1111,11 +1089,11 @@ const FilterNote = styled.div`
   }
 
   strong {
-    color: ${COLORS.white};
+    color: ${COLORS.ink};
   }
 
   a {
-    color: ${COLORS.white};
+    color: ${COLORS.link};
     font-weight: 600;
     white-space: nowrap;
   }
@@ -1126,11 +1104,15 @@ const FilterIcon = styled.span`
   min-width: 0 !important;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.12);
-  color: ${COLORS.white};
+  color: ${COLORS.ink};
+`
+
+const PortVisitsNote = styled.span`
+  padding: 2px 8px;
+  border: 1px dashed ${COLORS.border};
+  border-radius: 6px;
+  color: ${COLORS.muted};
+  font-size: 11px;
 `
 
 const Badges = styled.div`
@@ -1161,7 +1143,7 @@ const FoundVessels = styled.ul`
     align-items: center;
     gap: 10px;
     padding: 8px;
-    border-radius: 10px;
+    border-radius: 4px;
     color: ${COLORS.ink};
     text-decoration: none;
   }
@@ -1200,15 +1182,14 @@ const OnlyOnPhones = styled.div`
 
 const Callout = styled.p`
   margin: 0 0 10px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: ${COLORS.accentSoft};
-  color: ${COLORS.accentInk};
-  font-size: 13.5px;
+  padding: 2px 0 2px 10px;
+  border-left: 3px solid ${COLORS.accent};
+  color: ${COLORS.text};
+  font-size: 13px;
   line-height: 1.45;
 
   a {
-    color: ${COLORS.accentInk};
+    color: ${COLORS.link};
     font-weight: 600;
   }
 `
@@ -1218,7 +1199,7 @@ const VesselRows = styled.ul`
   padding: 0;
   list-style: none;
   border: 1px solid ${COLORS.cardBorder};
-  border-radius: 14px;
+  border-radius: 6px;
   background: ${COLORS.white};
 `
 
@@ -1228,7 +1209,7 @@ const Row = styled.li`
   }
 
   &:first-child > * {
-    border-radius: 14px 14px 0 0;
+    border-radius: 6px 14px 0 0;
   }
 
   &:last-child > * {
@@ -1299,7 +1280,7 @@ const RowIcon = styled.span`
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 4px;
   background: ${COLORS.info};
   color: ${COLORS.link};
 
@@ -1353,7 +1334,6 @@ const Credit = styled.span`
   font-size: 10.5px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  backdrop-filter: blur(4px);
 `
 
 const CardBody = styled.div`
@@ -1389,13 +1369,16 @@ const Facts = styled.ul`
   padding: 0;
   list-style: none;
 
+  /* Plain text, separated by a middle dot */
   li {
-    padding: 2px 7px;
-    border-radius: 6px;
-    background: ${COLORS.info};
-    color: ${COLORS.link};
-    font-size: 11px;
-    font-weight: 500;
+    color: ${COLORS.text};
+    font-size: 12px;
+  }
+
+  li + li::before {
+    content: '·';
+    margin-right: 4px;
+    color: ${COLORS.muted};
   }
 `
 
@@ -1408,15 +1391,10 @@ const Empty = styled.p`
   margin: 8px 0;
   padding: 20px;
   border: 1px dashed ${COLORS.border};
-  border-radius: 12px;
+  border-radius: 4px;
   color: ${COLORS.muted};
   font-size: 14px;
   text-align: center;
-`
-
-const shimmer = keyframes`
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
 `
 
 const SkeletonList = styled.div`
@@ -1427,8 +1405,6 @@ const SkeletonList = styled.div`
 `
 
 const Skeleton = styled.div`
-  border-radius: 12px;
-  background: linear-gradient(90deg, ${COLORS.divider} 25%, #f7f5f0 50%, ${COLORS.divider} 75%);
-  background-size: 200% 100%;
-  animation: ${shimmer} 1.4s linear infinite;
+  border-radius: 4px;
+  background: ${COLORS.divider};
 `

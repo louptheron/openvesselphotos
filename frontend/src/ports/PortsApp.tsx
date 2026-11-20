@@ -2,7 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { useGetPortQuery, useGetPortsQuery } from '../api/api'
+import {
+  useGetFishingEffortPeriodQuery,
+  useGetPortFishingEffortQuery,
+  useGetPortQuery,
+  useGetPortsQuery
+} from '../api/api'
 import { of } from '../i18n/fr'
 import { COLORS } from '../theme'
 import { AuctionSales } from './AuctionSales'
@@ -12,7 +17,7 @@ import { MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH, SHEET_HEIGHT } from './layout'
 import { PortPanel } from './PortPanel'
 import { type MapPadding, PortsMap, type PortsMapHandle } from './PortsMap'
 import type { Extent } from './regions'
-import { SITE_NAME } from './texts'
+import { SITE_NAME, vessels } from './texts'
 
 export function PortsApp() {
   return (
@@ -29,6 +34,7 @@ function MapPage() {
   const navigate = useNavigate()
   const mapRef = useRef<PortsMapHandle>(null)
   const { data: ports = [], isError, isLoading } = useGetPortsQuery()
+  const { data: fishingEffort } = useGetFishingEffortPeriodQuery()
   // The same request as the panel's: done once
   const { data: portDetails } = useGetPortQuery(locode ?? '', { skip: !locode })
   const auction = locode && portDetails?.port.locode === locode ? portDetails.auction : null
@@ -39,6 +45,13 @@ function MapPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { search } = useLocation()
   const gear = getGearFamily(searchParams.get(GEAR_PARAM))
+  // Where the vessels of the port fished, for the trawls only (see GetFishingEffort)
+  const isPortEffortWanted =
+    Boolean(locode && fishingEffort?.isEnabled) && (!gear || (fishingEffort?.gearFamilies.includes(gear.id) ?? false))
+  const { data: portFishingEffort } = useGetPortFishingEffortQuery(
+    { gear: gear?.id, locode: locode ?? '' },
+    { skip: !isPortEffortWanted }
+  )
   const setGear = useCallback(
     (family: GearFamily | undefined) => setSearchParams(family ? { [GEAR_PARAM]: family.id } : {}, { replace: true }),
     [setSearchParams]
@@ -47,8 +60,8 @@ function MapPage() {
   // The server sets the title on the first load of each page (see PortsPagesController)
   useEffect(() => {
     document.title = selected
-      ? `Navires de pêche du port ${of(selected.name)} | ${SITE_NAME}`
-      : `Les navires de pêche français par port | ${SITE_NAME}`
+      ? `Port de pêche ${of(selected.name)} : ${vessels(selected.vesselCount)}${selected.auction ? ' et sa criée' : ''} | ${SITE_NAME}`
+      : `${SITE_NAME} : la flotte, les ports et les criées`
   }, [selected])
 
   useEffect(() => {
@@ -81,6 +94,8 @@ function MapPage() {
   return (
     <Page>
       <PortsMap
+        fishingEffort={fishingEffort}
+        portFishingEffort={portFishingEffort}
         gear={gear}
         highlightedLocode={locode ? undefined : highlightedLocode}
         onSelect={select}

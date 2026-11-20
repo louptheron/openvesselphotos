@@ -339,6 +339,8 @@ export type PortVessel = {
   /** The company owning the vessel, from a public source */
   owner: { group: string | null; name: string; sourceUrl: string } | null
   registration: string | null
+  /** IMPORT: from the imported observations; GFW: the port it visited most in a year, on Global Fishing Watch */
+  homePortSource?: 'GFW' | 'IMPORT'
   /** Gross tonnage */
   tonnageGt: number | null
   vesselType: string | null
@@ -397,4 +399,76 @@ export type PortPositionImportResult = {
   skipped: number
   unknown: number
   updated: number
+}
+
+/** The fishing activity map: the last 12 complete months, when a Global Fishing Watch token is set */
+export type FishingEffortPeriod = {
+  from: string
+  /** The gear families drawn: the trawls only, the other vessels mostly lacking AIS */
+  gearFamilies: string[]
+  isEnabled: boolean
+  to: string
+}
+
+/** Where the vessels of a port fished over the last 12 months */
+export type PortFishingEffort = {
+  /** [longitude, latitude, hours of fishing] of each cell of 0.05° */
+  cells: [number, number, number][]
+  trackedVessels: number
+}
+
+export type FishingActivitySyncStatus = {
+  done: number
+  errors: string[]
+  failed: number
+  finishedAt: string | null
+  found: number
+  isRunning: boolean
+  startedAt: string | null
+  total: number
+  withFishing: number
+}
+
+export type HomePortsFromPortVisitsStatus = {
+  done: number
+  errors: string[]
+  failed: number
+  farFromPorts: number
+  finishedAt: string | null
+  found: number
+  isRunning: boolean
+  placed: number
+  startedAt: string | null
+  total: number
+  unknownPorts: string[]
+  withoutVisits: number
+}
+
+export type HomePortCheckResult = 'AGREES' | 'DISAGREES' | 'NEARBY' | 'NOT_FOUND' | 'NOT_ON_THE_MAP' | 'TOO_FEW_VISITS'
+
+export type HomePortsCheckStatus = {
+  countsByResult: Partial<Record<HomePortCheckResult, number>>
+  done: number
+  errors: string[]
+  failed: number
+  finishedAt: string | null
+  isRunning: boolean
+  startedAt: string | null
+  total: number
+}
+
+/** An imported home port checked against the port the vessel visited most in a year, on Global Fishing Watch */
+export type HomePortCheck = {
+  cfr: string
+  checkedOn: string
+  distanceKm: number | null
+  gfwLocode: string | null
+  gfwPortName: string | null
+  importedLocode: string
+  importedPortName: string | null
+  result: HomePortCheckResult
+  vesselName: string | null
+  visitsAtGfwPort: number
+  visitsAtImported: number
+  visitsTotal: number
 }

@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-import { COLORS, FONTS } from '../theme'
+import { COLORS } from '../theme'
 import { SOURCES } from './impacts'
 
 const INSTITUT_AGRO = {
@@ -55,21 +55,6 @@ export function FishingFacts() {
         Les navires de moins de 12 m forment 84 % de la flotte et 44 % des emplois, pour 24 % des captures. Ceux de plus
         de 40 m, moins de 1 % des navires, en débarquent 37 %.
       </Takeaway>
-
-      <Figures>
-        <Figure>
-          <strong>12 316</strong>
-          <span>marins embarqués sur les navires de pêche (2022)</span>
-        </Figure>
-        <Figure>
-          <strong>527 000 t</strong>
-          <span>de produits de la mer débarqués (2022)</span>
-        </Figure>
-        <Figure>
-          <strong>1,14 Mt</strong>
-          <span>de CO₂e émises par la flotte (2022)</span>
-        </Figure>
-      </Figures>
       <Sources>
         Sources :{' '}
         <a href={INSTITUT_AGRO.url} rel="noopener" target="_blank">
@@ -79,11 +64,7 @@ export function FishingFacts() {
         <a href={SOURCES.bloomOligarchs.url} rel="noopener" target="_blank">
           BLOOM
         </a>
-        ),{' '}
-        <a href={SOURCES.shiftCarbon.url} rel="noopener" target="_blank">
-          The Shift Project &amp; BLOOM
-        </a>{' '}
-        (données CSTEP 2022).
+        ).
       </Sources>
     </div>
   )
@@ -169,37 +150,6 @@ const Takeaway = styled.p`
   color: ${COLORS.text};
   font-size: 12.5px;
   line-height: 1.45;
-`
-
-const Figures = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 14px;
-`
-
-const Figure = styled.div`
-  padding: 10px;
-  border: 1px solid ${COLORS.cardBorder};
-  border-radius: 12px;
-  background: ${COLORS.white};
-
-  strong {
-    display: block;
-    color: ${COLORS.ink};
-    font-family: ${FONTS.display};
-    font-size: 17px;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  span {
-    display: block;
-    margin-top: 2px;
-    color: ${COLORS.muted};
-    font-size: 11px;
-    line-height: 1.3;
-  }
 `
 
 const Sources = styled.p`

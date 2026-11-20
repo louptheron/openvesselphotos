@@ -31,6 +31,23 @@ data class HomePort(
     val observationsAtPort: Int,
     /** Mean distance to the port of the observations at it */
     val meanDistanceKm: Double?,
+    val source: HomePortSource = HomePortSource.IMPORT,
+)
+
+enum class HomePortSource {
+    /** Imported observations */
+    IMPORT,
+
+    /** The port it visited most in a year, on Global Fishing Watch */
+    GFW,
+}
+
+/** A vessel of the EU fleet register without home port */
+data class HomePortCandidate(
+    val cfr: String,
+    val name: String?,
+    val mmsi: String?,
+    val callSign: String?,
 )
 
 /** The company owning a vessel (armement), from a public source. */

@@ -7,15 +7,7 @@ import {
   useGetPhotoImportQuery,
   useImportPhotosMutation
 } from '../../api/api'
-import {
-  Card,
-  ErrorMessage,
-  Muted,
-  SecondaryButton,
-  SectionTitle,
-  SuccessMessage,
-  TextButton
-} from '../../components/ui'
+import { Card, ErrorMessage, SecondaryButton, SuccessMessage, TextButton } from '../../components/ui'
 import { COLORS } from '../../theme'
 import { useTranslation } from '../../i18n'
 
@@ -53,8 +45,6 @@ export function PhotoImport() {
 
   return (
     <Section>
-      <SectionTitle as="h2">{t.admin.photoImportTitle}</SectionTitle>
-      <Muted>{t.admin.photoImportText}</Muted>
       <Form as="form" onSubmit={submit}>
         <label htmlFor="photos-file">{t.admin.csvFile}</label>
         <input

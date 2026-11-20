@@ -1,7 +1,9 @@
 package org.openvesselphotos.infrastructure.database.repositories
 
 import org.openvesselphotos.domain.entities.HomePort
+import org.openvesselphotos.domain.entities.HomePortCandidate
 import org.openvesselphotos.domain.entities.HomePortSearchResult
+import org.openvesselphotos.domain.entities.HomePortSource
 import org.openvesselphotos.domain.entities.Port
 import org.openvesselphotos.domain.entities.PortWithVesselCount
 import org.openvesselphotos.domain.entities.VesselOwner
@@ -30,12 +32,22 @@ class JdbcPortRepository(
             """.trimIndent(),
             ports.map { arrayOf<Any>(it.locode, it.name, it.country) },
         )
-        jdbcTemplate.update("DELETE FROM vessel_home_ports")
+        // The home ports found on Global Fishing Watch are kept, unless the import gives one
+        jdbcTemplate.update("DELETE FROM vessel_home_ports WHERE source = 'IMPORT'")
         jdbcTemplate.batchUpdate(
             """
             INSERT INTO vessel_home_ports
-                (cfr, vessel_name, port_locode, observations_total, observations_at_port, mean_distance_km, imported_on)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                (cfr, vessel_name, port_locode, observations_total, observations_at_port, mean_distance_km, imported_on,
+                 source)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'IMPORT')
+            ON CONFLICT (cfr) DO UPDATE SET
+                vessel_name = excluded.vessel_name,
+                port_locode = excluded.port_locode,
+                observations_total = excluded.observations_total,
+                observations_at_port = excluded.observations_at_port,
+                mean_distance_km = excluded.mean_distance_km,
+                imported_on = excluded.imported_on,
+                source = 'IMPORT'
             """.trimIndent(),
             homePorts.map {
                 arrayOf<Any?>(
@@ -46,6 +58,46 @@ class JdbcPortRepository(
                     it.observationsAtPort,
                     it.meanDistanceKm,
                     Date.valueOf(importedOn),
+                )
+            },
+        )
+    }
+
+    override fun findHomePortCandidates(): List<HomePortCandidate> =
+        jdbcTemplate.query(
+            """
+            SELECT v.cfr, v.name, v.mmsi, v.call_sign FROM vessels v
+            WHERE v.cfr LIKE 'FRA%' AND NOT EXISTS (SELECT 1 FROM vessel_home_ports h WHERE h.cfr = v.cfr)
+            ORDER BY v.id
+            """.trimIndent(),
+        ) { row, _ ->
+            HomePortCandidate(
+                cfr = row.getString("cfr"),
+                name = row.getString("name"),
+                mmsi = row.getString("mmsi"),
+                callSign = row.getString("call_sign"),
+            )
+        }
+
+    override fun addHomePorts(homePorts: List<HomePort>) {
+        jdbcTemplate.batchUpdate(
+            """
+            INSERT INTO vessel_home_ports
+                (cfr, vessel_name, port_locode, observations_total, observations_at_port, mean_distance_km, imported_on,
+                 source)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (cfr) DO NOTHING
+            """.trimIndent(),
+            homePorts.map {
+                arrayOf<Any?>(
+                    it.cfr,
+                    it.vesselName,
+                    it.portLocode,
+                    it.observationsTotal,
+                    it.observationsAtPort,
+                    it.meanDistanceKm,
+                    Date.valueOf(LocalDate.now()),
+                    it.source.name,
                 )
             },
         )
@@ -174,6 +226,7 @@ class JdbcPortRepository(
                     observationsTotal = row.getInt("observations_total"),
                     observationsAtPort = row.getInt("observations_at_port"),
                     meanDistanceKm = row.getDoubleOrNull("mean_distance_km"),
+                    source = HomePortSource.valueOf(row.getString("source")),
                 )
             }
 

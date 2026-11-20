@@ -1,4 +1,5 @@
-export const SITE_NAME = 'Ports de pêche'
+export const SITE_NAME = 'La Pêche française'
+export const SITE_TAGLINE = 'La flotte, les ports, les criées'
 
 export function vessels(count: number): string {
   return count === 1 ? '1 navire' : `${count} navires`

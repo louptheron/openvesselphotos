@@ -33,7 +33,7 @@ install-front:
 .PHONY: run-back ##LOCAL ▶️  Run backend API (and its database)
 run-back:
 	docker compose up -d --quiet-pull --wait db
-	@bash -c 'set -a; source ./backend/.env.local.defaults; if [ -f .env ]; then source .env; fi; ./gradlew :backend:bootRun'
+	@bash -c 'set -a; source ./backend/.env.local.defaults; if [ -f .env ]; then source ./.env; fi; ./gradlew :backend:bootRun'
 
 .PHONY: load-dummy-fleet-register ##LOCAL 🚢 Fill the local database with dummy fleet register data for the ports site
 load-dummy-fleet-register:

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import styled from 'styled-components'
 
 import { getErrorMessage, useGetWikidataImportQuery, useImportWikidataMutation } from '../../api/api'
-import { ErrorMessage, Muted, SecondaryButton, SectionTitle, SuccessMessage } from '../../components/ui'
+import { ErrorMessage, SecondaryButton, SuccessMessage } from '../../components/ui'
 import { COLORS } from '../../theme'
 import { useTranslation } from '../../i18n'
 
@@ -29,8 +29,6 @@ export function WikidataImport() {
 
   return (
     <Section>
-      <SectionTitle as="h2">{t.admin.wikidataImportTitle}</SectionTitle>
-      <Muted>{t.admin.wikidataImportText}</Muted>
       <div>
         <SecondaryButton disabled={isLoading || isRunning} onClick={() => importWikidata()} type="button">
           {isLoading ? t.admin.importing : t.admin.wikidataImportStart}

@@ -2,7 +2,7 @@ import { type FormEvent, useState } from 'react'
 import styled from 'styled-components'
 
 import { getErrorMessage, useSetPhotoNotesMutation } from '../../api/api'
-import { Card, ErrorMessage, Muted, SecondaryButton, SectionTitle, SuccessMessage } from '../../components/ui'
+import { Card, ErrorMessage, SecondaryButton, SuccessMessage } from '../../components/ui'
 import { COLORS } from '../../theme'
 import { useTranslation } from '../../i18n'
 
@@ -23,8 +23,6 @@ export function PhotoNotes() {
 
   return (
     <Section>
-      <SectionTitle as="h2">{t.admin.photoNotesTitle}</SectionTitle>
-      <Muted>{t.admin.photoNotesText}</Muted>
       <Form as="form" onSubmit={submit}>
         <label htmlFor="notes-file">{t.admin.csvFile}</label>
         <input

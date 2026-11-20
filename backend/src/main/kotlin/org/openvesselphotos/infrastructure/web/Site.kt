@@ -1,8 +1,8 @@
 package org.openvesselphotos.infrastructure.web
 
 /**
- * The websites served by this app, told apart by their host: Open Vessel Photos, and the map of the French fishing
- * vessels by home port on a domain of its own (OPENVESSELPHOTOS_PORTS_PUBLIC_URL). The /v1 API is shared.
+ * The websites served by this app, told apart by their host: Open Vessel Photos, and La Pêche française, the map of
+ * the French fishing vessels by home port on a domain of its own (OPENVESSELPHOTOS_PORTS_PUBLIC_URL). The /v1 API is shared.
  */
 enum class Site(
     val siteName: String,
@@ -10,7 +10,7 @@ enum class Site(
     val template: String,
 ) {
     OPENVESSELPHOTOS("Open Vessel Photos", "static/index.html"),
-    PORTS("Ports de pêche", "static/ports.html"),
+    PORTS("La Pêche française", "static/ports.html"),
     ;
 
     companion object {

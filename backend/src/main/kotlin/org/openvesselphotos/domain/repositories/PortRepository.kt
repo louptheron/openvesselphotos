@@ -1,6 +1,7 @@
 package org.openvesselphotos.domain.repositories
 
 import org.openvesselphotos.domain.entities.HomePort
+import org.openvesselphotos.domain.entities.HomePortCandidate
 import org.openvesselphotos.domain.entities.HomePortSearchResult
 import org.openvesselphotos.domain.entities.Port
 import org.openvesselphotos.domain.entities.PortWithVesselCount
@@ -9,7 +10,8 @@ import java.time.LocalDate
 
 interface PortRepository {
     /**
-     * Replaces every home port with the given ones. The ports are created, or renamed: their positions are kept.
+     * Replaces the imported home ports with the given ones; they take precedence over the ones found on Global Fishing
+     * Watch. The ports are created, or renamed: their positions are kept.
      */
     fun replaceHomePorts(
         ports: List<Port>,
@@ -38,4 +40,10 @@ interface PortRepository {
         query: String,
         limit: Int,
     ): List<HomePortSearchResult>
+
+    /** French vessels of the EU fleet register (by their CFR) without home port */
+    fun findHomePortCandidates(): List<HomePortCandidate>
+
+    /** Adds home ports to vessels without one; the ones with a home port already keep it */
+    fun addHomePorts(homePorts: List<HomePort>)
 }

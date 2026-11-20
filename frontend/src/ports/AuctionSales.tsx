@@ -167,12 +167,10 @@ const Card = styled.section<{ $isFloating: boolean }>`
   flex: none;
   margin-top: ${({ $isFloating }) => ($isFloating ? 0 : 14)}px;
   padding: 14px;
-  border: 1px solid ${({ $isFloating }) => ($isFloating ? 'rgba(255, 255, 255, 0.7)' : COLORS.cardBorder)};
-  border-radius: ${({ $isFloating }) => ($isFloating ? 18 : 14)}px;
-  background: ${({ $isFloating }) => ($isFloating ? 'rgba(250, 249, 246, 0.92)' : COLORS.white)};
-  box-shadow: ${({ $isFloating }) =>
-    $isFloating ? '0 1px 2px rgba(11, 34, 51, 0.06), 0 12px 32px rgba(11, 34, 51, 0.16)' : 'none'};
-  backdrop-filter: ${({ $isFloating }) => ($isFloating ? 'blur(20px) saturate(1.4)' : 'none')};
+  border: 1px solid ${({ $isFloating }) => ($isFloating ? COLORS.border : COLORS.cardBorder)};
+  border-radius: 6px;
+  background: ${({ $isFloating }) => ($isFloating ? '#FBFAF6' : COLORS.white)};
+  box-shadow: ${({ $isFloating }) => ($isFloating ? '0 1px 2px rgba(11, 34, 51, 0.1)' : 'none')};
 `
 
 const FoldButton = styled.button`
@@ -209,12 +207,9 @@ const Header = styled.div`
 `
 
 const Year = styled.span`
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: ${COLORS.info};
-  color: ${COLORS.link};
-  font-size: 11.5px;
-  font-weight: 600;
+  color: ${COLORS.muted};
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 `
 
 const Figures = styled.div`
@@ -253,11 +248,11 @@ const Subtitle = styled.div`
   justify-content: space-between;
   gap: 8px;
   margin: 14px 0 6px;
-  color: ${COLORS.muted};
-  font-size: 11px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid ${COLORS.divider};
+  color: ${COLORS.ink};
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 `
 
 const Months = styled.span`
@@ -308,12 +303,9 @@ const SpeciesName = styled.div`
 `
 
 const InSeason = styled.span`
-  padding: 0 6px;
-  border-radius: 999px;
-  background: #e3f2e8;
-  color: #14532d;
-  font-size: 10.5px;
-  font-weight: 600;
+  color: #1d6b3d;
+  font-size: 11px;
+  font-weight: 500;
 `
 
 const Quantity = styled.div`

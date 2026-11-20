@@ -6,12 +6,18 @@ import type {
   ApiKey,
   ApiKeyRequest,
   ApprovedApiKey,
+  FishingActivitySyncStatus,
+  HomePortCheck,
+  HomePortsCheckStatus,
+  FishingEffortPeriod,
+  HomePortsFromPortVisitsStatus,
   HomePortImportResult,
   KeyType,
   PhotoImportStatus,
   PhotoNotesResult,
   Port,
   PortDetails,
+  PortFishingEffort,
   PortPositionImportResult,
   PortVesselSearchResult,
   ReportReason,
@@ -48,6 +54,44 @@ export const api = createApi({
     searchPortVessels: builder.query<PortVesselSearchResult[], string>({
       providesTags: ['Ports'],
       query: q => ({ params: { q }, url: '/ports/vessels' })
+    }),
+    getPortFishingEffort: builder.query<PortFishingEffort, { gear: string | undefined; locode: string }>({
+      providesTags: ['Ports'],
+      query: ({ gear, locode }) => ({
+        params: gear ? { engin: gear } : {},
+        url: `/ports/${encodeURIComponent(locode)}/fishing-effort`
+      })
+    }),
+    getFishingActivitySync: builder.query<FishingActivitySyncStatus, void>({
+      providesTags: ['FishingActivitySync'],
+      query: () => '/admin/ports/fishing-activity'
+    }),
+    syncFishingActivity: builder.mutation<FishingActivitySyncStatus, void>({
+      invalidatesTags: ['FishingActivitySync', 'Ports'],
+      query: () => ({ method: 'POST', url: '/admin/ports/fishing-activity' })
+    }),
+    getHomePortsCheck: builder.query<HomePortsCheckStatus, void>({
+      providesTags: ['HomePortsCheck'],
+      query: () => '/admin/ports/home-ports/check'
+    }),
+    getHomePortChecks: builder.query<HomePortCheck[], void>({
+      providesTags: ['HomePortsCheck'],
+      query: () => '/admin/ports/home-ports/checks'
+    }),
+    checkHomePorts: builder.mutation<HomePortsCheckStatus, string | undefined>({
+      invalidatesTags: ['HomePortsCheck'],
+      query: port => ({ method: 'POST', params: port ? { port } : {}, url: '/admin/ports/home-ports/check' })
+    }),
+    getFishingEffortPeriod: builder.query<FishingEffortPeriod, void>({
+      query: () => '/ports/fishing-effort'
+    }),
+    getHomePortsFromPortVisits: builder.query<HomePortsFromPortVisitsStatus, void>({
+      providesTags: ['HomePortsFromPortVisits'],
+      query: () => '/admin/ports/home-ports/from-port-visits'
+    }),
+    findHomePortsFromPortVisits: builder.mutation<HomePortsFromPortVisitsStatus, void>({
+      invalidatesTags: ['HomePortsFromPortVisits', 'Ports'],
+      query: () => ({ method: 'POST', url: '/admin/ports/home-ports/from-port-visits' })
     }),
     getPorts: builder.query<Port[], void>({
       providesTags: ['Ports'],
@@ -173,15 +217,33 @@ export const api = createApi({
     })
   }),
   reducerPath: 'api',
-  tagTypes: ['ApiKeys', 'PhotoImport', 'Ports', 'Queue', 'Vessels', 'WikidataImport']
+  tagTypes: [
+    'ApiKeys',
+    'FishingActivitySync',
+    'HomePortsCheck',
+    'HomePortsFromPortVisits',
+    'PhotoImport',
+    'Ports',
+    'Queue',
+    'Vessels',
+    'WikidataImport'
+  ]
 })
 
 export const {
   useAdminActionMutation,
   useApproveApiKeyMutation,
   useCancelPhotoImportMutation,
+  useCheckHomePortsMutation,
+  useFindHomePortsFromPortVisitsMutation,
   useGetActiveApiKeysQuery,
+  useGetFishingActivitySyncQuery,
+  useGetFishingEffortPeriodQuery,
+  useGetHomePortChecksQuery,
+  useGetHomePortsCheckQuery,
+  useGetHomePortsFromPortVisitsQuery,
   useGetPhotoImportQuery,
+  useGetPortFishingEffortQuery,
   useGetPortQuery,
   useGetPortsQuery,
   useGetRecentVesselsQuery,
@@ -204,6 +266,7 @@ export const {
   useReportPhotoMutation,
   useRequestApiKeyMutation,
   useSearchPortVesselsQuery,
+  useSyncFishingActivityMutation,
   useSearchVesselsQuery,
   useSetPhotoNotesMutation,
   useSubmitPhotoMutation,

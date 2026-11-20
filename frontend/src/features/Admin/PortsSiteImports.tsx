@@ -8,26 +8,21 @@ import {
   useImportPortPositionsMutation,
   useImportVesselOwnersMutation
 } from '../../api/api'
-import { Card, ErrorMessage, Muted, SecondaryButton, SectionTitle, SuccessMessage } from '../../components/ui'
+import { Card, ErrorMessage, SecondaryButton, SuccessMessage } from '../../components/ui'
 import { useTranslation } from '../../i18n'
 import { COLORS } from '../../theme'
 
-/** The data of the ports site: the home ports of the vessels, and the positions of the ports on the map. */
-export function PortsImport() {
+/** The home ports of the vessels, from a CSV file: replaces all the imported home ports */
+export function HomePortsImport() {
   const { t } = useTranslation()
   const [importHomePorts, homePorts] = useImportHomePortsMutation()
-  const [importPortPositions, positions] = useImportPortPositionsMutation()
-  const [importVesselOwners, owners] = useImportVesselOwnersMutation()
-  const [importAuctionSales, auctionSales] = useImportAuctionSalesMutation()
 
   return (
     <Section>
-      <SectionTitle as="h2">{t.admin.portsImportTitle}</SectionTitle>
-      <Muted>{t.admin.portsImportText}</Muted>
       <FileForm
         id="home-ports-file"
         isLoading={homePorts.isLoading}
-        label={t.admin.homePortsFile}
+        label={t.admin.csvFile}
         onSubmit={importHomePorts}
       />
       {homePorts.error && <ErrorMessage>{getErrorMessage(homePorts.error, t)}</ErrorMessage>}
@@ -37,10 +32,21 @@ export function PortsImport() {
           <Errors messages={homePorts.data.errors} />
         </SuccessMessage>
       )}
+    </Section>
+  )
+}
+
+/** The positions of the ports on the map, from a CSV file */
+export function PortPositionsImport() {
+  const { t } = useTranslation()
+  const [importPortPositions, positions] = useImportPortPositionsMutation()
+
+  return (
+    <Section>
       <FileForm
         id="port-positions-file"
         isLoading={positions.isLoading}
-        label={t.admin.portPositionsFile}
+        label={t.admin.csvFile}
         onSubmit={importPortPositions}
       />
       {positions.error && <ErrorMessage>{getErrorMessage(positions.error, t)}</ErrorMessage>}
@@ -50,10 +56,21 @@ export function PortsImport() {
           <Errors messages={positions.data.errors} />
         </SuccessMessage>
       )}
+    </Section>
+  )
+}
+
+/** The owners (armements) of the vessels, from a CSV file: replaces all the owners */
+export function VesselOwnersImport() {
+  const { t } = useTranslation()
+  const [importVesselOwners, owners] = useImportVesselOwnersMutation()
+
+  return (
+    <Section>
       <FileForm
         id="vessel-owners-file"
         isLoading={owners.isLoading}
-        label={t.admin.vesselOwnersFile}
+        label={t.admin.csvFile}
         onSubmit={importVesselOwners}
       />
       {owners.error && <ErrorMessage>{getErrorMessage(owners.error, t)}</ErrorMessage>}
@@ -63,7 +80,17 @@ export function PortsImport() {
           <Errors messages={owners.data.errors} />
         </SuccessMessage>
       )}
-      <Muted>{t.admin.auctionSalesHelp}</Muted>
+    </Section>
+  )
+}
+
+/** The sales of the fish auctions, from FranceAgriMer's yearly workbook: replaces all the sales */
+export function AuctionSalesImport() {
+  const { t } = useTranslation()
+  const [importAuctionSales, auctionSales] = useImportAuctionSalesMutation()
+
+  return (
+    <Section>
       <FileForm
         accept=".xlsm,.xlsx"
         id="auction-sales-file"

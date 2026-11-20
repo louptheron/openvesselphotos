@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo, useState } from 'react'
-import styled, { css, keyframes } from 'styled-components'
+import styled, { css } from 'styled-components'
 
 import type { Port } from '../api/types'
 import { COLORS, FONTS } from '../theme'
@@ -168,18 +168,10 @@ function GearExplanation({ count, family, onClear }: { count: number; family: Ge
   )
 }
 
-const appear = keyframes`
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: none; }
-`
-
 const glass = css`
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  background: rgba(250, 249, 246, 0.9);
-  box-shadow:
-    0 1px 2px rgba(11, 34, 51, 0.06),
-    0 12px 32px rgba(11, 34, 51, 0.16);
-  backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid ${COLORS.border};
+  background: #fbfaf6;
+  box-shadow: 0 1px 2px rgba(11, 34, 51, 0.1);
 `
 
 const Wrapper = styled.div`
@@ -213,7 +205,7 @@ const Bar = styled.div`
   gap: 2px;
   max-width: 100%;
   padding: 4px;
-  border-radius: 16px;
+  border-radius: 6px;
 
   @media ${MOBILE_QUERY} {
     flex-wrap: nowrap;
@@ -234,7 +226,7 @@ const Option = styled.button<{ $isSelected: boolean }>`
   gap: 8px;
   padding: 4px 12px 4px 4px;
   border: none;
-  border-radius: 12px;
+  border-radius: 4px;
   background: transparent;
   color: ${COLORS.ink};
   font: inherit;
@@ -266,7 +258,7 @@ const Icon = styled.span<{ $isSelected: boolean }>`
   place-items: center;
   width: 34px;
   height: 34px;
-  border-radius: 9px;
+  border-radius: 4px;
   background: ${({ $isSelected }) => ($isSelected ? 'rgba(255, 255, 255, 0.12)' : COLORS.info)};
   color: ${({ $isSelected }) => ($isSelected ? COLORS.white : COLORS.link)};
   transition: background 0.15s;
@@ -328,7 +320,7 @@ const RightColumn = styled.div`
   max-width: 100%;
   max-height: calc(100vh - 110px);
   overflow-y: auto;
-  border-radius: 18px;
+  border-radius: 6px;
   scrollbar-width: none;
 
   @media ${MOBILE_QUERY} {
@@ -340,18 +332,13 @@ const Explanation = styled.div`
   ${glass}
   flex: none;
   padding: 12px 14px 14px;
-  border-radius: 18px;
-  animation: ${appear} 0.25s ease-out;
+  border-radius: 6px;
 
   p {
     margin: 8px 0 0;
     color: ${COLORS.text};
     font-size: 13px;
     line-height: 1.45;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
   }
 
   @media ${MOBILE_QUERY} {
@@ -371,8 +358,8 @@ const ExplanationIcon = styled.span`
   place-items: center;
   width: 42px;
   height: 42px;
-  border-radius: 11px;
-  background: linear-gradient(160deg, #dcebf4, ${COLORS.info});
+  border-radius: 4px;
+  background: ${COLORS.info};
   color: ${COLORS.link};
 `
 
@@ -456,7 +443,7 @@ function CarbonFacts({ carbonGroup, hasSeabedCarbon }: { carbonGroup: CarbonGrou
 const Carbon = styled.div`
   margin-top: 10px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 4px;
   background: ${COLORS.white};
 `
 

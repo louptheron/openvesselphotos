@@ -1,12 +1,9 @@
 import styled from 'styled-components'
 
 import type { PortVessel } from '../api/types'
-import { COLORS, FONTS } from '../theme'
+import { COLORS } from '../theme'
 import { GEAR_FAMILIES, GearIcon, getFamilyOfGear } from './gears'
 import { INDUSTRIAL_LENGTH } from './impacts'
-import { formatNumber } from './texts'
-
-const CURRENT_YEAR = new Date().getFullYear()
 
 /** Coastal, offshore and industrial vessels, as in the reports on the French fleet */
 export const SIZE_CLASSES = [
@@ -16,16 +13,14 @@ export const SIZE_CLASSES = [
 ]
 
 /**
- * What kind of port it is, at a glance: its fleet by size and by gear, how old and how big its vessels are. From the
- * EU fleet register, for the vessels Open Vessel Photos knows.
+ * What kind of port it is, at a glance: its fleet by size and by gear. From the EU fleet register, for the vessels
+ * Open Vessel Photos knows.
  */
 export function PortPortrait({ vessels }: { vessels: PortVessel[] }) {
   const lengths = vessels.flatMap(vessel => (vessel.lengthMeters === null ? [] : [vessel.lengthMeters]))
   if (lengths.length === 0) {
     return null
   }
-  const ages = vessels.flatMap(vessel => (vessel.yearBuilt === null ? [] : [CURRENT_YEAR - vessel.yearBuilt]))
-  const tonnage = vessels.reduce((sum, vessel) => sum + (vessel.tonnageGt ?? 0), 0)
   const sizes = SIZE_CLASSES.map((sizeClass, index) => ({
     ...sizeClass,
     count: lengths.filter(length => length < sizeClass.max && length >= (SIZE_CLASSES[index - 1]?.max ?? 0)).length
@@ -42,25 +37,6 @@ export function PortPortrait({ vessels }: { vessels: PortVessel[] }) {
 
   return (
     <Portrait aria-label="Portrait du port">
-      <Figures>
-        <Figure>
-          <strong>{formatNumber(Math.round(average(lengths) * 10) / 10)} m</strong>
-          <span>longueur moyenne</span>
-        </Figure>
-        {ages.length > 0 && (
-          <Figure>
-            <strong>{Math.round(average(ages))} ans</strong>
-            <span>âge moyen</span>
-          </Figure>
-        )}
-        {tonnage > 0 && (
-          <Figure>
-            <strong>{formatNumber(Math.round(tonnage))}</strong>
-            <span>jauge brute totale (UMS)</span>
-          </Figure>
-        )}
-      </Figures>
-
       <Subtitle>Taille des navires</Subtitle>
       <SizeBar aria-hidden>
         {sizes
@@ -107,48 +83,26 @@ export function PortPortrait({ vessels }: { vessels: PortVessel[] }) {
   )
 }
 
-function average(values: number[]): number {
-  return values.reduce((sum, value) => sum + value, 0) / values.length
-}
-
 const Portrait = styled.section`
   margin-top: 14px;
   padding: 14px;
   border: 1px solid ${COLORS.cardBorder};
-  border-radius: 14px;
+  border-radius: 6px;
   background: ${COLORS.white};
-`
-
-const Figures = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 8px;
-`
-
-const Figure = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  strong {
-    color: ${COLORS.ink};
-    font-family: ${FONTS.display};
-    font-size: 18px;
-    font-variant-numeric: tabular-nums;
-  }
-
-  span {
-    color: ${COLORS.muted};
-    font-size: 11.5px;
-  }
 `
 
 const Subtitle = styled.h3`
   margin: 14px 0 6px;
-  color: ${COLORS.muted};
-  font-size: 11px;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  padding-bottom: 4px;
+  border-bottom: 1px solid ${COLORS.divider};
+  color: ${COLORS.ink};
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 `
 
 const SizeBar = styled.div`

@@ -73,6 +73,8 @@ data class PortVesselDataOutput(
     val observationsTotal: Int,
     val observationsAtPort: Int,
     val meanDistanceKm: Double?,
+    /** IMPORT: from the imported observations; GFW: the port it visited most in a year, on Global Fishing Watch */
+    val homePortSource: String,
     /** The vessel's page on Open Vessel Photos, when it has one */
     val pageUrl: String?,
     val photoCount: Int,
@@ -102,6 +104,7 @@ data class PortVesselDataOutput(
                 observationsTotal = homePort.observationsTotal,
                 observationsAtPort = homePort.observationsAtPort,
                 meanDistanceKm = homePort.meanDistanceKm,
+                homePortSource = homePort.source.name,
                 pageUrl = vessel?.let { baseUrl + PagesController.vesselPath(it) },
                 photoCount = photos.size,
                 mainPhoto = photos.firstOrNull()?.let { PhotoDataOutput.from(baseUrl, vessel!!, it) },

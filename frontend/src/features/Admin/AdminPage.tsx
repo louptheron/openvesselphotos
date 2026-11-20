@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, type ReactNode, useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -22,10 +22,16 @@ import {
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
-import { ReviewQueuePanel } from './ReviewQueuePanel'
+import { COLORS, FONTS } from '../../theme'
+import { AdminSection } from './AdminSection'
+import { ADMIN_GROUPS, ADMIN_SECTIONS, type AdminSectionId, sectionAnchor } from './adminSections'
+import { FishingActivitySync } from './FishingActivitySync'
+import { HomePortsCheck } from './HomePortsCheck'
+import { HomePortsFromPortVisits } from './HomePortsFromPortVisits'
 import { PhotoImport } from './PhotoImport'
-import { PortsImport } from './PortsImport'
 import { PhotoNotes } from './PhotoNotes'
+import { AuctionSalesImport, HomePortsImport, PortPositionsImport, VesselOwnersImport } from './PortsSiteImports'
+import { ReviewQueuePanel } from './ReviewQueuePanel'
 import { VesselImport } from './VesselImport'
 import { WikidataImport } from './WikidataImport'
 
@@ -49,10 +55,26 @@ export function AdminPage() {
     )
   }
 
+  const pendingCount = queue.photos.length + queue.keyLinks.length + queue.reports.length + queue.apiKeyRequests.length
+  const content: Record<AdminSectionId, { body: ReactNode; description?: ReactNode }> = {
+    auctionSales: { body: <AuctionSalesImport />, description: t.admin.auctionSalesHelp },
+    fishingGrounds: { body: <FishingActivitySync />, description: t.admin.fishingActivityText },
+    homePorts: { body: <HomePortsImport />, description: t.admin.homePortsText },
+    homePortsCheck: { body: <HomePortsCheck />, description: t.admin.homePortsCheckText },
+    homePortsFromVisits: { body: <HomePortsFromPortVisits />, description: t.admin.homePortsFromPortVisitsText },
+    owners: { body: <VesselOwnersImport />, description: t.admin.vesselOwnersText },
+    photoNotes: { body: <PhotoNotes />, description: t.admin.photoNotesText },
+    photos: { body: <PhotoImport />, description: t.admin.photoImportText },
+    portPositions: { body: <PortPositionsImport />, description: t.admin.portPositionsText },
+    review: { body: <ReviewQueuePanel queue={queue} /> },
+    vessels: { body: <VesselImport /> },
+    wikidata: { body: <WikidataImport />, description: t.admin.wikidataImportText }
+  }
+
   return (
     <Page>
       <Header>
-        <Title as="h1">{t.admin.queueTitle}</Title>
+        <Title as="h1">{t.admin.adminTitle}</Title>
         <HeaderLinks>
           <Link to="/admin/stats">{t.admin.statistics}</Link>
           <TextButton onClick={() => logout()} type="button">
@@ -60,12 +82,47 @@ export function AdminPage() {
           </TextButton>
         </HeaderLinks>
       </Header>
-      <ReviewQueuePanel queue={queue} />
-      <VesselImport />
-      <WikidataImport />
-      <PhotoImport />
-      <PhotoNotes />
-      <PortsImport />
+      <Layout>
+        <Contents aria-label={t.admin.contents}>
+          {ADMIN_GROUPS.map(group => (
+            <div key={group}>
+              <strong>{t.admin.groups[group].title}</strong>
+              <ol>
+                {ADMIN_SECTIONS.filter(section => section.group === group).map(section => (
+                  <li key={section.id}>
+                    <a href={`#${sectionAnchor(section.id)}`}>{t.admin.sections[section.id]}</a>
+                    {section.id === 'review' && pendingCount > 0 && <Count>{pendingCount}</Count>}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </Contents>
+        <Groups>
+          {ADMIN_GROUPS.map(group => {
+            const sections = ADMIN_SECTIONS.filter(section => section.group === group)
+
+            return (
+              <Group aria-labelledby={`admin-group-${group}`} key={group}>
+                <GroupHead>
+                  <h2 id={`admin-group-${group}`}>{t.admin.groups[group].title}</h2>
+                  <p>{t.admin.groups[group].text}</p>
+                </GroupHead>
+                {sections.map((section, index) => (
+                  <AdminSection
+                    description={content[section.id].description}
+                    id={section.id}
+                    key={section.id}
+                    step={sections.length > 1 ? index + 1 : undefined}
+                  >
+                    {content[section.id].body}
+                  </AdminSection>
+                ))}
+              </Group>
+            )
+          })}
+        </Groups>
+      </Layout>
     </Page>
   )
 }
@@ -119,6 +176,98 @@ const Header = styled.div`
 
   h1 {
     font-size: 36px;
+  }
+`
+
+const Layout = styled.div`
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: start;
+  gap: 40px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+`
+
+/** The sections, in the order to run them: follows the page on wide screens */
+const Contents = styled.nav`
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 18px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  font-size: 13px;
+
+  strong {
+    display: block;
+    margin-bottom: 4px;
+    color: ${COLORS.ink};
+  }
+
+  ol {
+    margin: 0;
+    padding-left: 20px;
+    color: ${COLORS.muted};
+  }
+
+  li {
+    padding: 2px 0;
+  }
+
+  a {
+    color: ${COLORS.link};
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 900px) {
+    position: static;
+    max-height: none;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    padding: 12px 0;
+    border-top: 1px solid ${COLORS.border};
+  }
+`
+
+const Count = styled.span`
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 3px;
+  background: ${COLORS.accent};
+  color: ${COLORS.white};
+  font-size: 11px;
+  font-weight: 600;
+`
+
+const Groups = styled.div`
+  display: grid;
+  gap: 48px;
+`
+
+const Group = styled.section``
+
+const GroupHead = styled.div`
+  padding-bottom: 12px;
+  border-bottom: 2px solid ${COLORS.ink};
+
+  h2 {
+    margin: 0;
+    font-family: ${FONTS.display};
+    font-size: 28px;
+  }
+
+  p {
+    max-width: 760px;
+    margin: 6px 0 0;
+    color: ${COLORS.text};
+    font-size: 14px;
+    line-height: 1.5;
   }
 `
 

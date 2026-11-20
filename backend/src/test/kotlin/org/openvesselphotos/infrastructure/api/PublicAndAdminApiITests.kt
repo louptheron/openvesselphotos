@@ -3,6 +3,7 @@ package org.openvesselphotos.infrastructure.api
 import jakarta.servlet.http.Cookie
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.startsWith
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
@@ -43,6 +44,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 @SpringBootTest(
     properties = [
         "openvesselphotos.admin-password=test-password",
+        // Never Global Fishing Watch, whatever the environment
+        "openvesselphotos.gfw-token=",
         // Every vessel without photo described by the register is released
         "openvesselphotos.vessels-without-photos.since=2000-01-01",
     ],
@@ -1474,6 +1477,31 @@ class PublicAndAdminApiITests {
             .andExpect(jsonPath("$.auction.species[0].priceEurosPerKg").value(15.0))
             .andExpect(jsonPath("$.auction.species[0].monthlyQuantitiesTonnes.length()").value(12))
         mockMvc.perform(get("/v1/ports/FRLRH-0015")).andExpect(jsonPath("$.auction.name").value("La Rochelle"))
+        // Without Global Fishing Watch token, no fishing activity map nor search of home ports
+        mockMvc.perform(get("/v1/ports/fishing-effort")).andExpect(jsonPath("$.isEnabled").value(false))
+        mockMvc.perform(get("/v1/ports/fishing-effort/2/1/1.png")).andExpect(status().isNotFound)
+        mockMvc
+            .perform(post("/v1/admin/ports/home-ports/from-port-visits").cookie(cookie))
+            .andExpect(status().isBadRequest)
+        mockMvc.perform(get("/v1/ports/FRQUY")).andExpect(jsonPath("$.vessels[0].homePortSource").value("IMPORT"))
+        mockMvc
+            .perform(post("/v1/admin/ports/fishing-activity").cookie(cookie))
+            .andExpect(status().isBadRequest)
+        mockMvc.perform(post("/v1/admin/ports/home-ports/check").cookie(cookie)).andExpect(status().isBadRequest)
+        mockMvc
+            .perform(
+                get("/v1/admin/ports/home-ports/checks").cookie(cookie),
+            ).andExpect(jsonPath("$.length()").value(0))
+        mockMvc
+            .perform(get("/v1/admin/ports/home-ports/checks.csv").cookie(cookie))
+            .andExpect(content().string(startsWith("cfr,vessel_name,result,")))
+        mockMvc.perform(get("/v1/admin/ports/home-ports/checks")).andExpect(status().isUnauthorized)
+        mockMvc
+            .perform(get("/v1/ports/FRQUY/fishing-effort").param("engin", "chalut-de-fond"))
+            .andExpect(jsonPath("$.trackedVessels").value(0))
+            .andExpect(jsonPath("$.cells.length()").value(0))
+        mockMvc.perform(get("/v1/ports/FRQUY/fishing-effort").param("engin", "filets")).andExpect(status().isBadRequest)
+
         // On the map: the ports with an auction
         mockMvc
             .perform(get("/v1/ports"))
@@ -1519,9 +1547,13 @@ class PublicAndAdminApiITests {
         assertThat(portPage)
             .contains("""<html lang="fr">""")
             .contains("""<link rel="canonical" href="http://ports.localhost/FRQUY" />""")
-            .contains("""<meta property="og:site_name" content="Ports de pêche" />""")
+            .contains("""<meta property="og:site_name" content="La Pêche française" />""")
             .contains("""<a href="http://localhost/vessels/cfr/FRA000900001">KER ARMOR</a>""")
             .contains("<li>TROUZ AR MOR (CFR FRA000900002)</li>")
+            .contains("<title>Port de pêche d’Erquy : 2 navires et sa criée | La Pêche française</title>")
+            .contains("<h1>Port de pêche d’Erquy</h1>")
+            .contains("basés au port d’Erquy : chalut de fond (1). Criée : 120 t vendues en 2025 pour 400 k€ (bar).")
+            .contains("\"@type\":\"BreadcrumbList\"")
             .doesNotContain("feed.xml")
         pages.perform(onPortsHost("/_ports/frquy")).andExpect(status().isMovedPermanently)
         pages.perform(onPortsHost("/_ports/FRXXX")).andExpect(status().isNotFound)
@@ -1529,7 +1561,7 @@ class PublicAndAdminApiITests {
         pages
             .perform(onPortsHost("/_ports/"))
             .andExpect(status().isOk)
-            .andExpect(content().string(containsString("""<a href="/FRQUY">Erquy</a> (2 navires)""")))
+            .andExpect(content().string(containsString("""<a href="/FRQUY">Erquy</a> : 2 navires""")))
         pages
             .perform(onPortsHost("/_ports/robots.txt"))
             .andExpect(content().string(containsString("Disallow: /v1/")))

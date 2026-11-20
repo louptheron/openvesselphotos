@@ -102,7 +102,7 @@ const Row = styled(Link)`
   align-items: center;
   gap: 10px;
   padding: 8px 8px 11px;
-  border-radius: 10px;
+  border-radius: 4px;
   color: ${COLORS.ink};
   text-decoration: none;
 

@@ -76,6 +76,7 @@ Variables are listed in `backend/.env.example`.
 | `OPENVESSELPHOTOS_DATABASE_HIKARI_MAX_POOL_SIZE`  | `5`                        | Database connections per container                  |
 | `OPENVESSELPHOTOS_PUBLIC_URL`                     | _(requested host)_         | Canonical base URL, e.g. `https://example.org`      |
 | `OPENVESSELPHOTOS_PORTS_PUBLIC_URL`               | _(`ports.localhost` only)_ | Domain of the ports site, see below                 |
+| `OPENVESSELPHOTOS_GFW_TOKEN`                      | _(empty: disabled)_        | Global Fishing Watch API token, see below           |
 | `OPENVESSELPHOTOS_INDEXNOW_KEY`                   | _(empty: disabled)_        | IndexNow key (8–128 letters, digits, dashes)        |
 | `OPENVESSELPHOTOS_ADMIN_PASSWORD`                 | _(empty: admin disabled)_  | Unique password of `/admin`                         |
 | `PORT`                                            | _(set by Scalingo)_        | HTTP port, takes precedence over the next one       |
@@ -186,7 +187,25 @@ The sales of the fish auctions (criées) come from FranceAgriMer's yearly workbo
 marée" (`BIL-MER-VENTES_HAM-Axx.xlsm`). To refresh them, upload the new workbook as downloaded in `/admin` → "Ventes en
 criée": it replaces all the sales (`AuctionSalesWorkbookParser`, which finds its tables by their labels and never runs
 its macros). Each auction is matched to a port by its name; auctions named after their town or island are listed in
-`ImportAuctionSales.ALIASES`, and the import reports the auctions left without a port. In local development, open
+`ImportAuctionSales.ALIASES`, and the import reports the auctions left without a port.
+
+With a [Global Fishing Watch](https://globalfishingwatch.org/our-apis/tokens) token (`OPENVESSELPHOTOS_GFW_TOKEN`,
+non-commercial use, CC BY-NC 4.0), the map shows where the vessels fished over the last 12 months, for the trawls only:
+the other French fishing vessels are mostly too small to carry AIS, and their maps would be nearly empty
+(`GetFishingEffort`).
+
+- All French vessels: tiles of Global Fishing Watch through `/v1/ports/fishing-effort/…`, so that the token never
+  reaches browsers, kept in memory.
+- The vessels of a port: in `/admin` → "Zones de pêche des ports", a background synchronisation finds each vessel of
+  the ports site on Global Fishing Watch (by MMSI, call sign, then name) and stores its fishing hours by cell of 0.05°
+  (`SyncFishingActivity`); `/v1/ports/{locode}/fishing-effort` sums them, drawn as a heatmap. To run again every month
+  or so; `?port=FRLRT` synchronises one port.
+- In `/admin` → "Ports d'attache par les escales", a background search gives a home port to the French vessels of the
+  EU fleet register without one: the French port each visited most in a year (any port otherwise), when that port is
+  on the map. Imported home ports take precedence (`FindHomePortsFromPortVisits`).
+- In `/admin` → "Vérifier les ports d'attache", a background check compares each imported home port with the port the
+  vessel visited most in a year on Global Fishing Watch, and lists the disagreements (also as a CSV). It changes no
+  home port (`CheckHomePorts`). In local development, open
 `http://ports.localhost:3000` (`make run-front`) or `http://ports.localhost:8880`.
 
 To put it online, add both domains to the Scalingo app (`scalingo --app openvesselphotos domains-add <domain>`, and

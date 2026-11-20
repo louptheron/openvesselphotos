@@ -3,14 +3,21 @@ package org.openvesselphotos.infrastructure.api.admin
 import jakarta.servlet.http.HttpServletRequest
 import org.openvesselphotos.config.AdminAuthentication
 import org.openvesselphotos.domain.entities.ImageSize
+import org.openvesselphotos.domain.fishing_activity.HomePortCheck
+import org.openvesselphotos.domain.fishing_activity.HomePortCheckResult
 import org.openvesselphotos.domain.use_cases.admin.ApproveApiKeyRequest
 import org.openvesselphotos.domain.use_cases.admin.ApprovePhoto
 import org.openvesselphotos.domain.use_cases.admin.AuctionSalesImportResult
+import org.openvesselphotos.domain.use_cases.admin.CheckHomePorts
+import org.openvesselphotos.domain.use_cases.admin.FindHomePortsFromPortVisits
+import org.openvesselphotos.domain.use_cases.admin.FishingActivitySyncStatus
 import org.openvesselphotos.domain.use_cases.admin.GetActiveApiKeys
 import org.openvesselphotos.domain.use_cases.admin.GetPendingPhotoImage
 import org.openvesselphotos.domain.use_cases.admin.GetReviewQueue
 import org.openvesselphotos.domain.use_cases.admin.GetUsageStatistics
 import org.openvesselphotos.domain.use_cases.admin.HomePortImportResult
+import org.openvesselphotos.domain.use_cases.admin.HomePortsCheckStatus
+import org.openvesselphotos.domain.use_cases.admin.HomePortsFromPortVisitsStatus
 import org.openvesselphotos.domain.use_cases.admin.ImportAuctionSales
 import org.openvesselphotos.domain.use_cases.admin.ImportHomePorts
 import org.openvesselphotos.domain.use_cases.admin.ImportPhotos
@@ -27,6 +34,7 @@ import org.openvesselphotos.domain.use_cases.admin.ResolveReport
 import org.openvesselphotos.domain.use_cases.admin.ReviewKeyLink
 import org.openvesselphotos.domain.use_cases.admin.RevokeApiKey
 import org.openvesselphotos.domain.use_cases.admin.SetPhotoNotes
+import org.openvesselphotos.domain.use_cases.admin.SyncFishingActivity
 import org.openvesselphotos.domain.use_cases.admin.UsageStatistics
 import org.openvesselphotos.domain.use_cases.admin.VesselImportResult
 import org.openvesselphotos.domain.use_cases.admin.VesselOwnerImportResult
@@ -76,6 +84,9 @@ class AdminController(
     private val importPortPositions: ImportPortPositions,
     private val importVesselOwners: ImportVesselOwners,
     private val importAuctionSales: ImportAuctionSales,
+    private val findHomePortsFromPortVisits: FindHomePortsFromPortVisits,
+    private val checkHomePorts: CheckHomePorts,
+    private val syncFishingActivity: SyncFishingActivity,
 ) {
     @PostMapping("/login")
     fun login(
@@ -213,6 +224,78 @@ class AdminController(
         importPortPositions.execute(PortsCsvParser.parsePositions(String(file.bytes, Charsets.UTF_8)))
 
     /**
+     * Gives a home port to the French vessels of the EU fleet register without one, from their port visits on Global
+     * Fishing Watch: starts a background search and returns its status at once.
+     */
+    @PostMapping("/ports/home-ports/from-port-visits")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    fun findHomePortsFromPortVisits(): HomePortsFromPortVisitsStatus = findHomePortsFromPortVisits.start()
+
+    /**
+     * Where the vessels of the ports site fished over the last 12 months, for the map of each port, from Global Fishing
+     * Watch, of a port only when given (port=FRLRT): starts a background synchronisation and returns its status at once.
+     */
+    @PostMapping("/ports/fishing-activity")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    fun syncFishingActivity(
+        @RequestParam(required = false) port: String?,
+    ): FishingActivitySyncStatus = syncFishingActivity.start(port?.takeIf { it.isNotBlank() })
+
+    @GetMapping("/ports/fishing-activity")
+    fun fishingActivitySyncStatus(): FishingActivitySyncStatus = syncFishingActivity.status()
+
+    @GetMapping("/ports/home-ports/from-port-visits")
+    fun homePortsFromPortVisitsStatus(): HomePortsFromPortVisitsStatus = findHomePortsFromPortVisits.status()
+
+    /**
+     * Double checks the imported home ports against the port visits of the vessels on Global Fishing Watch, of a port
+     * only when given (port=FRLRT): starts a background check and returns its status at once. Changes no home port.
+     */
+    @PostMapping("/ports/home-ports/check")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    fun checkHomePorts(
+        @RequestParam(required = false) port: String?,
+    ): HomePortsCheckStatus = checkHomePorts.start(port?.takeIf { it.isNotBlank() })
+
+    @GetMapping("/ports/home-ports/check")
+    fun homePortsCheckStatus(): HomePortsCheckStatus = checkHomePorts.status()
+
+    /** The vessels checked, those whose port disagrees first */
+    @GetMapping("/ports/home-ports/checks")
+    fun homePortChecks(): List<HomePortCheck> = checkHomePorts.results().sortedWith(HOME_PORT_CHECKS_ORDER)
+
+    /** The same, as a CSV file to review in a spreadsheet */
+    @GetMapping("/ports/home-ports/checks.csv")
+    fun homePortChecksCsv(): ResponseEntity<String> {
+        val header =
+            "cfr,vessel_name,result,imported_locode,imported_port,gfw_locode,gfw_port,visits_total," +
+                "visits_at_gfw_port,visits_at_imported_port,distance_km,checked_on"
+        val rows =
+            checkHomePorts.results().sortedWith(HOME_PORT_CHECKS_ORDER).map {
+                listOf(
+                    it.cfr,
+                    it.vesselName,
+                    it.result.name,
+                    it.importedLocode,
+                    it.importedPortName,
+                    it.gfwLocode,
+                    it.gfwPortName,
+                    it.visitsTotal,
+                    it.visitsAtGfwPort,
+                    it.visitsAtImported,
+                    it.distanceKm,
+                    it.checkedOn,
+                ).joinToString(",") { value -> csvValue(value?.toString()) }
+            }
+
+        return ResponseEntity
+            .ok()
+            .contentType(MediaType("text", "csv", Charsets.UTF_8))
+            .header("Content-Disposition", "attachment; filename=\"home-port-checks.csv\"")
+            .body((listOf(header) + rows).joinToString("\n", postfix = "\n"))
+    }
+
+    /**
      * Replaces the sales of the fish auctions, shown on the ports site, with FranceAgriMer's yearly workbook "Ventes
      * déclarées en halles à marée" (BIL-MER-VENTES_HAM-Axx.xlsm), as published.
      */
@@ -262,5 +345,33 @@ class AdminController(
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun cancelPhotoImport() {
         importPhotos.cancel()
+    }
+
+    companion object {
+        /** Disagreements first, with the fewest visits to the imported port first */
+        private val HOME_PORT_CHECKS_ORDER =
+            compareBy<HomePortCheck> { HOME_PORT_CHECK_RANK.getValue(it.result) }
+                .thenBy { it.visitsAtImported }
+                .thenByDescending { it.visitsAtGfwPort }
+
+        private val HOME_PORT_CHECK_RANK =
+            listOf(
+                HomePortCheckResult.DISAGREES,
+                HomePortCheckResult.NOT_ON_THE_MAP,
+                HomePortCheckResult.NEARBY,
+                HomePortCheckResult.AGREES,
+                HomePortCheckResult.TOO_FEW_VISITS,
+                HomePortCheckResult.NOT_FOUND,
+            ).withIndex().associate { (index, result) -> result to index }
+
+        /** Quoted when needed, formulas neutralised for spreadsheets */
+        private fun csvValue(value: String?): String {
+            val text = (value ?: "").let { if (it.firstOrNull() in FORMULA_STARTS) "'$it" else it }
+
+            return if (text.any { it in CSV_SPECIALS }) "\"${text.replace("\"", "\"\"")}\"" else text
+        }
+
+        private val FORMULA_STARTS = setOf('=', '+', '-', '@')
+        private val CSV_SPECIALS = setOf(',', '"', '\n', '\r')
     }
 }

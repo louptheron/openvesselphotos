@@ -6,17 +6,20 @@ import Attribution from 'ol/control/Attribution'
 import ScaleLine from 'ol/control/ScaleLine'
 import Point from 'ol/geom/Point'
 import VectorLayer from 'ol/layer/Vector'
+import HeatmapLayer from 'ol/layer/Heatmap'
+import TileLayer from 'ol/layer/Tile'
 import WebGLVectorLayer from 'ol/layer/WebGLVector'
 import { fromLonLat, transformExtent } from 'ol/proj'
 import VectorSource from 'ol/source/Vector'
+import XYZ from 'ol/source/XYZ'
 import type { FlatStyle } from 'ol/style/flat'
 import { Fill, Stroke, Style, Text } from 'ol/style'
 import { MapboxVectorLayer } from 'ol-mapbox-style'
 import { createPortal } from 'react-dom'
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import styled, { keyframes } from 'styled-components'
+import styled from 'styled-components'
 
-import type { Port } from '../api/types'
+import type { FishingEffortPeriod, Port, PortFishingEffort } from '../api/types'
 import { COLORS, FONTS } from '../theme'
 import { type GearFamily, countVessels } from './gears'
 import { MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH } from './layout'
@@ -36,6 +39,10 @@ export type PortsMapHandle = {
 }
 
 type Props = {
+  /** Where the French vessels fish, from Global Fishing Watch, when enabled */
+  fishingEffort?: FishingEffortPeriod | undefined
+  /** Where the vessels of the selected port fished, drawn instead of the French vessels' */
+  portFishingEffort?: PortFishingEffort | undefined
   /** Shows only the vessels using this family of gears */
   gear: GearFamily | undefined
   /** A port hovered in the panel, highlighted on the map */
@@ -52,10 +59,14 @@ type Props = {
  * GPU from their vessel count and from style variables, so hovering or selecting a port only updates two variables.
  */
 export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
-  { gear, highlightedLocode, onSelect, padding, ports, selectedLocode },
+  { fishingEffort, gear, highlightedLocode, portFishingEffort, onSelect, padding, ports, selectedLocode },
   handle
 ) {
   const elementRef = useRef<HTMLDivElement>(null)
+  const effortLayerRef = useRef<TileLayer<XYZ>>(undefined)
+  const portEffortSourceRef = useRef(new VectorSource<Feature<Point>>())
+  const portEffortLayerRef = useRef<HeatmapLayer>(undefined)
+  const [isEffortShown, setIsEffortShown] = useState(true)
   // OpenLayers moves the overlays' elements into the map: React renders into them through portals, never removing them
   const [tooltipElement] = useState(() => document.createElement('div'))
   const [pulseElement] = useState(() => document.createElement('div'))
@@ -97,11 +108,30 @@ export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
       style: (feature, resolution) =>
         getLabelStyle(feature.get('port') as Port, feature.get('vesselCount') as number, resolution)
     })
+    // Where the vessels fish, between the basemap and the ports
+    const effortLayer = new TileLayer<XYZ>({ opacity: 0.55, visible: false })
+    effortLayerRef.current = effortLayer
+    // The fishing grounds of a port's vessels, from their cells
+    const portEffortLayer = new HeatmapLayer({
+      blur: 18,
+      gradient: ['rgba(11, 155, 150, 0)', 'rgba(11, 155, 150, 0.7)', '#0B9B96', '#077571', '#04403D'],
+      radius: 9,
+      source: portEffortSourceRef.current,
+      visible: false,
+      weight: feature => feature.get('weight') as number
+    })
+    portEffortLayerRef.current = portEffortLayer
     const tooltip = new Overlay({ element: tooltipElement, offset: [0, -18], positioning: 'bottom-center' })
     const pulse = new Overlay({ element: pulseElement, positioning: 'center-center', stopEvent: false })
     const map = new OlMap({
       controls: [new Attribution({ collapsible: true }), new ScaleLine({ bar: false, minWidth: 80 })],
-      layers: [new MapboxVectorLayer({ styleUrl: BASEMAP_STYLE_URL }), portsLayer, labelsLayer],
+      layers: [
+        new MapboxVectorLayer({ styleUrl: BASEMAP_STYLE_URL }),
+        effortLayer,
+        portEffortLayer,
+        portsLayer,
+        labelsLayer
+      ],
       overlays: [tooltip, pulse],
       target: elementRef.current,
       view: new View({
@@ -128,6 +158,17 @@ export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
     map.getViewport()?.addEventListener('pointerleave', () => setHovered(undefined))
 
     mapRef.current = map
+    // A cell of the port's fishing grounds is about 5 km wide: its spot follows the zoom, so that the cells merge
+    const fitHeatmapToZoom = () => {
+      const resolution = map.getView().getResolution()
+      if (resolution) {
+        const cellPixels = FISHING_CELL_METERS / resolution
+        portEffortLayer.setRadius(Math.min(50, Math.max(4, cellPixels * 0.7)))
+        portEffortLayer.setBlur(Math.min(60, Math.max(6, cellPixels * 0.8)))
+      }
+    }
+    map.getView().on('change:resolution', fitHeatmapToZoom)
+    fitHeatmapToZoom()
     portsLayerRef.current = portsLayer
     tooltipOverlayRef.current = tooltip
     pulseOverlayRef.current = pulse
@@ -175,6 +216,49 @@ export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
     )
   }, [gear, ports])
 
+  // The fishing grounds: of the French vessels, or of the vessels of the selected port; for the trawls only
+  const isGearDrawn = !gear || (fishingEffort?.gearFamilies.includes(gear.id) ?? false)
+  const isPortEffortShown = Boolean(selectedLocode && portFishingEffort)
+  useEffect(() => {
+    const layer = effortLayerRef.current
+    if (!layer) {
+      return
+    }
+    if (!fishingEffort?.isEnabled || !isGearDrawn) {
+      layer.setVisible(false)
+
+      return
+    }
+    layer.setSource(
+      new XYZ({
+        attributions: GFW_ATTRIBUTION,
+        maxZoom: FISHING_EFFORT_MAX_ZOOM,
+        url: `/v1/ports/fishing-effort/{z}/{x}/{y}.png${gear ? `?engin=${gear.id}` : ''}`
+      })
+    )
+    layer.setVisible(isEffortShown && !isPortEffortShown)
+  }, [fishingEffort?.isEnabled, gear, isEffortShown, isGearDrawn, isPortEffortShown])
+
+  useEffect(() => {
+    const source = portEffortSourceRef.current
+    source.clear()
+    const cells = portFishingEffort?.cells ?? []
+    // The square root keeps the less fished grounds visible next to the most fished ones, and a floor keeps a few hours
+    // of fishing visible at all
+    const maxWeight = Math.sqrt(Math.max(1, ...cells.map(([, , hours]) => hours)))
+    source.addFeatures(
+      cells.map(
+        ([longitude, latitude, hours]) =>
+          new Feature({
+            geometry: new Point(fromLonLat([longitude, latitude])),
+            weight: 0.25 + 0.75 * (Math.sqrt(hours) / maxWeight)
+          })
+      )
+    )
+    source.setAttributions(cells.length > 0 ? GFW_ATTRIBUTION : undefined)
+    portEffortLayerRef.current?.setVisible(isEffortShown && isPortEffortShown && isGearDrawn)
+  }, [isEffortShown, isGearDrawn, isPortEffortShown, portFishingEffort])
+
   // The port under the pointer, or the one hovered in the panel's list
   const shown = useMemo(
     () => hovered ?? ports.find(port => port.locode === highlightedLocode),
@@ -221,7 +305,7 @@ export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
 
   return (
     <>
-      <MapElement aria-label="Carte des ports de pêche" ref={elementRef} role="application" />
+      <MapElement aria-label="Carte de la pêche française" ref={elementRef} role="application" />
       <Controls>
         <ControlGroup>
           <ControlButton aria-label="Zoomer" onClick={() => zoomBy(1)} title="Zoomer" type="button">
@@ -277,6 +361,31 @@ export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
             </svg>
           </ControlButton>
         </ControlGroup>
+        {fishingEffort?.isEnabled && (
+          <ControlGroup>
+            <ControlButton
+              aria-label="Zones de pêche"
+              aria-pressed={isEffortShown}
+              data-active={isEffortShown}
+              onClick={() => setIsEffortShown(!isEffortShown)}
+              title={isEffortShown ? 'Masquer les zones de pêche' : 'Afficher les zones de pêche'}
+              type="button"
+            >
+              <svg
+                aria-hidden
+                fill="none"
+                height="18"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                viewBox="0 0 24 24"
+                width="18"
+              >
+                <path d="M12 3 3 8l9 5 9-5-9-5Z" strokeLinejoin="round" />
+                <path d="m3 13 9 5 9-5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </ControlButton>
+          </ControlGroup>
+        )}
       </Controls>
       {createPortal(
         <Tooltip>
@@ -304,6 +413,21 @@ export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
           <i data-auction />
           Port avec criée
         </span>
+        {fishingEffort?.isEnabled && isEffortShown && (
+          <span title="Activité de pêche, d’après les positions AIS des navires (Global Fishing Watch)">
+            <b
+              aria-hidden
+              data-muted={!isGearDrawn || (isPortEffortShown && portFishingEffort?.trackedVessels === 0)}
+            />
+            {!isGearDrawn
+              ? 'Zones de pêche : chalutiers seulement'
+              : isPortEffortShown
+                ? portFishingEffort?.trackedVessels
+                  ? `Zones de pêche de ${vessels(portFishingEffort.trackedVessels)} suivi${portFishingEffort.trackedVessels > 1 ? 's' : ''} par AIS, ${formatPeriod(fishingEffort)}`
+                  : 'Aucun navire de ce port suivi par AIS'
+                : `Zones de pêche, ${formatPeriod(fishingEffort)}${gear ? ` · ${gear.label.toLowerCase()}` : ''}`}
+          </span>
+        )}
       </Legend>
     </>
   )
@@ -415,7 +539,6 @@ const MapElement = styled.div`
     padding: 4px 8px;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
   }
 
   .ol-scale-line-inner {
@@ -429,7 +552,6 @@ const MapElement = styled.div`
     bottom: 48px;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
     font: 11px ${FONTS.sans};
   }
 
@@ -471,11 +593,10 @@ const ControlGroup = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 12px;
-  background: rgba(250, 249, 246, 0.9);
-  box-shadow: 0 6px 20px rgba(11, 34, 51, 0.16);
-  backdrop-filter: blur(16px);
+  border: 1px solid ${COLORS.border};
+  border-radius: 4px;
+  background: #fbfaf6;
+  box-shadow: 0 1px 2px rgba(11, 34, 51, 0.1);
 `
 
 const ControlButton = styled.button`
@@ -496,6 +617,11 @@ const ControlButton = styled.button`
   &:hover {
     background: ${COLORS.white};
   }
+
+  &[data-active='true'] {
+    background: ${COLORS.ink};
+    color: ${COLORS.white};
+  }
 `
 
 const Legend = styled.div`
@@ -506,13 +632,12 @@ const Legend = styled.div`
   display: flex;
   gap: 14px;
   padding: 7px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 12px;
-  background: rgba(250, 249, 246, 0.9);
-  box-shadow: 0 6px 20px rgba(11, 34, 51, 0.12);
+  border: 1px solid ${COLORS.border};
+  border-radius: 4px;
+  background: #fbfaf6;
+  box-shadow: 0 1px 2px rgba(11, 34, 51, 0.1);
   color: ${COLORS.ink};
   font: 500 12px ${FONTS.sans};
-  backdrop-filter: blur(16px);
 
   span {
     display: flex;
@@ -533,6 +658,17 @@ const Legend = styled.div`
     border: 3px solid ${AUCTION_COLOR};
   }
 
+  b[data-muted='true'] {
+    opacity: 0.3;
+  }
+
+  b {
+    width: 22px;
+    height: 10px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, rgba(11, 155, 150, 0.08), rgba(11, 155, 150, 0.6));
+  }
+
   @media ${MOBILE_QUERY} {
     display: none;
   }
@@ -547,9 +683,9 @@ const Tooltip = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 7px 12px;
-  border-radius: 10px;
+  border-radius: 4px;
   background: ${COLORS.ink};
-  box-shadow: 0 8px 24px rgba(11, 34, 51, 0.28);
+  box-shadow: 0 1px 3px rgba(11, 34, 51, 0.25);
   color: ${COLORS.white};
   font: 12px ${FONTS.sans};
   white-space: nowrap;
@@ -580,26 +716,34 @@ const Tooltip = styled.div`
   }
 `
 
-const pulse = keyframes`
-  from { transform: scale(0.6); opacity: 0.7; }
-  to { transform: scale(2.6); opacity: 0; }
-`
-
+/** A ring around the selected port */
 const Pulse = styled.div`
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
   border: 2px solid ${COLORS.accent};
+  border-radius: 50%;
   pointer-events: none;
-  animation: ${pulse} 1.8s ease-out infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-    opacity: 0.6;
-  }
 `
 
 /** e.g. "15 656 t" */
 function formatTonnes(tonnes: number): string {
   return `${formatNumber(Math.round(tonnes))} t`
+}
+
+/** The width of a cell of the port's fishing grounds, 0.05° of latitude, in Web Mercator meters at French latitudes */
+const FISHING_CELL_METERS = 8_000
+
+const GFW_ATTRIBUTION =
+  'Zones de pêche : <a href="https://globalfishingwatch.org" rel="noopener" target="_blank">Powered by Global Fishing Watch</a>'
+
+/** Beyond, the map enlarges the tiles of this zoom level: the data is not finer (see GetFishingEffort) */
+const FISHING_EFFORT_MAX_ZOOM = 9
+
+/** e.g. "nov. 2025 – oct. 2026": the end of the period is excluded */
+function formatPeriod({ from, to }: FishingEffortPeriod): string {
+  const format = (date: Date) => date.toLocaleDateString('fr', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+  const end = new Date(to)
+  end.setUTCDate(0)
+
+  return `${format(new Date(from))} – ${format(end)}`
 }
