@@ -1642,5 +1642,45 @@ class PublicAndAdminApiITests {
             .andExpect(content().string(startsWith("# La Pêche française")))
             .andExpect(content().string(containsString("http://ports.localhost/ports/{slug}")))
             .andExpect(content().string(containsString("Combien de bateaux de pêche en France ?")))
+
+        // How complete and fresh the data is, and its changelog
+        mockMvc
+            .perform(get("/v1/ports/data-quality"))
+            // Other tests add vessels to the register
+            .andExpect(jsonPath("$.registerVessels").isNumber)
+            .andExpect(jsonPath("$.withHomePort").isNumber)
+            .andExpect(jsonPath("$.share").isNumber)
+            .andExpect(jsonPath("$.fromObservations").isNumber)
+            .andExpect(jsonPath("$.fromPortVisits").value(0))
+            .andExpect(jsonPath("$.lastUpdate").isNotEmpty)
+        pages
+            .perform(onPortsHost("/_ports/mises-a-jour"))
+            .andExpect(status().isOk)
+            .andExpect(
+                content().string(
+                    containsString("<strong>Ventes des criées, FranceAgriMer</strong> : Ventes 2025 de 2 criées"),
+                ),
+            ).andExpect(content().string(containsString("Ports d’attache de 4 navires, dans 3 ports")))
+            .andExpect(content().string(containsString("Port d’attache connu pour ")))
+        assertThat(portPage)
+            .contains("<h3>Fiabilité des données</h3><p>2 navires y ont été vus à quai le plus souvent")
+            .contains(
+                """<meta property="og:image" content="http://ports.localhost/images/partage/ports/erquy.png" />""",
+            )
+
+        // The images of the pages when shared: their figures, drawn as PNG
+        listOf("accueil", "ports/erquy", "especes/bar").forEach {
+            val image =
+                pages
+                    .perform(onPortsHost("/_ports/images/partage/$it.png"))
+                    .andExpect(status().isOk)
+                    .andExpect(content().contentType("image/png"))
+                    .andReturn()
+                    .response.contentAsByteArray
+            assertThat(
+                image.take(4),
+            ).containsExactly(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte())
+        }
+        pages.perform(onPortsHost("/_ports/images/partage/ports/nowhere.png")).andExpect(status().isNotFound)
     }
 }

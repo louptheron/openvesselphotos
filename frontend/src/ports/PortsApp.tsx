@@ -173,4 +173,6 @@ const Page = styled.div`
   inset: 0;
   overflow: hidden;
   background: ${COLORS.ground};
+  /* Figures line up in every list and table */
+  font-variant-numeric: tabular-nums;
 `

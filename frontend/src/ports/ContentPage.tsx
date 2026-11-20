@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 
 import { COLORS, FONTS } from '../theme'
-import { TrawlerLogo } from './TrawlerLogo'
+import { SiteMark } from './SiteMark'
 import { SITE_NAME, SITE_TAGLINE } from './texts'
 
 type Props = {
@@ -18,7 +18,7 @@ export function ContentPage({ html }: Props) {
     <Page>
       <Header>
         <a href="/">
-          <TrawlerLogo size={32} />
+          <SiteMark size={32} />
           <span>
             <strong>{SITE_NAME}</strong>
             <small>{SITE_TAGLINE}</small>
@@ -36,6 +36,7 @@ const Page = styled.div`
   background: ${COLORS.ground};
   color: ${COLORS.text};
   font-family: ${FONTS.sans};
+  font-variant-numeric: tabular-nums;
 `
 
 const Header = styled.header`
@@ -57,7 +58,7 @@ const Header = styled.header`
   }
 
   strong {
-    font-family: ${FONTS.display};
+    font-family: ${FONTS.sans};
     font-size: 17px;
   }
 
@@ -78,12 +79,14 @@ const Content = styled.div`
   h2,
   h3 {
     color: ${COLORS.ink};
-    font-family: ${FONTS.display};
+    font-family: ${FONTS.sans};
+    font-weight: 600;
     line-height: 1.25;
   }
 
   h1 {
     font-size: 30px;
+    letter-spacing: -0.01em;
   }
 
   h2 {

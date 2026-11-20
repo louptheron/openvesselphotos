@@ -84,6 +84,7 @@ class PortsContentController(
                         " | ${Site.PORTS.siteName}",
                 description = description,
                 canonicalPath = PortsSeo.SPECIES_PATH,
+                imageUrl = PortsSeo.homeImage(baseUrl()),
                 structuredData =
                     listOf(PortsSeo.breadcrumb(baseUrl(), "Espèces" to PortsSeo.SPECIES_PATH)) +
                         PortsSeo.faqStructuredData(questions),
@@ -182,6 +183,7 @@ class PortsContentController(
                 title = "$name : prix en criée, ports et saisons $year | ${Site.PORTS.siteName}",
                 description = description,
                 canonicalPath = path,
+                imageUrl = PortsSeo.speciesImage(baseUrl(), slug),
                 structuredData =
                     listOf(
                         PortsSeo.breadcrumb(baseUrl(), "Espèces" to PortsSeo.SPECIES_PATH, name to path),
@@ -232,6 +234,7 @@ class PortsContentController(
                 title = "Méthodologie et sources | ${Site.PORTS.siteName}",
                 description = description,
                 canonicalPath = PortsSeo.METHODOLOGY_PATH,
+                imageUrl = PortsSeo.homeImage(baseUrl()),
                 structuredData =
                     listOf(
                         PortsSeo.breadcrumb(baseUrl(), "Méthodologie" to PortsSeo.METHODOLOGY_PATH),
@@ -242,6 +245,7 @@ class PortsContentController(
                         "<h1>Méthodologie et sources</h1><p>${escapeHtml(description)}</p>" +
                         PortsSeo.updatedOn(updatedOn) +
                         "<h2>Le port d’attache des navires</h2>" +
+                        (PortsSeo.coverageSentence(getPorts.coverage())?.let { "<p>${escapeHtml(it)}</p>" } ?: "") +
                         "<p>Chaque navire de pêche professionnelle est rattaché au port où il a été le plus souvent " +
                         "observé à quai, d’après ses positions (AIS). Pour les navires du " +
                         """<a href="${PortsSeo.FLEET_REGISTER_URL}">${PortsSeo.FLEET_REGISTER}</a> """ +
@@ -266,12 +270,45 @@ class PortsContentController(
                         "chacune avec son auteur et sa licence.</p>" +
                         "<h2>Mises à jour</h2>" +
                         "<p>Les ports d’attache sont mis à jour à chaque nouvel import des positions, les ventes des " +
-                        "criées à chaque publication annuelle de FranceAgriMer.</p>" +
+                        "criées à chaque publication annuelle de FranceAgriMer. Chaque mise à jour est datée dans " +
+                        """l’<a href="${PortsSeo.CHANGELOG_PATH}">historique des mises à jour</a>.</p>""" +
                         "<h2>Télécharger les données</h2><ul>" +
                         """<li><a href="${PortsSeo.PORTS_CSV_PATH}">Les ports et leur flotte</a> (CSV)</li>""" +
                         """<li><a href="${PortsSeo.SALES_CSV_PATH}">Les ventes des criées par espèce</a> (CSV)</li>""" +
                         """<li><a href="/llms.txt">llms.txt</a>, pour les assistants d’IA</li></ul>""" +
                         links() + "</main>",
+            ),
+        )
+    }
+
+    /** The updates of the data, by day, the latest first */
+    @GetMapping("$PORTS_PREFIX${PortsSeo.CHANGELOG_PATH}")
+    fun changelog(): ResponseEntity<String> {
+        val updates = getPorts.updates()
+        val coverage = PortsSeo.coverageSentence(getPorts.coverage())
+        val description =
+            "Les mises à jour des données de ${Site.PORTS.siteName} : ports d’attache des navires, registre de la " +
+                "flotte, ventes des criées, armateurs."
+        val items =
+            updates.groupBy { it.updatedOn }.entries.joinToString("") { (day, ofDay) ->
+                """<h2><time datetime="$day">${PortsSeo.date(day)}</time></h2><ul>""" +
+                    ofDay.joinToString("") {
+                        "<li><strong>${escapeHtml(it.source.label)}</strong> : ${escapeHtml(it.summary)}</li>"
+                    } + "</ul>"
+            }
+
+        return render(
+            HtmlPage(
+                title = "Historique des mises à jour | ${Site.PORTS.siteName}",
+                description = description,
+                canonicalPath = PortsSeo.CHANGELOG_PATH,
+                imageUrl = PortsSeo.homeImage(baseUrl()),
+                structuredData = listOf(PortsSeo.breadcrumb(baseUrl(), "Mises à jour" to PortsSeo.CHANGELOG_PATH)),
+                body =
+                    "<main>" + PortsSeo.nav("Mises à jour" to null) +
+                        "<h1>Historique des mises à jour</h1><p>${escapeHtml(description)}</p>" +
+                        (coverage?.let { "<p>${escapeHtml(it)}</p>" } ?: "") +
+                        items.ifEmpty { "<p>Aucune mise à jour pour l’instant.</p>" } + links() + "</main>",
             ),
         )
     }
@@ -392,6 +429,7 @@ class PortsContentController(
             |- [Espèces vendues en criée]($baseUrl${PortsSeo.SPECIES_PATH}): prix, tonnages et premières criées
             |- Une espèce : `$baseUrl${PortsSeo.SPECIES_PATH}/{slug}`${exampleSpecies ?: ""}
             |- [Méthodologie et sources]($baseUrl${PortsSeo.METHODOLOGY_PATH})
+            |- [Historique des mises à jour]($baseUrl${PortsSeo.CHANGELOG_PATH})
             |
             |## Données
             |

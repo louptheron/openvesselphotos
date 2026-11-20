@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.Duration
+import java.time.LocalDate
 
 /** The French fishing vessels by home port, for the ports site. Changes with each import only: cached for 5 minutes. */
 @RestController
@@ -33,6 +34,23 @@ class PortsController(
     /** The ports with vessels based at them, by name */
     @GetMapping
     fun ports(): ResponseEntity<List<PortDataOutput>> = cached(getPorts.execute().map(PortDataOutput::from))
+
+    /** How much of the French fleet has a known home port, and when the data last changed, the latest first */
+    @GetMapping("/data-quality")
+    fun dataQuality(): ResponseEntity<DataQualityDataOutput> {
+        val coverage = getPorts.coverage()
+
+        return cached(
+            DataQualityDataOutput(
+                registerVessels = coverage.registerVessels,
+                withHomePort = coverage.withHomePort,
+                share = coverage.share,
+                fromObservations = coverage.fromObservations,
+                fromPortVisits = coverage.fromPortVisits,
+                lastUpdate = getPorts.lastUpdate(),
+            ),
+        )
+    }
 
     /** The period of the fishing activity map, and whether it is enabled (Global Fishing Watch token) */
     @GetMapping("/fishing-effort")
@@ -101,4 +119,17 @@ data class PortFishingEffortDataOutput(
     val trackedVessels: Int,
     /** [longitude, latitude, hours of fishing] of each cell */
     val cells: List<List<Double>>,
+)
+
+data class DataQualityDataOutput(
+    /** French vessels of the EU fleet register */
+    val registerVessels: Int,
+    val withHomePort: Int,
+    /** From 0 to 1; null without register */
+    val share: Double?,
+    /** Home ports from the observations at quay */
+    val fromObservations: Int,
+    /** Home ports from the port visits on Global Fishing Watch */
+    val fromPortVisits: Int,
+    val lastUpdate: LocalDate?,
 )

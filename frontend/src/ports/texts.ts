@@ -11,6 +11,16 @@ export function vessels(count: number): string {
   return count === 1 ? '1 navire' : `${count} navires`
 }
 
+/** e.g. "92 %" */
+export function formatPercent(share: number): string {
+  return `${Math.round(share * 100)} %`
+}
+
+/** e.g. "20 novembre 2026", from "2026-11-20" */
+export function formatDate(day: string): string {
+  return new Date(`${day}T12:00:00`).toLocaleDateString('fr', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
 /** e.g. "12 345" */
 export function formatNumber(value: number): string {
   return value.toLocaleString('fr')

@@ -403,6 +403,18 @@ export type PortPositionImportResult = {
   updated: number
 }
 
+/** How much of the French fleet has a known home port, and when the data last changed (see /mises-a-jour) */
+export type PortsDataQuality = {
+  fromObservations: number
+  fromPortVisits: number
+  /** e.g. 2026-11-20 */
+  lastUpdate: string | null
+  registerVessels: number
+  /** From 0 to 1; null without register */
+  share: number | null
+  withHomePort: number
+}
+
 /** The fishing activity map: the last 12 complete months, when a Global Fishing Watch token is set */
 export type FishingEffortPeriod = {
   from: string

@@ -1,5 +1,6 @@
 package org.openvesselphotos.infrastructure.web
 
+import org.openvesselphotos.domain.entities.HomePortCoverage
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -19,10 +20,25 @@ object PortsSeo {
     const val SPECIES_PATH = "/especes"
     const val PORTS_CSV_PATH = "/donnees/ports.csv"
     const val SALES_CSV_PATH = "/donnees/criees.csv"
+    const val CHANGELOG_PATH = "/mises-a-jour"
+    const val SHARE_IMAGES_PATH = "/images/partage"
 
     fun portPath(slug: String) = "/ports/$slug"
 
     fun speciesPath(slug: String) = "$SPECIES_PATH/$slug"
+
+    /** The image of a page when shared, see ShareImagesController */
+    fun homeImage(baseUrl: String) = "$baseUrl$SHARE_IMAGES_PATH/accueil.png"
+
+    fun portImage(
+        baseUrl: String,
+        slug: String,
+    ) = "$baseUrl$SHARE_IMAGES_PATH/ports/$slug.png"
+
+    fun speciesImage(
+        baseUrl: String,
+        slug: String,
+    ) = "$baseUrl$SHARE_IMAGES_PATH/especes/$slug.png"
 
     data class Question(
         val question: String,
@@ -64,7 +80,22 @@ object PortsSeo {
 
     /** "Mis à jour le…": search engines and AI assistants favour pages that say how fresh their figures are */
     fun updatedOn(day: LocalDate?): String =
-        day?.let { """<p>Mis à jour le <time datetime="$it">${date(it)}</time>.</p>""" } ?: ""
+        day?.let {
+            """<p>Mis à jour le <time datetime="$it">${date(it)}</time> · """ +
+                """<a href="$CHANGELOG_PATH">historique des mises à jour</a></p>"""
+        } ?: ""
+
+    /** e.g. "Port d’attache connu pour 92 % des 6 012 navires français du registre de la flotte de l’UE." */
+    fun coverageSentence(coverage: HomePortCoverage): String? =
+        coverage.share?.let {
+            "Port d’attache connu pour ${percent(it)} des ${PortsPagesController.number(coverage.registerVessels)} " +
+                "navires français du $FLEET_REGISTER : ${PortsPagesController.number(coverage.fromObservations)} " +
+                "d’après leurs positions à quai, ${PortsPagesController.number(coverage.fromPortVisits)} d’après " +
+                "leurs escales (Global Fishing Watch)."
+        }
+
+    /** e.g. "92 %", with a no-break space */
+    fun percent(share: Double): String = "${Math.round(share * 100)} %"
 
     fun breadcrumb(
         baseUrl: String,

@@ -2,6 +2,7 @@ package org.openvesselphotos.infrastructure.database.repositories
 
 import org.openvesselphotos.domain.entities.HomePort
 import org.openvesselphotos.domain.entities.HomePortCandidate
+import org.openvesselphotos.domain.entities.HomePortCoverage
 import org.openvesselphotos.domain.entities.HomePortSearchResult
 import org.openvesselphotos.domain.entities.HomePortSource
 import org.openvesselphotos.domain.entities.Port
@@ -105,6 +106,28 @@ class JdbcPortRepository(
 
     override fun findLastHomePortsUpdate(): LocalDate? =
         jdbcTemplate.queryForObject("SELECT max(imported_on) FROM vessel_home_ports", Date::class.java)?.toLocalDate()
+
+    override fun findCoverage(): HomePortCoverage {
+        val bySource =
+            jdbcTemplate
+                .queryForList("SELECT source, count(*) AS count FROM vessel_home_ports GROUP BY source")
+                .associate { it["source"] as String to (it["count"] as Number).toInt() }
+
+        return jdbcTemplate.queryForObject(
+            """
+            SELECT count(*) AS register_vessels, count(h.cfr) AS with_home_port
+            FROM vessels v LEFT JOIN vessel_home_ports h ON h.cfr = v.cfr
+            WHERE v.cfr LIKE 'FRA%'
+            """.trimIndent(),
+        ) { row, _ ->
+            HomePortCoverage(
+                registerVessels = row.getInt("register_vessels"),
+                withHomePort = row.getInt("with_home_port"),
+                fromObservations = bySource[HomePortSource.IMPORT.name] ?: 0,
+                fromPortVisits = bySource[HomePortSource.GFW.name] ?: 0,
+            )
+        }!!
+    }
 
     override fun savePositions(ports: List<Port>): Int =
         jdbcTemplate

@@ -1,6 +1,7 @@
 package org.openvesselphotos.infrastructure.web
 
-import org.openvesselphotos.domain.entities.ImageSize
+import org.openvesselphotos.domain.entities.HomePort
+import org.openvesselphotos.domain.entities.HomePortSource
 import org.openvesselphotos.domain.entities.PortWithVesselCount
 import org.openvesselphotos.domain.entities.SpeciesSales
 import org.openvesselphotos.domain.exceptions.BackendUsageException
@@ -78,6 +79,7 @@ class PortsPagesController(
                 title = "${Site.PORTS.siteName} — ${PortsSeo.TAGLINE}",
                 description = description,
                 canonicalPath = "/",
+                imageUrl = PortsSeo.homeImage(baseUrl),
                 structuredData =
                     listOf(
                         mapOf(
@@ -99,6 +101,7 @@ class PortsPagesController(
                         "Pour chaque port : sa flotte par taille et par engin de pêche (chalut, filets, lignes, " +
                         "casiers, dragues…), ses navires et leurs photos, et ce que vend sa criée.</p>" +
                         PortsSeo.updatedOn(updatedOn) +
+                        (PortsSeo.coverageSentence(getPorts.coverage())?.let { "<p>${escapeHtml(it)}</p>" } ?: "") +
                         PortsSeo.faqSection(questions) +
                         "<h2>Les ports de pêche français</h2><ul>$portItems</ul>" +
                         (
@@ -176,6 +179,7 @@ class PortsPagesController(
                 .orEmpty()
         val speciesSlugs = if (species.isEmpty()) emptyMap() else speciesSlugsByName(getSpecies.execute())
         val vesselCount = details.vessels.size
+        val reliability = reliability(details.vessels.map { it.homePort })
 
         val title =
             if (auctionTotal != null) {
@@ -285,6 +289,10 @@ class PortsPagesController(
                     append("</ul>")
                 }
                 append("<p>Source : ${PortsSeo.FLEET_REGISTER}, positions des navires.</p>")
+                reliability?.let {
+                    append("<h3>Fiabilité des données</h3><p>${escapeHtml(it)} ")
+                    append("""<a href="${PortsSeo.METHODOLOGY_PATH}">Méthodologie</a></p>""")
+                }
             }
         val auctionSection =
             if (auction == null || auctionTotal == null) {
@@ -309,14 +317,6 @@ class PortsPagesController(
                             (it.priceEurosPerKg?.let { p -> ", ${price(p)}" } ?: "") + "</li>"
                     } + "</ul>"
             }
-        val mainPhoto =
-            details.vessels.firstNotNullOfOrNull { portVessel ->
-                portVessel.vessel?.let { (vessel, photos) ->
-                    photos.firstOrNull()?.let {
-                        PagesController.photoUrl(vesselsBaseUrl, vessel, it, ImageSize.FULL)
-                    }
-                }
-            }
         val path = PortsSeo.portPath(slug)
         val portUrl = publicUrl.get(Site.PORTS) + path
 
@@ -325,7 +325,8 @@ class PortsPagesController(
                 title = "$title | ${Site.PORTS.siteName}",
                 description = description,
                 canonicalPath = path,
-                imageUrl = mainPhoto,
+                // A card with its figures: a random vessel photo would not say what the page is
+                imageUrl = PortsSeo.portImage(publicUrl.get(Site.PORTS), slug),
                 structuredData =
                     listOf(
                         mapOf(
@@ -376,7 +377,7 @@ class PortsPagesController(
         val baseUrl = publicUrl.get(Site.PORTS)
         val lastModified = getPorts.lastUpdate()?.let { "<lastmod>$it</lastmod>" } ?: ""
         val paths =
-            listOf("/", PortsSeo.SPECIES_PATH, PortsSeo.METHODOLOGY_PATH) +
+            listOf("/", PortsSeo.SPECIES_PATH, PortsSeo.METHODOLOGY_PATH, PortsSeo.CHANGELOG_PATH) +
                 getPorts.execute().map { PortsSeo.portPath(it.slug) } +
                 getSpecies.execute().map { PortsSeo.speciesPath(it.slug) }
         val urls = paths.joinToString("") { "<url><loc>${escapeHtml(baseUrl + it)}</loc>$lastModified</url>" }
@@ -443,6 +444,7 @@ class PortsPagesController(
             "<nav><h2>Aller plus loin</h2><ul>" +
                 """<li><a href="${PortsSeo.SPECIES_PATH}">Les espèces vendues en criée : prix et saisons</a></li>""" +
                 """<li><a href="${PortsSeo.METHODOLOGY_PATH}">Méthodologie et sources</a></li>""" +
+                """<li><a href="${PortsSeo.CHANGELOG_PATH}">Historique des mises à jour</a></li>""" +
                 """<li><a href="${PortsSeo.PORTS_CSV_PATH}">Télécharger les ports et leur flotte (CSV)</a></li>""" +
                 """<li><a href="${PortsSeo.SALES_CSV_PATH}">Télécharger les ventes des criées (CSV)</a></li>""" +
                 "</ul></nav>"
@@ -530,6 +532,34 @@ class PortsPagesController(
                     )
                 }
             }
+        }
+
+        /**
+         * How the home ports of a port's vessels were found, e.g. "12 navires y ont été vus à quai le plus souvent
+         * (81 % de leurs positions au port en moyenne), 3 y ont fait le plus d’escales en un an (Global Fishing Watch)."
+         */
+        fun reliability(homePorts: List<HomePort>): String? {
+            if (homePorts.isEmpty()) return null
+            val observed = homePorts.filter { it.source == HomePortSource.IMPORT }
+            val fromVisits = homePorts.filter { it.source == HomePortSource.GFW }
+            val shares =
+                observed
+                    .filter { it.observationsTotal > 0 }
+                    .map { it.observationsAtPort.toDouble() / it.observationsTotal }
+            val average = shares.takeIf { it.isNotEmpty() }?.average()
+            val sharePart = average?.let { " (${PortsSeo.percent(it)} de leurs positions à quai en moyenne)" } ?: ""
+
+            return listOfNotNull(
+                observed.takeIf { it.isNotEmpty() }?.let {
+                    val plural = it.size > 1
+                    "${vessels(it.size)} ${if (plural) "y ont" else "y a"} été vu${if (plural) "s" else ""} à quai " +
+                        "le plus souvent$sharePart"
+                },
+                fromVisits.takeIf { it.isNotEmpty() }?.let {
+                    "${vessels(it.size)} ${if (it.size > 1) "y ont" else "y a"} fait le plus d’escales en un an " +
+                        "(Global Fishing Watch)"
+                },
+            ).joinToString(", ").replaceFirstChar { it.uppercase() } + "."
         }
 
         fun movedTo(path: String): ResponseEntity<String> =
