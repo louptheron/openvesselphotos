@@ -360,7 +360,8 @@ export const en = {
     terms: 'I will only send photos their authors agreed to publish under an open licence, with their credit.',
     submit: 'Request a key',
     howTitle: 'How to use it',
-    howHeader: 'Send the key in the x-api-key header of your POST requests:',
+    howHeader:
+      'Send the key in the x-api-key header of your POST requests, and if you wish of your GETs, so that your application is recognised:',
     howSecret:
       'Keep it secret: never put it in a web page or a mobile app. Everything sent is still reviewed before publication. See the',
     apiDocs: 'API docs'
@@ -393,9 +394,11 @@ export const en = {
     errorsIntro: 'Errors come back as',
     errorsOutro: 'with a 400, 404 or 409 status.',
     apiKeyTitle: 'API key',
-    apiKeyText1: 'Every GET is open, without key. POST requests need an API key in the x-api-key header:',
+    apiKeyText1: 'POST requests need an API key in the x-api-key header:',
     apiKeyLink: 'request one',
     apiKeyText2: ', it is free. Without it, they return a 401.',
+    apiKeyGet:
+      'GET requests are open, without key. An application with a key can still send it with its GETs, photo downloads included: its requests are then counted under its name. An invalid key is ignored.',
     apiKeyContributorId:
       'To tell your users’ photos apart, send contributorId: a stable pseudonymous id of the author in your application (1 to 64 letters, digits, - or _), never an email or a name, e.g. a HMAC of your user id with a secret key that you keep. It is only seen by reviewers. A photo taken on duty by a French administration is sent under the Licence Ouverte 2.0:',
     apiKeyContributeLink:
@@ -513,7 +516,7 @@ export const en = {
     done: 'Done',
     emailSubject: 'Your Open Vessel Photos API key',
     emailBody: (name: string, key: string, publicId: string | null, docsUrl: string) =>
-      `Hello ${name},\n\nYour API key request was approved. Here is your key:\n\n${key}\n\nSend it in the x-api-key header of your POST requests, and keep it secret. Documentation: ${docsUrl}\n` +
+      `Hello ${name},\n\nYour API key request was approved. Here is your key:\n\n${key}\n\nSend it in the x-api-key header of your POST requests (and, if you wish, of your GETs), and keep it secret. Documentation: ${docsUrl}\n` +
       (publicId
         ? `\nThe public id of your app, to link your users to the contribute page (not a secret): ${publicId}\n`
         : ''),
@@ -592,8 +595,8 @@ export const en = {
     vesselsAddedPerDay: (total: string) => `Vessels added per day (${total} in all, imports included)`,
     imageSources: 'Sites showing the photos',
     apiSources: 'API calls by site',
-    apiKeys: 'API calls by key',
-    noKeyCalls: 'No call with an API key yet.',
+    apiKeys: 'Usage by API key',
+    noKeyCalls: 'No request with an API key yet.',
     noData: 'Nothing counted yet.',
     site: 'Site',
     count: 'Count',

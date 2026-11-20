@@ -357,7 +357,7 @@ export const fr: Messages = {
       'Je n’enverrai que des photos que leurs auteurs ont accepté de publier sous licence libre, avec leur crédit.',
     submit: 'Demander une clé',
     howTitle: 'Comment l’utiliser',
-    howHeader: `Envoyez la clé dans l’en-tête x-api-key de vos requêtes POST${_}:`,
+    howHeader: `Envoyez la clé dans l’en-tête x-api-key de vos requêtes POST, et si vous le souhaitez de vos GET, pour qu’on reconnaisse votre application${_}:`,
     howSecret: `Gardez-la secrète${_}: ne la mettez jamais dans une page web ou une application mobile. Tout ce qui est envoyé reste vérifié avant publication. Voir la`,
     apiDocs: 'documentation de l’API'
   },
@@ -389,9 +389,10 @@ export const fr: Messages = {
     errorsIntro: 'Les erreurs sont renvoyées sous la forme',
     errorsOutro: 'avec un statut 400, 404 ou 409.',
     apiKeyTitle: 'Clé d’API',
-    apiKeyText1: `Tous les GET sont libres, sans clé. Les requêtes POST nécessitent une clé d’API dans l’en-tête x-api-key${_}:`,
+    apiKeyText1: `Les requêtes POST nécessitent une clé d’API dans l’en-tête x-api-key${_}:`,
     apiKeyLink: 'demandez-en une',
     apiKeyText2: ', c’est gratuit. Sans elle, elles renvoient une erreur 401.',
+    apiKeyGet: `Les GET sont libres, sans clé. Une application qui a une clé peut tout de même l’envoyer avec ses GET, téléchargements de photos compris${_}: ses requêtes sont alors comptées à son nom. Une clé invalide est ignorée.`,
     apiKeyContributorId: `Pour distinguer les photos de vos utilisateurs, envoyez contributorId${_}: un identifiant pseudonyme et stable de l’auteur dans votre application (1 à 64 lettres, chiffres, - ou _), jamais un e-mail ni un nom, par exemple un HMAC de votre identifiant interne avec une clé secrète que vous gardez. Seuls les relecteurs le voient. Une photo prise en service par une administration française est envoyée sous Licence Ouverte 2.0${_}:`,
     apiKeyContributeLink: `Vos utilisateurs peuvent aussi envoyer leurs photos depuis ce site${_}: faites un lien vers la page de contribution avec l’identifiant public de votre application (donné avec votre clé, ce n’est pas un secret) et leur contributorId. Leurs photos sont alors les vôtres, comme celles envoyées avec votre clé, et elles sont renvoyées par GET /v1/submissions?contributorId= dès leur envoi, puis avec leur vérification. Quiconque connaît un contributorId peut envoyer des photos en son nom${_}: raison de plus pour un identifiant impossible à deviner${_}:`,
     rateLimitsTitle: 'Limites de débit',
@@ -504,7 +505,7 @@ export const fr: Messages = {
     done: 'Terminé',
     emailSubject: 'Votre clé d’API Open Vessel Photos',
     emailBody: (name: string, key: string, publicId: string | null, docsUrl: string) =>
-      `Bonjour ${name},\n\nVotre demande de clé d’API a été acceptée. Voici votre clé${_}:\n\n${key}\n\nEnvoyez-la dans l’en-tête x-api-key de vos requêtes POST, et gardez-la secrète. Documentation${_}: ${docsUrl}\n` +
+      `Bonjour ${name},\n\nVotre demande de clé d’API a été acceptée. Voici votre clé${_}:\n\n${key}\n\nEnvoyez-la dans l’en-tête x-api-key de vos requêtes POST (et, si vous le souhaitez, de vos GET), et gardez-la secrète. Documentation${_}: ${docsUrl}\n` +
       (publicId
         ? `\nL’identifiant public de votre application, pour envoyer vos utilisateurs vers la page de contribution (ce n’est pas un secret)${_}: ${publicId}\n`
         : ''),
@@ -566,8 +567,8 @@ export const fr: Messages = {
     vesselsAddedPerDay: total => `Navires ajoutés par jour (${total} au total, imports compris)`,
     imageSources: 'Sites qui affichent les photos',
     apiSources: 'Appels à l’API par site',
-    apiKeys: 'Appels à l’API par clé',
-    noKeyCalls: 'Aucun appel avec une clé d’API pour l’instant.',
+    apiKeys: 'Utilisation par clé d’API',
+    noKeyCalls: 'Aucune requête avec une clé d’API pour l’instant.',
     noData: 'Rien de compté pour l’instant.',
     site: 'Site',
     count: 'Nombre',

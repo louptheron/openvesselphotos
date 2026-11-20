@@ -1330,6 +1330,8 @@ class PublicAndAdminApiITests {
         }
         mockMvc.perform(get("/v1/mmsi/227000555.jpg").header("Referer", "http://localhost/vessels/mmsi/227000555"))
         mockMvc.perform(get("/v1/mmsi/227000555").header("x-api-key", key)).andExpect(status().isOk)
+        // A photo downloaded by the application's server, with its key
+        mockMvc.perform(get("/v1/mmsi/227000555.jpg").header("x-api-key", key)).andExpect(status().isOk)
         mockMvc.perform(get("/v1/mmsi/227000555").header("x-api-key", "ovp_wrong")).andExpect(status().isOk)
         mockMvc.perform(get("/v1/mmsi/227000000.jpg").header("Referer", "https://not-counted.example/"))
         recordUsage.flush()
@@ -1345,6 +1347,7 @@ class PublicAndAdminApiITests {
             .andExpect(jsonPath("$.imageSources[?(@.source == 'stats-test.example')].count").value(2))
             .andExpect(jsonPath("$.imageSources[?(@.source == 'not-counted.example')]").isEmpty)
             .andExpect(jsonPath("$.apiKeys[?(@.name == 'Stats app')].calls").value(1))
+            .andExpect(jsonPath("$.apiKeys[?(@.name == 'Stats app')].imageViews").value(1))
         assertThat(
             mockMvc
                 .perform(get("/v1/admin/usage").cookie(cookie))

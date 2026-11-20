@@ -4,6 +4,7 @@ import org.openvesselphotos.config.UseCase
 import org.openvesselphotos.domain.entities.ApiKey
 import org.openvesselphotos.domain.entities.ApiKeyStatus
 import org.openvesselphotos.domain.repositories.ApiKeyRepository
+import java.time.ZonedDateTime
 
 @UseCase
 class AuthenticateApiKey(
@@ -16,7 +17,10 @@ class AuthenticateApiKey(
                 .findByKeyHash(ApiKey.hash(key.trim()))
                 ?.takeIf { it.status == ApiKeyStatus.ACTIVE }
                 ?: return null
-        apiKeyRepository.markUsed(requireNotNull(apiKey.id))
+        // Keys can be sent with every GET, photos included: not one database write per request
+        if (apiKey.lastUsedAt?.isAfter(ZonedDateTime.now().minusMinutes(1)) != true) {
+            apiKeyRepository.markUsed(requireNotNull(apiKey.id))
+        }
 
         return apiKey
     }

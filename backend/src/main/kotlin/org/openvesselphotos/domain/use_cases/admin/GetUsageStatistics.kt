@@ -32,6 +32,8 @@ data class ApiKeyUsage(
     val name: String,
     val organisation: String?,
     val calls: Long,
+    /** Photos downloaded with the key */
+    val imageViews: Long,
     val lastUsedAt: ZonedDateTime?,
 )
 
@@ -74,12 +76,10 @@ class GetUsageStatistics(
         val images = counts.filter { it.key.kind == UsageKind.IMAGE }
         val calls = counts.filter { it.key.kind == UsageKind.API }
 
-        val callsByKey =
-            calls
-                .filter { it.key.apiKeyId != null }
-                .groupBy { requireNotNull(it.key.apiKeyId) }
-                .mapValues { (_, keyCounts) -> keyCounts.sumOf { it.count } }
-        val keys = apiKeyRepository.findByIds(callsByKey.keys).associateBy { requireNotNull(it.id) }
+        val callsByKey = countByKey(calls)
+        val imagesByKey = countByKey(images)
+        val keys =
+            apiKeyRepository.findByIds(callsByKey.keys + imagesByKey.keys).associateBy { requireNotNull(it.id) }
         val elsewhere = images.filter { it.key.source !in LOCAL_SOURCES }
 
         return UsageStatistics(
@@ -112,12 +112,25 @@ class GetUsageStatistics(
             imageSources = topSources(images),
             apiSources = topSources(calls),
             apiKeys =
-                callsByKey
-                    .mapNotNull { (id, count) ->
-                        keys[id]?.let { ApiKeyUsage(id, it.name, it.organisation, count, it.lastUsedAt) }
-                    }.sortedByDescending { it.calls },
+                keys
+                    .map { (id, key) ->
+                        ApiKeyUsage(
+                            id = id,
+                            name = key.name,
+                            organisation = key.organisation,
+                            calls = callsByKey[id] ?: 0,
+                            imageViews = imagesByKey[id] ?: 0,
+                            lastUsedAt = key.lastUsedAt,
+                        )
+                    }.sortedByDescending { it.calls + it.imageViews },
         )
     }
+
+    private fun countByKey(counts: List<UsageCount>): Map<Int, Long> =
+        counts
+            .filter { it.key.apiKeyId != null }
+            .groupBy { requireNotNull(it.key.apiKeyId) }
+            .mapValues { (_, keyCounts) -> keyCounts.sumOf { it.count } }
 
     private fun topSources(counts: List<UsageCount>): List<SourceUsage> =
         counts
