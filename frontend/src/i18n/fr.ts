@@ -5,7 +5,7 @@ import type { Messages } from './en'
 const _ = ' '
 
 /** "de Brest", "d’Auray", "du Guilvinec", "des Sables-d’Olonne", as on the server (PageTexts.French.of) */
-function of(name: string): string {
+export function of(name: string): string {
   if (name.startsWith('Le ')) {
     return `du ${name.slice(3)}`
   }
@@ -435,6 +435,58 @@ export const fr: Messages = {
     link: 'Rechercher des photos de navires'
   },
   admin: {
+    adminTitle: 'Administration',
+    contents: 'Sommaire',
+    sections: {
+      auctionSales: 'Ventes en criée',
+      fishingGrounds: 'Zones de pêche des ports',
+      homePorts: 'Ports d’attache (fichier)',
+      homePortsCheck: 'Vérifier les ports d’attache',
+      homePortsFromVisits: 'Ports d’attache par les escales',
+      owners: 'Armateurs',
+      photoNotes: 'Notes des photos',
+      photos: 'Importer des photos',
+      portPositions: 'Positions des ports',
+      review: 'Contributions à relire',
+      vessels: 'Importer des navires',
+      wikidata: 'Compléter avec Wikidata'
+    },
+    effects: {
+      completes: 'Complète, sans rien écraser',
+      decides: 'Publie ou rejette',
+      publishes: 'Publie sans relecture',
+      readOnly: 'Ne modifie rien',
+      recomputes: 'Recalcule',
+      replacesAll: 'Remplace tout',
+      updatesListed: 'Modifie les lignes du fichier'
+    },
+    siteAreas: {
+      portPages: 'pages des ports (La Pêche française)',
+      portsMap: 'carte des ports (La Pêche française)',
+      vesselPages: 'pages des navires (Open Vessel Photos)'
+    },
+    shownOn: 'Visible sur',
+    uses: 'S’appuie sur',
+    runAgainAfter: 'Relancer ensuite',
+    alsoAffects: 'Change aussi',
+    groups: {
+      ports: {
+        text: `Les données du site des ports. Les ports d’attache du fichier sont la base${_}: les positions, les tâches Global Fishing Watch et les criées s’appuient dessus. Après un nouveau fichier de ports d’attache, relancez les étapes qui suivent.`,
+        title: `La Pêche française${_}: ports, flotte et criées`
+      },
+      review: {
+        text: 'Les photos, liens et signalements envoyés par les contributeurs, et les demandes de clé d’API.',
+        title: 'Relecture'
+      },
+      vessels: {
+        text: `Les données de la photothèque, dans cet ordre${_}: les navires, puis les photos, puis ce qui les complète.`,
+        title: `Open Vessel Photos${_}: navires et photos`
+      }
+    },
+    homePortsText: `Un CSV avec les colonnes cfr, vessel_name, port_locode, port_name, port_country, observations_total, observations_at_port et mean_distance_km. Remplace tous les ports d’attache importés et crée les ports absents${_}; les ports d’attache trouvés par les escales sont gardés pour les navires absents du fichier.`,
+    portPositionsText: `Un CSV avec les colonnes locode, latitude et longitude${_}: place les ports sur la carte. Seuls les ports du fichier changent. Un port sans position n’est pas sur la carte, et les escales n’y sont pas rattachées.`,
+    vesselOwnersText:
+      'Un CSV avec les colonnes cfr, armateur, groupe et source (un lien public). Remplace tous les armateurs.',
     pageTitle: 'Modération',
     queueTitle: 'File de modération',
     statistics: 'Statistiques',
@@ -544,6 +596,56 @@ export const fr: Messages = {
     setNotes: 'Définir les notes',
     photoNotesResult: r =>
       `${r.read}${_}lignes lues${_}: ${r.updated}${_}notes définies, ${r.unchanged}${_}déjà à jour, ${r.errors.length}${_}erreurs.`,
+    portsImportTitle: 'Site des ports',
+    portsImportText: `La carte des navires de pêche français par port d’attache, sur son propre domaine. Ports d’attache${_}: un CSV avec les colonnes cfr, vessel_name, port_locode, port_name, port_country, observations_total, observations_at_port et mean_distance_km, qui remplace tous les ports d’attache. Positions${_}: un CSV avec les colonnes locode, latitude et longitude, pour placer les ports sur la carte. Armateurs${_}: un CSV avec les colonnes cfr, armateur, groupe et source (un lien), qui remplace tous les armateurs.`,
+    homePortsFile: 'Ports d’attache',
+    portPositionsFile: 'Positions',
+    vesselOwnersFile: 'Armateurs',
+    vesselOwnersResult: r => `${r.read}${_}lignes lues${_}: ${r.imported}${_}armateurs, ${r.skipped}${_}ignorées.`,
+    fishingActivityTitle: 'Zones de pêche des ports',
+    fishingActivityText: `Où les navires du site des ports ont pêché ces 12 derniers mois, pour la carte de chaque port${_}: leurs opérations de pêche sur Global Fishing Watch, cumulées par maille d’environ 5${_}km. Les navires sont cherchés par MMSI, indicatif d’appel, puis nom, une fois par mois${_}; les petits navires sans AIS ne sont pas trouvés. Tourne en arrière-plan, environ 2${_}requêtes par navire${_}: à relancer chaque mois environ.`,
+    fishingActivityStart: 'Synchroniser',
+    fishingActivityProgress: s =>
+      `${s.done}/${s.total}${_}navires${_}: ${s.found}${_}trouvés sur Global Fishing Watch, ${s.withFishing}${_}avec de la pêche ces 12 derniers mois, ${s.failed}${_}en échec.`,
+    homePortsCheckTitle: 'Vérifier les ports d’attache par les escales',
+    homePortsCheckText: `Contre-vérifie les ports d’attache importés${_}: le port où chaque navire a fait le plus d’escales sur un an, d’après ses positions sur Global Fishing Watch, comparé à son port d’attache importé. Ne modifie aucun port d’attache${_}: vérifiez les navires ci-dessous. Seuls les navires équipés d’AIS peuvent être vérifiés${_}; environ 2${_}requêtes par navire.`,
+    homePortsCheckPort: 'Port (LOCODE, facultatif)',
+    homePortsCheckStart: 'Vérifier',
+    homePortsCheckProgress: s => `${s.done}/${s.total}${_}navires vérifiés, ${s.failed}${_}en échec.`,
+    homePortsCheckResults: {
+      AGREES: 'même port',
+      DISAGREES: 'autre port',
+      NEARBY: 'port voisin',
+      NOT_FOUND: 'non trouvés',
+      NOT_ON_THE_MAP: 'port absent de la carte',
+      TOO_FEW_VISITS: 'trop peu d’escales'
+    },
+    homePortsCheckToReview: count => `À vérifier${_}: ${count}${_}navires ont surtout fréquenté un autre port`,
+    homePortsCheckDownload: 'Télécharger tous les résultats (CSV)',
+    homePortsCheckVessel: 'Navire',
+    homePortsCheckImported: 'Port importé',
+    homePortsCheckVisited: 'Port le plus fréquenté',
+    homePortsCheckVisits: 'Escales sur un an',
+    homePortsCheckVisitsCell: (atVisited, atImported, total) =>
+      `${atVisited}${_}là, ${atImported}${_}au port importé, sur ${total}`,
+    homePortsFromPortVisitsTitle: 'Ports d’attache par les escales',
+    homePortsFromPortVisitsText: `Donne un port d’attache aux navires français du registre de la flotte de l’UE qui n’en ont pas${_}: le port français où chacun a fait le plus d’escales sur un an (ou un autre port à défaut), d’après ses positions sur Global Fishing Watch, quand ce port est sur la carte. Les navires sont cherchés par MMSI, indicatif d’appel, puis nom${_}; les petits navires sans AIS ne sont pas trouvés. Tourne en arrière-plan, environ 3${_}requêtes par navire. Les ports d’attache importés restent prioritaires.`,
+    homePortsFromPortVisitsStart: 'Lancer',
+    homePortsFromPortVisitsProgress: s =>
+      `${s.done}/${s.total}${_}navires${_}: ${s.found}${_}trouvés sur Global Fishing Watch, ${s.placed}${_}rattachés à un port, ${s.withoutVisits}${_}avec trop peu d’escales, ${s.farFromPorts}${_}dans un port absent de la carte, ${s.failed}${_}en échec.`,
+    homePortsFromPortVisitsUnknownPorts: `Ports les plus fréquentés absents de la carte${_}:`,
+    homePortsFromPortVisitsNone: `Aucun navire français du registre de la flotte de l’UE n’est sans port d’attache${_}: importez d’abord le registre (Importer des navires, plus haut).`,
+    auctionSalesFile: 'Ventes en criée',
+    auctionSalesHelp:
+      'Le classeur annuel de FranceAgriMer «${_}Ventes déclarées en halles à marée${_}» (BIL-MER-VENTES_HAM-Axx.xlsm), tel que téléchargé${_}: il remplace toutes les ventes en criée.',
+    auctionSalesResult: r =>
+      `${r.year}${_}: ${r.auctions}${_}criées, ${r.matched.length}${_}rattachées à un port, ${r.seasonalSpecies}${_}espèces avec saisons.${
+        r.unmatched.length > 0 ? ` Sans port${_}: ${r.unmatched.join(', ')}.` : ''
+      }`,
+    homePortsResult: r =>
+      `${r.read}${_}lignes lues${_}: ${r.imported}${_}navires dans ${r.ports}${_}ports, ${r.withoutPort}${_}sans port, ${r.skipped}${_}ignorées.`,
+    portPositionsResult: r =>
+      `${r.read}${_}lignes lues${_}: ${r.updated}${_}ports placés, ${r.unknown}${_}ports inconnus, ${r.skipped}${_}ignorées.`,
     importResult: r =>
       `${r.read}${_}lignes lues${_}: ${r.created}${_}navires créés, ${r.updated}${_}complétés, ${r.unchanged}${_}déjà à jour, ${r.outOfFleet}${_}sortis de la flotte, ${r.skipped}${_}ignorés.`
   },

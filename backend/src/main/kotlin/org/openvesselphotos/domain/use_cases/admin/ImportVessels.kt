@@ -1,13 +1,17 @@
 package org.openvesselphotos.domain.use_cases.admin
 
 import org.openvesselphotos.config.UseCase
+import org.openvesselphotos.domain.entities.DataSource
+import org.openvesselphotos.domain.entities.DataUpdate
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.RegisterData
 import org.openvesselphotos.domain.entities.Vessel
 import org.openvesselphotos.domain.entities.VesselKey
 import org.openvesselphotos.domain.exceptions.BackendUsageException
+import org.openvesselphotos.domain.repositories.DataUpdateRepository
 import org.openvesselphotos.domain.repositories.VesselRepository
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
 
 /** A vessel read from an import file, before validation. */
 data class VesselImportRow(
@@ -50,6 +54,7 @@ data class VesselImportResult(
 @UseCase
 class ImportVessels(
     private val vesselRepository: VesselRepository,
+    private val dataUpdateRepository: DataUpdateRepository,
 ) {
     @Transactional
     fun execute(rows: List<VesselImportRow>): VesselImportResult {
@@ -83,6 +88,15 @@ class ImportVessels(
 
         val inFleet = vessels.values.filterNotNull()
         val counts = vesselRepository.importAll(inFleet)
+        if (counts.created + counts.updated > 0) {
+            dataUpdateRepository.add(
+                DataUpdate(
+                    DataSource.FLEET_REGISTER,
+                    LocalDate.now(),
+                    "${counts.created} navires ajoutés, ${counts.updated} mis à jour",
+                ),
+            )
+        }
 
         return VesselImportResult(
             read = rows.size,

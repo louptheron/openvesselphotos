@@ -32,6 +32,9 @@ class JpaVesselRepository(
     override fun findByIds(ids: Collection<Int>): List<Vessel> =
         dbVesselRepository.findAllById(ids).map { it.toVessel() }
 
+    override fun findByCfrs(cfrs: Collection<String>): List<Vessel> =
+        if (cfrs.isEmpty()) emptyList() else dbVesselRepository.findByCfrIn(cfrs).map { it.toVessel() }
+
     override fun search(
         query: String,
         limit: Int,

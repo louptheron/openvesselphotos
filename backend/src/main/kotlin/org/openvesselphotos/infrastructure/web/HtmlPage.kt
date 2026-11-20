@@ -28,12 +28,14 @@ data class HtmlPage(
     /** Server-rendered content, replaced by the React app once loaded. Must be escaped HTML. */
     val body: String = "",
     val status: HttpStatus = HttpStatus.OK,
+    val site: Site = Site.OPENVESSELPHOTOS,
 )
 
 fun escapeHtml(value: String?): String = HtmlUtils.htmlEscape(value ?: "", "UTF-8")
 
 /**
- * Renders the React app's index.html with the page's metadata, between the markers of frontend/index.html.
+ * Renders the React app's entry of the page's site (e.g. index.html) with the page's metadata, between the markers of
+ * frontend/index.html and frontend/ports.html.
  */
 @Component
 class HtmlPageRenderer(
@@ -42,23 +44,28 @@ class HtmlPageRenderer(
 ) {
     private val logger = LoggerFactory.getLogger(HtmlPageRenderer::class.java)
 
-    private val template: String by lazy {
-        val resource = ClassPathResource("static/index.html")
-        if (resource.exists()) {
-            resource.inputStream.use { String(it.readAllBytes(), Charsets.UTF_8) }
-        } else {
-            logger.warn("static/index.html not found: the frontend was not built, serving a bare page.")
-            FALLBACK_TEMPLATE
+    private val templates: Map<Site, Lazy<String>> =
+        Site.entries.associateWith { site ->
+            lazy {
+                val resource = ClassPathResource(site.template)
+                if (resource.exists()) {
+                    resource.inputStream.use { String(it.readAllBytes(), Charsets.UTF_8) }
+                } else {
+                    logger.warn("${site.template} not found: the frontend was not built, serving a bare page.")
+                    FALLBACK_TEMPLATE
+                }
+            }
         }
-    }
 
     fun render(page: HtmlPage): ResponseEntity<String> {
         val html =
-            template
+            templates
+                .getValue(page.site)
+                .value
                 .replace(
                     Regex("$HEAD_START.*?$HEAD_END", RegexOption.DOT_MATCHES_ALL),
                     Regex.escapeReplacement(renderHead(page)),
-                ).replace(HTML_LANG, """<html lang="${page.language.code}">""")
+                ).replaceFirst(HTML_LANG, """<html lang="${page.language.code}">""")
                 .replace(BODY_MARKER, page.body)
 
         return ResponseEntity
@@ -69,7 +76,8 @@ class HtmlPageRenderer(
     }
 
     private fun renderHead(page: HtmlPage): String {
-        val baseUrl = publicUrl.get()
+        val baseUrl = publicUrl.get(page.site)
+        val siteName = page.site.siteName
         val canonicalUrl = page.canonicalPath?.let { baseUrl + it }
         val title = escapeHtml(page.title)
         val description = escapeHtml(page.description)
@@ -97,12 +105,14 @@ class HtmlPageRenderer(
                 }
                 appendLine("""    <link rel="alternate" hreflang="x-default" href="${escapeHtml(baseUrl + path)}" />""")
             }
-            // The latest photos, for feed readers
-            val feedUrl = escapeHtml(baseUrl + page.language.path(CrawlersController.FEED_PATH))
-            appendLine(
-                """    <link rel="alternate" type="application/atom+xml" title="$SITE_NAME" href="$feedUrl" />""",
-            )
-            appendLine("""    <meta property="og:site_name" content="$SITE_NAME" />""")
+            if (page.site == Site.OPENVESSELPHOTOS) {
+                // The latest photos, for feed readers
+                val feedUrl = escapeHtml(baseUrl + page.language.path(CrawlersController.FEED_PATH))
+                appendLine(
+                    """    <link rel="alternate" type="application/atom+xml" title="$siteName" href="$feedUrl" />""",
+                )
+            }
+            appendLine("""    <meta property="og:site_name" content="$siteName" />""")
             appendLine("""    <meta property="og:locale" content="${page.language.ogLocale}" />""")
             appendLine("""    <meta property="og:type" content="website" />""")
             appendLine("""    <meta property="og:title" content="$title" />""")
@@ -127,7 +137,7 @@ class HtmlPageRenderer(
         private const val HEAD_START = "<!-- seo:head -->"
         private const val HEAD_END = "<!-- /seo:head -->"
         private const val BODY_MARKER = "<!-- seo:body -->"
-        private const val HTML_LANG = """<html lang="en">"""
+        private val HTML_LANG = Regex("""<html lang="[a-z]+">""")
         private const val FALLBACK_TEMPLATE =
             "<!doctype html><html lang=\"en\"><head>$HEAD_START$HEAD_END</head><body><div id=\"root\">$BODY_MARKER</div></body></html>"
     }

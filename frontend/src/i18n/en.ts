@@ -446,6 +446,60 @@ export const en = {
     link: 'Search vessel photos'
   },
   admin: {
+    adminTitle: 'Administration',
+    contents: 'Contents',
+    sections: {
+      auctionSales: 'Auction sales',
+      fishingGrounds: 'Fishing grounds of the ports',
+      homePorts: 'Home ports (file)',
+      homePortsCheck: 'Check the home ports',
+      homePortsFromVisits: 'Home ports from port visits',
+      owners: 'Vessel owners',
+      photoNotes: 'Photo notes',
+      photos: 'Import photos',
+      portPositions: 'Positions of the ports',
+      review: 'Contributions to review',
+      vessels: 'Import vessels',
+      wikidata: 'Complete from Wikidata'
+    },
+    effects: {
+      completes: 'Completes, overwrites nothing',
+      decides: 'Publishes or rejects',
+      publishes: 'Publishes without review',
+      readOnly: 'Changes nothing',
+      recomputes: 'Computes again',
+      replacesAll: 'Replaces everything',
+      updatesListed: 'Changes the rows of the file'
+    },
+    siteAreas: {
+      portPages: 'port pages (La Pêche française)',
+      portsMap: 'map of the ports (La Pêche française)',
+      vesselPages: 'vessel pages (Open Vessel Photos)'
+    },
+    shownOn: 'Shown on',
+    uses: 'Relies on',
+    runAgainAfter: 'Run again afterwards',
+    alsoAffects: 'Also changes',
+    groups: {
+      ports: {
+        text: 'The data of the ports site. The home ports of the file are the base: the positions, the Global Fishing Watch tasks and the auctions rely on them. After a new home ports file, run the steps that follow again.',
+        title: 'La Pêche française: ports, fleet and auctions'
+      },
+      review: {
+        text: 'Photos, links and reports sent by contributors, and API key requests.',
+        title: 'Review'
+      },
+      vessels: {
+        text: 'The data of the photo library, in this order: the vessels, then the photos, then what completes them.',
+        title: 'Open Vessel Photos: vessels and photos'
+      }
+    },
+    homePortsText:
+      'A CSV with the columns cfr, vessel_name, port_locode, port_name, port_country, observations_total, observations_at_port and mean_distance_km. Replaces all the imported home ports and creates the missing ports; the home ports found from port visits are kept for the vessels not in the file.',
+    portPositionsText:
+      'A CSV with the columns locode, latitude and longitude: places the ports on the map. Only the ports of the file change. A port without position is not on the map, and port visits are not matched to it.',
+    vesselOwnersText:
+      'A CSV with the columns cfr, armateur, groupe and source (a public link). Replaces all the owners.',
     pageTitle: 'Review',
     queueTitle: 'Review queue',
     statistics: 'Statistics',
@@ -566,6 +620,77 @@ export const en = {
     setNotes: 'Set the notes',
     photoNotesResult: (r: { read: number; updated: number; unchanged: number; errors: string[] }) =>
       `${r.read} lines read: ${r.updated} notes set, ${r.unchanged} already up to date, ${r.errors.length} errors.`,
+    portsImportTitle: 'Ports site',
+    portsImportText:
+      'The map of the French fishing vessels by home port, on its own domain. Home ports: a CSV with the columns cfr, vessel_name, port_locode, port_name, port_country, observations_total, observations_at_port and mean_distance_km, which replaces all the home ports. Positions: a CSV with the columns locode, latitude and longitude, for the ports on the map. Owners: a CSV with the columns cfr, armateur, groupe and source (a link), which replaces all the owners.',
+    homePortsFile: 'Home ports',
+    portPositionsFile: 'Positions',
+    vesselOwnersFile: 'Owners',
+    vesselOwnersResult: (r: { read: number; imported: number; skipped: number }) =>
+      `${r.read} lines read: ${r.imported} owners, ${r.skipped} skipped.`,
+    fishingActivityTitle: 'Fishing grounds of the ports',
+    fishingActivityText:
+      'Where the vessels of the ports site fished over the last 12 months, for the map of each port: their fishing events on Global Fishing Watch, summed by cell of about 5 km. Vessels are found by MMSI, call sign, then name, once a month; small vessels without AIS are not found. Runs in the background, about 2 requests per vessel: to run again every month or so.',
+    fishingActivityStart: 'Synchronise',
+    fishingActivityProgress: (s: { done: number; total: number; found: number; withFishing: number; failed: number }) =>
+      `${s.done}/${s.total} vessels: ${s.found} found on Global Fishing Watch, ${s.withFishing} with fishing in the last 12 months, ${s.failed} failed.`,
+    homePortsCheckTitle: 'Check the home ports with port visits',
+    homePortsCheckText:
+      'Double checks the imported home ports: the port each vessel visited most in the last year, from its positions on Global Fishing Watch, compared to its imported home port. Changes no home port: review the vessels below. Only the vessels with AIS can be checked; about 2 requests per vessel.',
+    homePortsCheckPort: 'Port (LOCODE, optional)',
+    homePortsCheckStart: 'Check',
+    homePortsCheckProgress: (s: { done: number; total: number; failed: number }) =>
+      `${s.done}/${s.total} vessels checked, ${s.failed} failed.`,
+    homePortsCheckResults: {
+      AGREES: 'same port',
+      DISAGREES: 'another port',
+      NEARBY: 'a port nearby',
+      NOT_FOUND: 'not found',
+      NOT_ON_THE_MAP: 'a port not on the map',
+      TOO_FEW_VISITS: 'too few visits'
+    },
+    homePortsCheckToReview: (count: number) => `To review: ${count} vessels visited another port most`,
+    homePortsCheckDownload: 'Download all results (CSV)',
+    homePortsCheckVessel: 'Vessel',
+    homePortsCheckImported: 'Imported port',
+    homePortsCheckVisited: 'Port visited most',
+    homePortsCheckVisits: 'Visits in a year',
+    homePortsCheckVisitsCell: (atVisited: number, atImported: number, total: number) =>
+      `${atVisited} there, ${atImported} at the imported port, of ${total}`,
+    homePortsFromPortVisitsTitle: 'Home ports from port visits',
+    homePortsFromPortVisitsText:
+      'Gives a home port to the French vessels of the EU fleet register that have none: the French port each visited most in the last year (or any port otherwise), from its positions on Global Fishing Watch, when that port is on the map. Vessels are found by MMSI, call sign, then name; small vessels without AIS are not found. Runs in the background, about 3 requests per vessel. Imported home ports take precedence.',
+    homePortsFromPortVisitsStart: 'Start',
+    homePortsFromPortVisitsProgress: (s: {
+      done: number
+      total: number
+      found: number
+      placed: number
+      withoutVisits: number
+      farFromPorts: number
+      failed: number
+    }) =>
+      `${s.done}/${s.total} vessels: ${s.found} found on Global Fishing Watch, ${s.placed} given a home port, ${s.withoutVisits} with too few port visits, ${s.farFromPorts} visiting a port not on the map, ${s.failed} failed.`,
+    homePortsFromPortVisitsUnknownPorts: 'Most visited ports not on the map:',
+    homePortsFromPortVisitsNone:
+      'No French vessel of the EU fleet register is without home port: import the register first (Import vessels, above).',
+    auctionSalesFile: 'Auction sales',
+    auctionSalesHelp:
+      'FranceAgriMer’s yearly workbook “Ventes déclarées en halles à marée” (BIL-MER-VENTES_HAM-Axx.xlsm), as downloaded: it replaces all the auction sales.',
+    auctionSalesResult: (r: {
+      year: number
+      auctions: number
+      matched: string[]
+      unmatched: string[]
+      seasonalSpecies: number
+    }) =>
+      `${r.year}: ${r.auctions} auctions, ${r.matched.length} matched to a port, ${r.seasonalSpecies} species with seasons.${
+        r.unmatched.length > 0 ? ` No port for: ${r.unmatched.join(', ')}.` : ''
+      }`,
+    homePortsResult: (r: { read: number; imported: number; ports: number; withoutPort: number; skipped: number }) =>
+      `${r.read} lines read: ${r.imported} vessels in ${r.ports} ports, ${r.withoutPort} without a port, ${r.skipped} skipped.`,
+    portPositionsResult: (r: { read: number; updated: number; unknown: number; skipped: number }) =>
+      `${r.read} lines read: ${r.updated} ports placed, ${r.unknown} unknown ports, ${r.skipped} skipped.`,
     importResult: (r: {
       read: number
       created: number

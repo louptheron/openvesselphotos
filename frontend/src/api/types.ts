@@ -302,3 +302,187 @@ export type ReviewQueue = {
     vessel: AdminVessel
   }>
 }
+
+/** A port of the ports site, with the vessels based at it (see PortsController) */
+export type Port = {
+  country: string
+  latitude: number | null
+  locode: string
+  longitude: number | null
+  name: string
+  vesselCount: number
+  /** Vessels by main gear (FAO code, e.g. OTB), for those whose gear is known */
+  gearCounts: Record<string, number>
+  /** The fish auction of the port: its sales of all species in its last year (missing from older responses) */
+  auction?: AuctionTotal | null
+  /** In the URL of its page, e.g. "le-guilvinec" for /ports/le-guilvinec; null in a port's details */
+  slug?: string | null
+}
+
+export type AuctionTotal = {
+  name: string
+  quantityTonnes: number
+  valueThousandEuros: number
+  year: number
+}
+
+export type PortVessel = {
+  cfr: string
+  lengthMeters: number | null
+  mainGear: string | null
+  mainPhoto: Photo | null
+  meanDistanceKm: number | null
+  name: string | null
+  observationsAtPort: number
+  observationsTotal: number
+  /** The vessel's page on Open Vessel Photos, when it has one */
+  pageUrl: string | null
+  photoCount: number
+  /** The company owning the vessel, from a public source */
+  owner: { group: string | null; name: string; sourceUrl: string } | null
+  registration: string | null
+  /** IMPORT: from the imported observations; GFW: the port it visited most in a year, on Global Fishing Watch */
+  homePortSource?: 'GFW' | 'IMPORT'
+  /** Gross tonnage */
+  tonnageGt: number | null
+  vesselType: string | null
+  yearBuilt: number | null
+}
+
+/** A vessel of the ports site found by its name or CFR */
+export type PortVesselSearchResult = {
+  cfr: string
+  name: string | null
+  portLocode: string
+  portName: string
+}
+
+export type PortDetails = {
+  /** The fish auction of the port, when it has one (FranceAgriMer) */
+  auction: PortAuction | null
+  port: Port
+  vessels: PortVessel[]
+}
+
+/** Sales declared at the fish auction of a port in its last year */
+export type PortAuction = {
+  name: string
+  previousQuantityTonnes: number | null
+  priceEurosPerKg: number | null
+  quantityTonnes: number
+  /** The main species sold, by value */
+  species: AuctionSpecies[]
+  valueThousandEuros: number
+  year: number
+}
+
+export type AuctionSpecies = {
+  /** Its sales in all French auctions by month, from January: its season */
+  monthlyQuantitiesTonnes: number[] | null
+  name: string
+  previousQuantityTonnes: number | null
+  priceEurosPerKg: number | null
+  quantityTonnes: number
+  valueThousandEuros: number
+}
+
+export type HomePortImportResult = {
+  errors: string[]
+  imported: number
+  ports: number
+  read: number
+  skipped: number
+  withoutPort: number
+}
+
+export type PortPositionImportResult = {
+  errors: string[]
+  read: number
+  skipped: number
+  unknown: number
+  updated: number
+}
+
+/** How much of the French fleet has a known home port, and when the data last changed (see /mises-a-jour) */
+export type PortsDataQuality = {
+  fromObservations: number
+  fromPortVisits: number
+  /** e.g. 2026-11-20 */
+  lastUpdate: string | null
+  registerVessels: number
+  /** From 0 to 1; null without register */
+  share: number | null
+  withHomePort: number
+}
+
+/** The fishing activity map: the last 12 complete months, when a Global Fishing Watch token is set */
+export type FishingEffortPeriod = {
+  from: string
+  /** The gear families drawn: the trawls only, the other vessels mostly lacking AIS */
+  gearFamilies: string[]
+  isEnabled: boolean
+  to: string
+}
+
+/** Where the vessels of a port fished over the last 12 months */
+export type PortFishingEffort = {
+  /** [longitude, latitude, hours of fishing] of each cell of 0.05° */
+  cells: [number, number, number][]
+  trackedVessels: number
+}
+
+export type FishingActivitySyncStatus = {
+  done: number
+  errors: string[]
+  failed: number
+  finishedAt: string | null
+  found: number
+  isRunning: boolean
+  startedAt: string | null
+  total: number
+  withFishing: number
+}
+
+export type HomePortsFromPortVisitsStatus = {
+  done: number
+  errors: string[]
+  failed: number
+  farFromPorts: number
+  finishedAt: string | null
+  found: number
+  isRunning: boolean
+  placed: number
+  startedAt: string | null
+  total: number
+  unknownPorts: string[]
+  withoutVisits: number
+}
+
+export type HomePortCheckResult = 'AGREES' | 'DISAGREES' | 'NEARBY' | 'NOT_FOUND' | 'NOT_ON_THE_MAP' | 'TOO_FEW_VISITS'
+
+export type HomePortsCheckStatus = {
+  countsByResult: Partial<Record<HomePortCheckResult, number>>
+  done: number
+  errors: string[]
+  failed: number
+  finishedAt: string | null
+  isRunning: boolean
+  startedAt: string | null
+  total: number
+}
+
+/** An imported home port checked against the port the vessel visited most in a year, on Global Fishing Watch */
+export type HomePortCheck = {
+  cfr: string
+  checkedOn: string
+  distanceKm: number | null
+  gfwLocode: string | null
+  gfwPortName: string | null
+  importedLocode: string
+  importedPortName: string | null
+  result: HomePortCheckResult
+  vesselName: string | null
+  visitsAtGfwPort: number
+  visitsAtImported: number
+  visitsTotal: number
+}

@@ -12,6 +12,8 @@ class WwwRedirectFilterUTests {
         host: String,
         path: String,
         query: String? = null,
+        portsPublicUrl: String = "",
+        portsAliasHosts: String = "",
     ): MockHttpServletResponse {
         val request =
             MockHttpServletRequest("GET", path).apply {
@@ -19,7 +21,10 @@ class WwwRedirectFilterUTests {
                 queryString = query
             }
         val response = MockHttpServletResponse()
-        WwwRedirectFilter(publicUrl).doFilter(request, response, MockFilterChain())
+        WwwRedirectFilter(
+            PublicUrl(publicUrl, portsPublicUrl),
+            portsAliasHosts,
+        ).doFilter(request, response, MockFilterChain())
 
         return response
     }
@@ -39,5 +44,36 @@ class WwwRedirectFilterUTests {
             .isEqualTo(200)
         // Without a public URL, every host is served
         assertThat(send("", "www.openvesselphotos.org", "/").status).isEqualTo(200)
+    }
+
+    @Test
+    fun `The www host of the ports site Should be redirected to its public URL`() {
+        val response =
+            send(
+                "https://openvesselphotos.org",
+                "www.ports-de-peche.fr",
+                "/FRQUY",
+                portsPublicUrl = "https://ports-de-peche.fr",
+            )
+
+        assertThat(response.status).isEqualTo(301)
+        assertThat(response.getHeader("Location")).isEqualTo("https://ports-de-peche.fr/FRQUY")
+    }
+
+    @Test
+    fun `The other domains of the ports site Should be redirected to its public URL, but never itself`() {
+        fun location(host: String) =
+            send(
+                "https://openvesselphotos.org",
+                host,
+                "/ports/erquy",
+                portsPublicUrl = "https://lapechefrancaise.fr",
+                portsAliasHosts = " lapechefrancaise.com, lapechefrancaise.fr",
+            ).getHeader("Location")
+
+        assertThat(location("lapechefrancaise.com")).isEqualTo("https://lapechefrancaise.fr/ports/erquy")
+        assertThat(location("www.lapechefrancaise.com")).isEqualTo("https://lapechefrancaise.fr/ports/erquy")
+        assertThat(location("www.lapechefrancaise.fr")).isEqualTo("https://lapechefrancaise.fr/ports/erquy")
+        assertThat(location("lapechefrancaise.fr")).isNull()
     }
 }

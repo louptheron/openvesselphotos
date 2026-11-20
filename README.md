@@ -75,6 +75,8 @@ Variables are listed in `backend/.env.example`.
 | `OPENVESSELPHOTOS_DATABASE_URL`                   | _(required otherwise)_     | `postgresql://user:password@host:port/db` or `jdbc:` |
 | `OPENVESSELPHOTOS_DATABASE_HIKARI_MAX_POOL_SIZE`  | `5`                        | Database connections per container                  |
 | `OPENVESSELPHOTOS_PUBLIC_URL`                     | _(requested host)_         | Canonical base URL, e.g. `https://example.org`      |
+| `OPENVESSELPHOTOS_PORTS_PUBLIC_URL`               | _(`ports.localhost` only)_ | Domain of the ports site, see below                 |
+| `OPENVESSELPHOTOS_GFW_TOKEN`                      | _(empty: disabled)_        | Global Fishing Watch API token, see below           |
 | `OPENVESSELPHOTOS_INDEXNOW_KEY`                   | _(empty: disabled)_        | IndexNow key (8–128 letters, digits, dashes)        |
 | `OPENVESSELPHOTOS_ADMIN_PASSWORD`                 | _(empty: admin disabled)_  | Unique password of `/admin`                         |
 | `PORT`                                            | _(set by Scalingo)_        | HTTP port, takes precedence over the next one       |
@@ -163,6 +165,54 @@ With a custom domain, set `OPENVESSELPHOTOS_PUBLIC_URL` so that canonical links 
 submit `https://<domain>/sitemap.xml` and `https://<domain>/feed.xml` in Google Search Console. With
 `OPENVESSELPHOTOS_INDEXNOW_KEY` set too (e.g. a UUID), the pages of vessels whose photos change are sent every minute to
 the IndexNow search engines (Bing, Yandex…; not Google), which check the key at `/indexnow-key.txt`.
+
+### Ports site
+
+The same app serves a second website on its own domain: a map of the French fishing vessels by home port, in French
+(`frontend/ports.html`, `frontend/src/ports/`). The backend tells the two sites apart by their host: on the host of
+`OPENVESSELPHOTOS_PORTS_PUBLIC_URL`, `SiteHostFilter` forwards every page to `/_ports/…` (`PortsPagesController`, with
+its own SEO metadata, `robots.txt` and `sitemap.xml`), while `/v1/**`, `/assets/**` and `/favicon.svg` are shared. No
+page is served on both hosts: search engines see two distinct sites. Vessel pages and photos link to Open Vessel
+Photos.
+
+Its data comes from two CSV imports in `/admin`: the home ports of the vessels (`cfr`, `vessel_name`, `port_locode`,
+`port_name`, `port_country`, `observations_total`, `observations_at_port`, `mean_distance_km`), which replaces them
+all, then the positions of the ports on the map (`locode`, `latitude`, `longitude`). A third import sets the owners of the vessels
+(`cfr`, `armateur`, `groupe`, `source`, a public link shown on the site). Each gear shows its impact rated by
+[BLOOM](https://www.bloomassociation.org/wp-content/uploads/2020/03/BLOOM-Methodes-de-peche.pdf) and its carbon
+footprint per kg landed from [The Shift Project & BLOOM](https://theshiftproject.org/app/uploads/2025/11/Bilan-des-emissions-carbone-de-la-peche-Rapport-final-BLOOM-x-Shift.pdf)
+(`frontend/src/ports/gears.tsx`, `impacts.tsx`).
+
+The sales of the fish auctions (criées) come from FranceAgriMer's yearly workbook "Ventes déclarées en halles à
+marée" (`BIL-MER-VENTES_HAM-Axx.xlsm`). To refresh them, upload the new workbook as downloaded in `/admin` → "Ventes en
+criée": it replaces all the sales (`AuctionSalesWorkbookParser`, which finds its tables by their labels and never runs
+its macros). Each auction is matched to a port by its name; auctions named after their town or island are listed in
+`ImportAuctionSales.ALIASES`, and the import reports the auctions left without a port.
+
+With a [Global Fishing Watch](https://globalfishingwatch.org/our-apis/tokens) token (`OPENVESSELPHOTOS_GFW_TOKEN`,
+non-commercial use, CC BY-NC 4.0), the map shows where the vessels fished over the last 12 months, for the trawls only:
+the other French fishing vessels are mostly too small to carry AIS, and their maps would be nearly empty
+(`GetFishingEffort`).
+
+- All French vessels: tiles of Global Fishing Watch through `/v1/ports/fishing-effort/…`, so that the token never
+  reaches browsers, kept in memory.
+- The vessels of a port: in `/admin` → "Zones de pêche des ports", a background synchronisation finds each vessel of
+  the ports site on Global Fishing Watch (by MMSI, call sign, then name) and stores its fishing hours by cell of 0.05°
+  (`SyncFishingActivity`); `/v1/ports/{locode}/fishing-effort` sums them, drawn as a heatmap. To run again every month
+  or so; `?port=FRLRT` synchronises one port.
+- In `/admin` → "Ports d'attache par les escales", a background search gives a home port to the French vessels of the
+  EU fleet register without one: the French port each visited most in a year (any port otherwise), when that port is
+  on the map. Imported home ports take precedence (`FindHomePortsFromPortVisits`).
+- In `/admin` → "Vérifier les ports d'attache", a background check compares each imported home port with the port the
+  vessel visited most in a year on Global Fishing Watch, and lists the disagreements (also as a CSV). It changes no
+  home port (`CheckHomePorts`). In local development, open
+`http://ports.localhost:3000` (`make run-front`) or `http://ports.localhost:8880`.
+
+To put it online, add both domains to the Scalingo app (`scalingo --app openvesselphotos domains-add <domain>`, and
+`www.<domain>`), point their DNS to it (`CNAME` to `openvesselphotos.osc-fr1.scalingo.io`, or `ALIAS` / CNAME
+flattening for the apex), set `OPENVESSELPHOTOS_PORTS_PUBLIC_URL=https://<domain>`, and don't set a Scalingo canonical
+domain: it would redirect the ports domain to the first one. `www.<domain>` is redirected to `<domain>` by the app.
+Submit `https://<domain>/sitemap.xml` in Google Search Console, as a property of its own.
 
 ## Deployment on Scalingo
 

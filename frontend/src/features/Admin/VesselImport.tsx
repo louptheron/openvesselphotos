@@ -2,7 +2,7 @@ import { type FormEvent, useState } from 'react'
 import styled from 'styled-components'
 
 import { getErrorMessage, useImportVesselsMutation } from '../../api/api'
-import { Card, ErrorMessage, Muted, SecondaryButton, SectionTitle, SuccessMessage } from '../../components/ui'
+import { Card, ErrorMessage, Muted, SecondaryButton, SuccessMessage } from '../../components/ui'
 import { COLORS } from '../../theme'
 import { useTranslation } from '../../i18n'
 
@@ -23,7 +23,6 @@ export function VesselImport() {
 
   return (
     <Section>
-      <SectionTitle as="h2">{t.admin.importTitle}</SectionTitle>
       <Muted>
         {t.admin.importText1}{' '}
         <a href="https://webgate.ec.europa.eu/fleet-europa/search_en" rel="noreferrer" target="_blank">

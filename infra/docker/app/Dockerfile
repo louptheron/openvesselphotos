@@ -30,7 +30,9 @@ RUN gradle :backend:bootJar --no-daemon
 ######################
 FROM azul/zulu-openjdk-alpine:21-jre
 
-RUN adduser -D openvesselphotos
+# Java draws the share images of the ports site (ShareImageRenderer) with FreeType, missing from Alpine
+RUN apk add --no-cache fontconfig freetype \
+    && adduser -D openvesselphotos
 USER openvesselphotos
 WORKDIR /home/openvesselphotos
 

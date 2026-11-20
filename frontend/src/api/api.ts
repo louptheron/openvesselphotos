@@ -6,9 +6,21 @@ import type {
   ApiKey,
   ApiKeyRequest,
   ApprovedApiKey,
+  FishingActivitySyncStatus,
+  HomePortCheck,
+  HomePortsCheckStatus,
+  FishingEffortPeriod,
+  HomePortsFromPortVisitsStatus,
+  HomePortImportResult,
   KeyType,
   PhotoImportStatus,
   PhotoNotesResult,
+  Port,
+  PortsDataQuality,
+  PortDetails,
+  PortFishingEffort,
+  PortPositionImportResult,
+  PortVesselSearchResult,
   ReportReason,
   ReviewQueue,
   VesselImportResult,
@@ -35,6 +47,59 @@ export const api = createApi({
     getVessel: builder.query<Vessel, VesselKeyParams>({
       providesTags: ['Vessels'],
       query: ({ key, keyType }) => `/${keyType}/${encodeURIComponent(key)}`
+    }),
+    getPort: builder.query<PortDetails, string>({
+      providesTags: ['Ports'],
+      query: locode => `/ports/${encodeURIComponent(locode)}`
+    }),
+    searchPortVessels: builder.query<PortVesselSearchResult[], string>({
+      providesTags: ['Ports'],
+      query: q => ({ params: { q }, url: '/ports/vessels' })
+    }),
+    getPortFishingEffort: builder.query<PortFishingEffort, { gear: string | undefined; locode: string }>({
+      providesTags: ['Ports'],
+      query: ({ gear, locode }) => ({
+        params: gear ? { engin: gear } : {},
+        url: `/ports/${encodeURIComponent(locode)}/fishing-effort`
+      })
+    }),
+    getFishingActivitySync: builder.query<FishingActivitySyncStatus, void>({
+      providesTags: ['FishingActivitySync'],
+      query: () => '/admin/ports/fishing-activity'
+    }),
+    syncFishingActivity: builder.mutation<FishingActivitySyncStatus, void>({
+      invalidatesTags: ['FishingActivitySync', 'Ports'],
+      query: () => ({ method: 'POST', url: '/admin/ports/fishing-activity' })
+    }),
+    getHomePortsCheck: builder.query<HomePortsCheckStatus, void>({
+      providesTags: ['HomePortsCheck'],
+      query: () => '/admin/ports/home-ports/check'
+    }),
+    getHomePortChecks: builder.query<HomePortCheck[], void>({
+      providesTags: ['HomePortsCheck'],
+      query: () => '/admin/ports/home-ports/checks'
+    }),
+    checkHomePorts: builder.mutation<HomePortsCheckStatus, string | undefined>({
+      invalidatesTags: ['HomePortsCheck'],
+      query: port => ({ method: 'POST', params: port ? { port } : {}, url: '/admin/ports/home-ports/check' })
+    }),
+    getFishingEffortPeriod: builder.query<FishingEffortPeriod, void>({
+      query: () => '/ports/fishing-effort'
+    }),
+    getHomePortsFromPortVisits: builder.query<HomePortsFromPortVisitsStatus, void>({
+      providesTags: ['HomePortsFromPortVisits'],
+      query: () => '/admin/ports/home-ports/from-port-visits'
+    }),
+    findHomePortsFromPortVisits: builder.mutation<HomePortsFromPortVisitsStatus, void>({
+      invalidatesTags: ['HomePortsFromPortVisits', 'Ports'],
+      query: () => ({ method: 'POST', url: '/admin/ports/home-ports/from-port-visits' })
+    }),
+    getPortsDataQuality: builder.query<PortsDataQuality, void>({
+      query: () => '/ports/data-quality'
+    }),
+    getPorts: builder.query<Port[], void>({
+      providesTags: ['Ports'],
+      query: () => '/ports'
     }),
     getVesselFilterOptions: builder.query<VesselFilterOptions, void>({
       providesTags: ['Vessels'],
@@ -89,6 +154,28 @@ export const api = createApi({
       providesTags: ['ApiKeys'],
       query: () => '/admin/api-keys'
     }),
+    importHomePorts: builder.mutation<HomePortImportResult, FormData>({
+      invalidatesTags: ['Ports'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/ports/home-ports/import' })
+    }),
+    importPortPositions: builder.mutation<PortPositionImportResult, FormData>({
+      invalidatesTags: ['Ports'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/ports/positions/import' })
+    }),
+    importAuctionSales: builder.mutation<
+      { auctions: number; matched: string[]; seasonalSpecies: number; unmatched: string[]; year: number },
+      FormData
+    >({
+      invalidatesTags: ['Ports'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/ports/auction-sales/import' })
+    }),
+    importVesselOwners: builder.mutation<
+      { errors: string[]; imported: number; read: number; skipped: number },
+      FormData
+    >({
+      invalidatesTags: ['Ports'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/ports/owners/import' })
+    }),
     importVessels: builder.mutation<VesselImportResult, FormData>({
       invalidatesTags: ['Vessels'],
       query: form => ({ body: form, method: 'POST', url: '/admin/vessels/import' })
@@ -134,15 +221,36 @@ export const api = createApi({
     })
   }),
   reducerPath: 'api',
-  tagTypes: ['ApiKeys', 'PhotoImport', 'Queue', 'Vessels', 'WikidataImport']
+  tagTypes: [
+    'ApiKeys',
+    'FishingActivitySync',
+    'HomePortsCheck',
+    'HomePortsFromPortVisits',
+    'PhotoImport',
+    'Ports',
+    'Queue',
+    'Vessels',
+    'WikidataImport'
+  ]
 })
 
 export const {
   useAdminActionMutation,
   useApproveApiKeyMutation,
   useCancelPhotoImportMutation,
+  useCheckHomePortsMutation,
+  useFindHomePortsFromPortVisitsMutation,
   useGetActiveApiKeysQuery,
+  useGetFishingActivitySyncQuery,
+  useGetFishingEffortPeriodQuery,
+  useGetHomePortChecksQuery,
+  useGetHomePortsCheckQuery,
+  useGetHomePortsFromPortVisitsQuery,
   useGetPhotoImportQuery,
+  useGetPortFishingEffortQuery,
+  useGetPortQuery,
+  useGetPortsDataQualityQuery,
+  useGetPortsQuery,
   useGetRecentVesselsQuery,
   useGetReviewQueueQuery,
   useGetUsageQuery,
@@ -150,7 +258,11 @@ export const {
   useGetVesselQuery,
   useGetVesselsPageQuery,
   useGetWikidataImportQuery,
+  useImportAuctionSalesMutation,
+  useImportHomePortsMutation,
   useImportPhotosMutation,
+  useImportPortPositionsMutation,
+  useImportVesselOwnersMutation,
   useImportVesselsMutation,
   useImportWikidataMutation,
   useLazyGetVesselQuery,
@@ -158,6 +270,8 @@ export const {
   useLogoutMutation,
   useReportPhotoMutation,
   useRequestApiKeyMutation,
+  useSearchPortVesselsQuery,
+  useSyncFishingActivityMutation,
   useSearchVesselsQuery,
   useSetPhotoNotesMutation,
   useSubmitPhotoMutation,
