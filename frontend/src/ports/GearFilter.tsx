@@ -369,9 +369,9 @@ const ExplanationTitle = styled.div`
   display: flex;
   flex-direction: column;
   color: ${COLORS.ink};
-  font-family: ${FONTS.display};
+  font-family: ${FONTS.sans};
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
 
   span {
     color: ${COLORS.muted};

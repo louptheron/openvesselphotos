@@ -201,7 +201,7 @@ const Header = styled.div`
     flex: 1;
     margin: 0;
     color: ${COLORS.ink};
-    font-family: ${FONTS.display};
+    font-family: ${FONTS.sans};
     font-size: 16px;
   }
 `
@@ -225,7 +225,7 @@ const Figure = styled.div`
 
   strong {
     color: ${COLORS.ink};
-    font-family: ${FONTS.display};
+    font-family: ${FONTS.sans};
     font-size: 17px;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;

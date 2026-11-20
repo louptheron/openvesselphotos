@@ -2,7 +2,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 
-import { useGetPortQuery, useSearchPortVesselsQuery } from '../api/api'
+import { useGetPortQuery, useGetPortsDataQualityQuery, useSearchPortVesselsQuery } from '../api/api'
 import type { Port, PortVessel } from '../api/types'
 import { fr } from '../i18n/fr'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../theme'
@@ -15,8 +15,8 @@ import { FishingFacts } from './FishingFacts'
 import { type GearFamily, GearIcon, countVessels, hasGear } from './gears'
 import { FactPill, INDUSTRIAL_LENGTH } from './impacts'
 import { type Extent, REGIONS, isInExtent } from './regions'
-import { TrawlerLogo } from './TrawlerLogo'
-import { formatNumber, normalize, SITE_NAME, SITE_TAGLINE } from './texts'
+import { SiteMark } from './SiteMark'
+import { formatDate, formatNumber, formatPercent, getPortPath, normalize, SITE_NAME, SITE_TAGLINE } from './texts'
 
 const OPEN_VESSEL_PHOTOS_URL = 'https://openvesselphotos.org/fr'
 /** In the URL of a port, the CFR of the vessel found by the search, e.g. ?navire=FRA000123456 */
@@ -63,7 +63,7 @@ export function PortPanel({ gear, isError, isLoading, locode, onFitExtent, onHig
       <Brand>
         <BrandLink to={{ pathname: '/', search }}>
           <BrandMark>
-            <TrawlerLogo size={32} />
+            <SiteMark size={32} />
           </BrandMark>
           <span>
             <BrandName>{SITE_NAME}</BrandName>
@@ -85,7 +85,7 @@ export function PortPanel({ gear, isError, isLoading, locode, onFitExtent, onHig
         />
       )}
       <Footer>
-        Photos de{' '}
+        <a href="/especes">Espèces et prix</a> · <a href="/methodologie">Méthodologie et sources</a> · Photos de{' '}
         <a href={OPEN_VESSEL_PHOTOS_URL} rel="noopener" target="_blank">
           Open Vessel Photos
         </a>{' '}
@@ -169,7 +169,12 @@ function PortsView({ gear, isError, isLoading, onFitExtent, onHighlight, onSelec
               {foundVessels.map(vessel => (
                 <li key={vessel.cfr}>
                   <Link
-                    to={{ pathname: `/${vessel.portLocode}`, search: withParam(urlSearch, VESSEL_PARAM, vessel.cfr) }}
+                    to={{
+                      pathname: getPortPath(
+                        ports.find(port => port.locode === vessel.portLocode) ?? { locode: vessel.portLocode }
+                      ),
+                      search: withParam(urlSearch, VESSEL_PARAM, vessel.cfr)
+                    }}
                   >
                     <RowIcon>
                       <BoatIcon />
@@ -228,7 +233,7 @@ function PortsView({ gear, isError, isLoading, onFitExtent, onHighlight, onSelec
                   onFocus={() => onHighlight(port.locode)}
                   onMouseEnter={() => onHighlight(port.locode)}
                   onMouseLeave={() => onHighlight(undefined)}
-                  to={{ pathname: `/${port.locode}`, search: urlSearch }}
+                  to={{ pathname: getPortPath(port), search: urlSearch }}
                 >
                   <PortName>
                     <span>{port.name}</span>
@@ -250,14 +255,39 @@ function PortsView({ gear, isError, isLoading, onFitExtent, onHighlight, onSelec
             </Empty>
           )}
         </Section>
+        <Section>
+          <DataQualityNote />
+        </Section>
       </Scroll>
     </>
   )
 }
 
+/** How complete and how fresh the data is: shown, so that its limits are known (see /methodologie) */
+function DataQualityNote() {
+  const { data } = useGetPortsDataQualityQuery()
+  if (!data) {
+    return null
+  }
+
+  return (
+    <SourcesNote>
+      {data.share !== null && (
+        <>
+          Port d’attache connu pour {formatPercent(data.share)} des {formatNumber(data.registerVessels)} navires
+          français du registre de la flotte de l’UE : {formatNumber(data.fromObservations)} d’après leurs positions à
+          quai, {formatNumber(data.fromPortVisits)} d’après leurs escales (Global Fishing Watch).{' '}
+        </>
+      )}
+      {data.lastUpdate && <>Mis à jour le {formatDate(data.lastUpdate)} · </>}
+      <a href="/mises-a-jour">Historique des mises à jour</a> · <a href="/methodologie">Méthodologie</a>
+    </SourcesNote>
+  )
+}
+
 function PortView({ gear, locode }: { gear: GearFamily | undefined; locode: string }) {
   const { data, isError, isLoading } = useGetPortQuery(locode)
-  const { search: urlSearch } = useLocation()
+  const { pathname, search: urlSearch } = useLocation()
   const [searchParams] = useSearchParams()
   // A vessel found by the search: shown even when the gear filter would hide it, and scrolled to
   const targetCfr = searchParams.get(VESSEL_PARAM)
@@ -334,7 +364,7 @@ function PortView({ gear, locode }: { gear: GearFamily | undefined; locode: stri
                     {gearVesselCount > 1 ? 'navires pêchent' : 'navire pêche'} avec cet engin ·{' '}
                     {gear.label.toLowerCase()}
                   </span>
-                  <Link to={{ pathname: `/${locode}` }}>Toute la flotte</Link>
+                  <Link to={{ pathname }}>Toute la flotte</Link>
                 </FilterNote>
               )}
               <PortPortrait vessels={portVessels} />
@@ -749,9 +779,9 @@ const BrandMark = styled.span`
 
 const BrandName = styled.span`
   display: block;
-  font-family: ${FONTS.display};
+  font-family: ${FONTS.sans};
   font-size: 19px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.01em;
 `
 
@@ -855,9 +885,9 @@ const Eyebrow = styled.p`
 const Title = styled.h1`
   margin: 0 0 8px;
   color: ${COLORS.ink};
-  font-family: ${FONTS.display};
+  font-family: ${FONTS.sans};
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.12;
   text-wrap: balance;
@@ -1267,10 +1297,10 @@ const RowContent = styled.div`
 const Length = styled.span`
   margin-top: 2px;
   color: ${COLORS.ink};
-  font-family: ${FONTS.display};
+  font-family: ${FONTS.sans};
   font-size: 15px;
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 `
 

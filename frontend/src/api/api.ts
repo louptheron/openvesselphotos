@@ -16,6 +16,7 @@ import type {
   PhotoImportStatus,
   PhotoNotesResult,
   Port,
+  PortsDataQuality,
   PortDetails,
   PortFishingEffort,
   PortPositionImportResult,
@@ -92,6 +93,9 @@ export const api = createApi({
     findHomePortsFromPortVisits: builder.mutation<HomePortsFromPortVisitsStatus, void>({
       invalidatesTags: ['HomePortsFromPortVisits', 'Ports'],
       query: () => ({ method: 'POST', url: '/admin/ports/home-ports/from-port-visits' })
+    }),
+    getPortsDataQuality: builder.query<PortsDataQuality, void>({
+      query: () => '/ports/data-quality'
     }),
     getPorts: builder.query<Port[], void>({
       providesTags: ['Ports'],
@@ -245,6 +249,7 @@ export const {
   useGetPhotoImportQuery,
   useGetPortFishingEffortQuery,
   useGetPortQuery,
+  useGetPortsDataQualityQuery,
   useGetPortsQuery,
   useGetRecentVesselsQuery,
   useGetReviewQueueQuery,

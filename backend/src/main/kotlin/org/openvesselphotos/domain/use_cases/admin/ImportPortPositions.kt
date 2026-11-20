@@ -1,9 +1,13 @@
 package org.openvesselphotos.domain.use_cases.admin
 
 import org.openvesselphotos.config.UseCase
+import org.openvesselphotos.domain.entities.DataSource
+import org.openvesselphotos.domain.entities.DataUpdate
 import org.openvesselphotos.domain.entities.Port
+import org.openvesselphotos.domain.repositories.DataUpdateRepository
 import org.openvesselphotos.domain.repositories.PortRepository
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
 
 /** A port's position read from an import file, before validation. */
 data class PortPositionImportRow(
@@ -26,6 +30,7 @@ data class PortPositionImportResult(
 @UseCase
 class ImportPortPositions(
     private val portRepository: PortRepository,
+    private val dataUpdateRepository: DataUpdateRepository,
 ) {
     @Transactional
     fun execute(rows: List<PortPositionImportRow>): PortPositionImportResult {
@@ -52,6 +57,11 @@ class ImportPortPositions(
             }
         }
         val updated = if (ports.isEmpty()) 0 else portRepository.savePositions(ports.values.toList())
+        if (updated > 0) {
+            dataUpdateRepository.add(
+                DataUpdate(DataSource.PORT_POSITIONS, LocalDate.now(), "Positions de $updated ports"),
+            )
+        }
 
         return PortPositionImportResult(
             read = rows.size,

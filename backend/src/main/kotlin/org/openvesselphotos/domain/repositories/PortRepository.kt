@@ -2,6 +2,7 @@ package org.openvesselphotos.domain.repositories
 
 import org.openvesselphotos.domain.entities.HomePort
 import org.openvesselphotos.domain.entities.HomePortCandidate
+import org.openvesselphotos.domain.entities.HomePortCoverage
 import org.openvesselphotos.domain.entities.HomePortSearchResult
 import org.openvesselphotos.domain.entities.Port
 import org.openvesselphotos.domain.entities.PortWithVesselCount
@@ -43,6 +44,12 @@ interface PortRepository {
 
     /** French vessels of the EU fleet register (by their CFR) without home port */
     fun findHomePortCandidates(): List<HomePortCandidate>
+
+    /** The day the home ports last changed, by an import or from Global Fishing Watch; null without home port */
+    fun findLastHomePortsUpdate(): LocalDate?
+
+    /** How much of the French fleet of the EU register has a known home port */
+    fun findCoverage(): HomePortCoverage
 
     /** Adds home ports to vessels without one; the ones with a home port already keep it */
     fun addHomePorts(homePorts: List<HomePort>)

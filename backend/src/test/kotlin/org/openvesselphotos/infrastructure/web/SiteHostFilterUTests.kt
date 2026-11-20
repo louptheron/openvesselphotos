@@ -35,6 +35,9 @@ class SiteHostFilterUTests {
         assertThat(send("ports-de-peche.fr", "/").forwardedUrl).isEqualTo("/_ports/")
         assertThat(send("ports-de-peche.fr", "/FRQUY").forwardedUrl).isEqualTo("/_ports/FRQUY")
         assertThat(send("ports-de-peche.fr", "/robots.txt").forwardedUrl).isEqualTo("/_ports/robots.txt")
+        assertThat(send("ports-de-peche.fr", "/ports/erquy").forwardedUrl).isEqualTo("/_ports/ports/erquy")
+        assertThat(send("ports-de-peche.fr", "/llms.txt").forwardedUrl).isEqualTo("/_ports/llms.txt")
+        assertThat(send("ports-de-peche.fr", "/donnees/ports.csv").forwardedUrl).isEqualTo("/_ports/donnees/ports.csv")
         // Pages of Open Vessel Photos are not found there
         assertThat(send("ports-de-peche.fr", "/vessels/cfr/FRA000123456").forwardedUrl)
             .isEqualTo("/_ports/vessels/cfr/FRA000123456")

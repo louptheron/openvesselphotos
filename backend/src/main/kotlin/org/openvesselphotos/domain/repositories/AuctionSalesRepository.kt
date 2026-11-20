@@ -15,6 +15,9 @@ interface AuctionSalesRepository {
     /** The sales of the auction of the port, all years */
     fun findByPort(locode: String): List<AuctionSpeciesSales>
 
+    /** The sales of each species (not the totals) at every auction, all years, with the port of the auction */
+    fun findSpeciesSales(): List<AuctionSpeciesSales>
+
     /** Monthly sales of all the species of the year */
     fun findMonthlySales(year: Int): List<SpeciesMonthlySales>
 

@@ -315,6 +315,8 @@ export type Port = {
   gearCounts: Record<string, number>
   /** The fish auction of the port: its sales of all species in its last year (missing from older responses) */
   auction?: AuctionTotal | null
+  /** In the URL of its page, e.g. "le-guilvinec" for /ports/le-guilvinec; null in a port's details */
+  slug?: string | null
 }
 
 export type AuctionTotal = {
@@ -399,6 +401,18 @@ export type PortPositionImportResult = {
   skipped: number
   unknown: number
   updated: number
+}
+
+/** How much of the French fleet has a known home port, and when the data last changed (see /mises-a-jour) */
+export type PortsDataQuality = {
+  fromObservations: number
+  fromPortVisits: number
+  /** e.g. 2026-11-20 */
+  lastUpdate: string | null
+  registerVessels: number
+  /** From 0 to 1; null without register */
+  share: number | null
+  withHomePort: number
 }
 
 /** The fishing activity map: the last 12 complete months, when a Global Fishing Watch token is set */

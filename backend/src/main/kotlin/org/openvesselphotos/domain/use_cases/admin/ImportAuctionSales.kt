@@ -2,13 +2,17 @@ package org.openvesselphotos.domain.use_cases.admin
 
 import org.openvesselphotos.config.UseCase
 import org.openvesselphotos.domain.entities.AuctionSalesData
+import org.openvesselphotos.domain.entities.DataSource
+import org.openvesselphotos.domain.entities.DataUpdate
 import org.openvesselphotos.domain.entities.Port
 import org.openvesselphotos.domain.exceptions.BackendUsageErrorCode
 import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.repositories.AuctionSalesRepository
+import org.openvesselphotos.domain.repositories.DataUpdateRepository
 import org.openvesselphotos.domain.repositories.PortRepository
 import org.springframework.transaction.annotation.Transactional
 import java.text.Normalizer
+import java.time.LocalDate
 
 data class AuctionSalesImportResult(
     /** The latest year of the workbook */
@@ -31,6 +35,7 @@ data class AuctionSalesImportResult(
 class ImportAuctionSales(
     private val auctionSalesRepository: AuctionSalesRepository,
     private val portRepository: PortRepository,
+    private val dataUpdateRepository: DataUpdateRepository,
 ) {
     @Transactional
     fun execute(data: AuctionSalesData): AuctionSalesImportResult {
@@ -41,6 +46,13 @@ class ImportAuctionSales(
         val auctions = data.sales.map { it.auction }.distinct()
         val portByAuction = auctions.mapNotNull { auction -> matchPort(auction, ports)?.let { auction to it } }.toMap()
         auctionSalesRepository.replaceAll(data.sales, data.monthlySales, portByAuction.mapValues { it.value.locode })
+        dataUpdateRepository.add(
+            DataUpdate(
+                DataSource.AUCTION_SALES,
+                LocalDate.now(),
+                "Ventes ${data.sales.maxOf { it.year }} de ${auctions.size} criées",
+            ),
+        )
 
         return AuctionSalesImportResult(
             year = data.sales.maxOf { it.year },

@@ -4,6 +4,7 @@ import type { PortVessel } from '../api/types'
 import { COLORS } from '../theme'
 import { GEAR_FAMILIES, GearIcon, getFamilyOfGear } from './gears'
 import { INDUSTRIAL_LENGTH } from './impacts'
+import { formatPercent } from './texts'
 
 /** Coastal, offshore and industrial vessels, as in the reports on the French fleet */
 export const SIZE_CLASSES = [
@@ -79,8 +80,33 @@ export function PortPortrait({ vessels }: { vessels: PortVessel[] }) {
           {unknown} navire{unknown > 1 ? 's' : ''} sans données du registre de la flotte de l’UE.
         </Note>
       )}
+      <Note>
+        Source : registre de la flotte de l’UE. {getReliability(vessels)} <a href="/methodologie">Méthodologie</a>
+      </Note>
     </Portrait>
   )
+}
+
+/**
+ * How the home ports of the vessels were found, e.g. "Port d’attache : 12 navires vus à quai le plus souvent (81 % de
+ * leurs positions à quai en moyenne), 3 d’après leurs escales (Global Fishing Watch)." Same as PortsPagesController.
+ */
+function getReliability(vessels: PortVessel[]): string {
+  const observed = vessels.filter(vessel => vessel.homePortSource !== 'GFW')
+  const fromVisits = vessels.length - observed.length
+  const shares = observed
+    .filter(vessel => vessel.observationsTotal > 0)
+    .map(vessel => vessel.observationsAtPort / vessel.observationsTotal)
+  const average = shares.length > 0 ? shares.reduce((sum, share) => sum + share, 0) / shares.length : undefined
+  const parts = [
+    observed.length > 0 &&
+      `${observed.length} navire${observed.length > 1 ? 's' : ''} vu${observed.length > 1 ? 's' : ''} à quai le plus souvent${
+        average === undefined ? '' : ` (${formatPercent(average)} de leurs positions à quai en moyenne)`
+      }`,
+    fromVisits > 0 && `${fromVisits} d’après leurs escales (Global Fishing Watch)`
+  ].filter(Boolean)
+
+  return parts.length > 0 ? `Port d’attache : ${parts.join(', ')}.` : ''
 }
 
 const Portrait = styled.section`
@@ -197,4 +223,9 @@ const Note = styled.p`
   margin: 10px 0 0;
   color: ${COLORS.muted};
   font-size: 11.5px;
+  line-height: 1.5;
+
+  a {
+    color: ${COLORS.muted};
+  }
 `

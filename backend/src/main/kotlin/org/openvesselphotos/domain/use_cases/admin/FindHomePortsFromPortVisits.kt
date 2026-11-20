@@ -1,6 +1,8 @@
 package org.openvesselphotos.domain.use_cases.admin
 
 import org.openvesselphotos.config.UseCase
+import org.openvesselphotos.domain.entities.DataSource
+import org.openvesselphotos.domain.entities.DataUpdate
 import org.openvesselphotos.domain.entities.HomePort
 import org.openvesselphotos.domain.entities.HomePortCandidate
 import org.openvesselphotos.domain.entities.HomePortSource
@@ -10,6 +12,7 @@ import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.fishing_activity.FishingActivityClient
 import org.openvesselphotos.domain.fishing_activity.PortVisit
 import org.openvesselphotos.domain.fishing_activity.VesselIdentity
+import org.openvesselphotos.domain.repositories.DataUpdateRepository
 import org.openvesselphotos.domain.repositories.PortRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -51,6 +54,7 @@ data class HomePortsFromPortVisitsStatus(
 class FindHomePortsFromPortVisits(
     private val portRepository: PortRepository,
     private val fishingActivityClient: FishingActivityClient,
+    private val dataUpdateRepository: DataUpdateRepository,
 ) {
     private val logger = LoggerFactory.getLogger(FindHomePortsFromPortVisits::class.java)
 
@@ -157,6 +161,15 @@ class FindHomePortsFromPortVisits(
             portRepository.addHomePorts(homePorts)
         }
         current = current.copy(isRunning = false, finishedAt = ZonedDateTime.now())
+        if (current.placed > 0) {
+            dataUpdateRepository.add(
+                DataUpdate(
+                    DataSource.HOME_PORTS_GFW,
+                    LocalDate.now(),
+                    "Ports d’attache de ${current.placed} navires de plus, d’après leurs escales",
+                ),
+            )
+        }
         logger.info("Search of home ports finished: $current")
     }
 

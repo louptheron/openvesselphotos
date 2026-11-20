@@ -56,6 +56,20 @@ class JdbcAuctionSalesRepository(
             locode,
         )
 
+    override fun findSpeciesSales(): List<AuctionSpeciesSales> =
+        jdbcTemplate.query(
+            "SELECT * FROM auction_sales WHERE species IS NOT NULL ORDER BY year, quantity_t DESC",
+        ) { row, _ ->
+            AuctionSpeciesSales(
+                auction = row.getString("auction"),
+                year = row.getInt("year"),
+                species = row.getString("species"),
+                quantityTonnes = row.getDouble("quantity_t"),
+                valueThousandEuros = row.getDouble("value_keur"),
+                portLocode = row.getString("port_locode"),
+            )
+        }
+
     override fun findMonthlySales(year: Int): List<SpeciesMonthlySales> =
         jdbcTemplate.query(
             "SELECT * FROM species_monthly_sales WHERE year = ? ORDER BY species, month",

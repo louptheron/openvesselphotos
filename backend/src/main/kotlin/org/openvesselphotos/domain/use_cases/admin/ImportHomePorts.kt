@@ -1,12 +1,15 @@
 package org.openvesselphotos.domain.use_cases.admin
 
 import org.openvesselphotos.config.UseCase
+import org.openvesselphotos.domain.entities.DataSource
+import org.openvesselphotos.domain.entities.DataUpdate
 import org.openvesselphotos.domain.entities.HomePort
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.Port
 import org.openvesselphotos.domain.entities.VesselKey
 import org.openvesselphotos.domain.exceptions.BackendUsageErrorCode
 import org.openvesselphotos.domain.exceptions.BackendUsageException
+import org.openvesselphotos.domain.repositories.DataUpdateRepository
 import org.openvesselphotos.domain.repositories.PortRepository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -39,6 +42,7 @@ data class HomePortImportResult(
 @UseCase
 class ImportHomePorts(
     private val portRepository: PortRepository,
+    private val dataUpdateRepository: DataUpdateRepository,
 ) {
     @Transactional
     fun execute(rows: List<HomePortImportRow>): HomePortImportResult {
@@ -103,6 +107,13 @@ class ImportHomePorts(
 
         if (homePorts.isNotEmpty()) {
             portRepository.replaceHomePorts(ports.values.toList(), homePorts.values.toList(), LocalDate.now())
+            dataUpdateRepository.add(
+                DataUpdate(
+                    DataSource.HOME_PORTS,
+                    LocalDate.now(),
+                    "Ports d’attache de ${homePorts.size} navires, dans ${ports.size} ports",
+                ),
+            )
         }
 
         return HomePortImportResult(

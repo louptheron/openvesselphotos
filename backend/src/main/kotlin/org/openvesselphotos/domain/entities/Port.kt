@@ -18,6 +18,8 @@ data class PortWithVesselCount(
     val vesselCountByGear: Map<String, Int> = emptyMap(),
     /** The fish auction of the port, when it has one */
     val auction: AuctionTotal? = null,
+    /** In the URL of its page, e.g. "le-guilvinec": unique among the ports, see GetPorts */
+    val slug: String = slugOf(port.name).ifEmpty { port.locode.lowercase() },
 )
 
 /** The port a vessel is based at, observed from its positions. */
