@@ -10,6 +10,7 @@ import org.openvesselphotos.domain.use_cases.admin.ApprovePhoto
 import org.openvesselphotos.domain.use_cases.admin.AuctionSalesImportResult
 import org.openvesselphotos.domain.use_cases.admin.CheckHomePorts
 import org.openvesselphotos.domain.use_cases.admin.FindHomePortsFromPortVisits
+import org.openvesselphotos.domain.use_cases.admin.FindHomePortsFromRegistration
 import org.openvesselphotos.domain.use_cases.admin.FishingActivitySyncStatus
 import org.openvesselphotos.domain.use_cases.admin.GetActiveApiKeys
 import org.openvesselphotos.domain.use_cases.admin.GetPendingPhotoImage
@@ -18,6 +19,7 @@ import org.openvesselphotos.domain.use_cases.admin.GetUsageStatistics
 import org.openvesselphotos.domain.use_cases.admin.HomePortImportResult
 import org.openvesselphotos.domain.use_cases.admin.HomePortsCheckStatus
 import org.openvesselphotos.domain.use_cases.admin.HomePortsFromPortVisitsStatus
+import org.openvesselphotos.domain.use_cases.admin.HomePortsFromRegistrationResult
 import org.openvesselphotos.domain.use_cases.admin.ImportAuctionSales
 import org.openvesselphotos.domain.use_cases.admin.ImportHomePorts
 import org.openvesselphotos.domain.use_cases.admin.ImportPhotos
@@ -85,6 +87,7 @@ class AdminController(
     private val importVesselOwners: ImportVesselOwners,
     private val importAuctionSales: ImportAuctionSales,
     private val findHomePortsFromPortVisits: FindHomePortsFromPortVisits,
+    private val findHomePortsFromRegistration: FindHomePortsFromRegistration,
     private val checkHomePorts: CheckHomePorts,
     private val syncFishingActivity: SyncFishingActivity,
 ) {
@@ -243,6 +246,13 @@ class AdminController(
 
     @GetMapping("/ports/fishing-activity")
     fun fishingActivitySyncStatus(): FishingActivitySyncStatus = syncFishingActivity.status()
+
+    /**
+     * Gives the French vessels of the EU fleet register still without home port the port of their quartier
+     * d'immatriculation, the coarsest source
+     */
+    @PostMapping("/ports/home-ports/from-registration")
+    fun findHomePortsFromRegistration(): HomePortsFromRegistrationResult = findHomePortsFromRegistration.execute()
 
     @GetMapping("/ports/home-ports/from-port-visits")
     fun homePortsFromPortVisitsStatus(): HomePortsFromPortVisitsStatus = findHomePortsFromPortVisits.status()

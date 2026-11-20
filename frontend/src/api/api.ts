@@ -11,6 +11,7 @@ import type {
   HomePortsCheckStatus,
   FishingEffortPeriod,
   HomePortsFromPortVisitsStatus,
+  HomePortsFromRegistrationResult,
   HomePortImportResult,
   KeyType,
   PhotoImportStatus,
@@ -93,6 +94,10 @@ export const api = createApi({
     findHomePortsFromPortVisits: builder.mutation<HomePortsFromPortVisitsStatus, void>({
       invalidatesTags: ['HomePortsFromPortVisits', 'Ports'],
       query: () => ({ method: 'POST', url: '/admin/ports/home-ports/from-port-visits' })
+    }),
+    findHomePortsFromRegistration: builder.mutation<HomePortsFromRegistrationResult, void>({
+      invalidatesTags: ['Ports'],
+      query: () => ({ method: 'POST', url: '/admin/ports/home-ports/from-registration' })
     }),
     getPortsDataQuality: builder.query<PortsDataQuality, void>({
       query: () => '/ports/data-quality'
@@ -240,6 +245,7 @@ export const {
   useCancelPhotoImportMutation,
   useCheckHomePortsMutation,
   useFindHomePortsFromPortVisitsMutation,
+  useFindHomePortsFromRegistrationMutation,
   useGetActiveApiKeysQuery,
   useGetFishingActivitySyncQuery,
   useGetFishingEffortPeriodQuery,

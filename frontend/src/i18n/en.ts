@@ -454,6 +454,7 @@ export const en = {
       homePorts: 'Home ports (file)',
       homePortsCheck: 'Check the home ports',
       homePortsFromVisits: 'Home ports from port visits',
+      homePortsFromRegistration: 'Home ports from quartiers',
       owners: 'Vessel owners',
       photoNotes: 'Photo notes',
       photos: 'Import photos',
@@ -661,6 +662,13 @@ export const en = {
     homePortsFromPortVisitsText:
       'Gives a home port to the French vessels of the EU fleet register that have none: the French port each visited most in the last year (or any port otherwise), from its positions on Global Fishing Watch, when that port is on the map. Vessels are found by MMSI, call sign, then name; small vessels without AIS are not found. Runs in the background, about 3 requests per vessel. Imported home ports take precedence.',
     homePortsFromPortVisitsStart: 'Start',
+    homePortsFromRegistrationText:
+      'As a last resort, gives the French vessels of the EU fleet register still without home port the port of their quartier maritime (the register’s “Place of registration”): the port of the map of the same name, else the port most of the quartier’s vessels with a known home port are based at. An approximation, flagged on the site: a quartier often covers several ports. The other sources take precedence and replace these ports; run it again after them.',
+    homePortsFromRegistrationStart: 'Match to quartiers',
+    homePortsFromRegistrationResult: (r: { placed: number; candidates: number; withoutPlace: number }) =>
+      `${r.placed} vessels given the port of their quartier, of ${r.candidates} without a better source; ${r.withoutPlace} without quartier in the register.`,
+    homePortsFromRegistrationMatched: 'Quartiers matched:',
+    homePortsFromRegistrationUnmatched: 'Quartiers without port on the map (add them to the aliases):',
     homePortsFromPortVisitsProgress: (s: {
       done: number
       total: number

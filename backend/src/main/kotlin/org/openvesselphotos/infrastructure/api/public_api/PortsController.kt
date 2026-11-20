@@ -47,6 +47,7 @@ class PortsController(
                 share = coverage.share,
                 fromObservations = coverage.fromObservations,
                 fromPortVisits = coverage.fromPortVisits,
+                fromRegistration = coverage.fromRegistration,
                 lastUpdate = getPorts.lastUpdate(),
             ),
         )
@@ -131,5 +132,6 @@ data class DataQualityDataOutput(
     val fromObservations: Int,
     /** Home ports from the port visits on Global Fishing Watch */
     val fromPortVisits: Int,
+    val fromRegistration: Int,
     val lastUpdate: LocalDate?,
 )

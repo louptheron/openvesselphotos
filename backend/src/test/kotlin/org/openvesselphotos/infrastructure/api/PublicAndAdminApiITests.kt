@@ -1682,5 +1682,45 @@ class PublicAndAdminApiITests {
             ).containsExactly(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte())
         }
         pages.perform(onPortsHost("/_ports/images/partage/ports/nowhere.png")).andExpect(status().isNotFound)
+
+        // Vessels without better source get the port of their quartier d'immatriculation, flagged as such
+        mockMvc
+            .perform(
+                multipart("/v1/admin/vessels/import")
+                    .file(
+                        MockMultipartFile(
+                            "file",
+                            "register.csv",
+                            "text/csv",
+                            (
+                                "CFR;Name of Vessel;Place of Registration Name\n" +
+                                    "FRA000900001;KER ARMOR;ERQUY\n" +
+                                    "FRA000900009;PETIT LOUP;ERQUY\n" +
+                                    "FRA000900010;FAR AWAY;NOWHERE BAY"
+                            ).toByteArray(),
+                        ),
+                    ).cookie(cookie),
+            ).andExpect(status().isOk)
+        mockMvc
+            .perform(post("/v1/admin/ports/home-ports/from-registration").cookie(cookie))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.unmatched").value(org.hamcrest.Matchers.hasItem("NOWHERE BAY (1)")))
+            .andExpect(jsonPath("$.matched").value(org.hamcrest.Matchers.hasItem("ERQUY → Erquy (FRQUY), 1")))
+        mockMvc
+            .perform(get("/v1/ports/FRQUY"))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000900009')].homePortSource").value("REGISTER"))
+            // An observed home port is kept
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000900001')].homePortSource").value("IMPORT"))
+        mockMvc
+            .perform(get("/v1/ports/data-quality"))
+            .andExpect(jsonPath("$.fromRegistration").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+        // Run again, it gives the same port
+        mockMvc
+            .perform(post("/v1/admin/ports/home-ports/from-registration").cookie(cookie))
+            .andExpect(jsonPath("$.matched").value(org.hamcrest.Matchers.hasItem("ERQUY → Erquy (FRQUY), 1")))
+        mockMvc.perform(post("/v1/admin/ports/home-ports/from-registration")).andExpect(status().isUnauthorized)
+        pages
+            .perform(onPortsHost("/_ports/methodologie"))
+            .andExpect(content().string(containsString("rattachés au port de leur quartier d’immatriculation")))
     }
 }

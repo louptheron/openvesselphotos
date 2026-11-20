@@ -341,8 +341,11 @@ export type PortVessel = {
   /** The company owning the vessel, from a public source */
   owner: { group: string | null; name: string; sourceUrl: string } | null
   registration: string | null
-  /** IMPORT: from the imported observations; GFW: the port it visited most in a year, on Global Fishing Watch */
-  homePortSource?: 'GFW' | 'IMPORT'
+  /**
+   * IMPORT: from the imported observations; GFW: the port it visited most in a year, on Global Fishing Watch; REGISTER:
+   * the port of its quartier d'immatriculation, the coarsest
+   */
+  homePortSource?: 'GFW' | 'IMPORT' | 'REGISTER'
   /** Gross tonnage */
   tonnageGt: number | null
   vesselType: string | null
@@ -407,6 +410,8 @@ export type PortPositionImportResult = {
 export type PortsDataQuality = {
   fromObservations: number
   fromPortVisits: number
+  /** From the quartier d'immatriculation, when no other source gives a home port */
+  fromRegistration: number
   /** e.g. 2026-11-20 */
   lastUpdate: string | null
   registerVessels: number
@@ -441,6 +446,16 @@ export type FishingActivitySyncStatus = {
   startedAt: string | null
   total: number
   withFishing: number
+}
+
+export type HomePortsFromRegistrationResult = {
+  candidates: number
+  /** e.g. "CAEN → Port-en-Bessin (FRPEB), 12" */
+  matched: string[]
+  placed: number
+  /** e.g. "SAINT PIERRE (14)" */
+  unmatched: string[]
+  withoutPlace: number
 }
 
 export type HomePortsFromPortVisitsStatus = {

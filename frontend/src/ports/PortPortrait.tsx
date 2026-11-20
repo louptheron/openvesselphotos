@@ -89,11 +89,13 @@ export function PortPortrait({ vessels }: { vessels: PortVessel[] }) {
 
 /**
  * How the home ports of the vessels were found, e.g. "Port d’attache : 12 navires vus à quai le plus souvent (81 % de
- * leurs positions à quai en moyenne), 3 d’après leurs escales (Global Fishing Watch)." Same as PortsPagesController.
+ * leurs positions à quai en moyenne), 3 d’après leurs escales (Global Fishing Watch), 5 d’après leur quartier
+ * d’immatriculation seulement." Same as PortsPagesController.
  */
 function getReliability(vessels: PortVessel[]): string {
-  const observed = vessels.filter(vessel => vessel.homePortSource !== 'GFW')
-  const fromVisits = vessels.length - observed.length
+  const observed = vessels.filter(vessel => vessel.homePortSource !== 'GFW' && vessel.homePortSource !== 'REGISTER')
+  const fromVisits = vessels.filter(vessel => vessel.homePortSource === 'GFW').length
+  const fromRegistration = vessels.filter(vessel => vessel.homePortSource === 'REGISTER').length
   const shares = observed
     .filter(vessel => vessel.observationsTotal > 0)
     .map(vessel => vessel.observationsAtPort / vessel.observationsTotal)
@@ -103,7 +105,8 @@ function getReliability(vessels: PortVessel[]): string {
       `${observed.length} navire${observed.length > 1 ? 's' : ''} vu${observed.length > 1 ? 's' : ''} à quai le plus souvent${
         average === undefined ? '' : ` (${formatPercent(average)} de leurs positions à quai en moyenne)`
       }`,
-    fromVisits > 0 && `${fromVisits} d’après leurs escales (Global Fishing Watch)`
+    fromVisits > 0 && `${fromVisits} d’après leurs escales (Global Fishing Watch)`,
+    fromRegistration > 0 && `${fromRegistration} d’après leur quartier d’immatriculation seulement`
   ].filter(Boolean)
 
   return parts.length > 0 ? `Port d’attache : ${parts.join(', ')}.` : ''

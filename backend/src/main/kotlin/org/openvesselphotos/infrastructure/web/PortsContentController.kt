@@ -253,6 +253,15 @@ class PortsContentController(
                         """<a href="${PortsSeo.GFW_URL}">Global Fishing Watch</a>. """ +
                         "Le port d’attache ainsi trouvé peut différer du quartier d’immatriculation, " +
                         "inscrit sur la coque.</p>" +
+                        "<p>Les petits navires n’ont souvent pas d’AIS : ni observés à quai, ni suivis par Global " +
+                        "Fishing Watch. Faute de mieux, ils sont rattachés au port de leur quartier " +
+                        "d’immatriculation (ou quartier maritime), inscrit au registre et sur la coque (GV pour " +
+                        "Le Guilvinec, CC pour " +
+                        "Concarneau…) : le port du même nom, ou à défaut celui où sont basés la plupart des navires " +
+                        "du quartier dont le port d’attache est connu. C’est une approximation : un quartier compte " +
+                        "souvent plusieurs ports (celui du Guilvinec couvre aussi Saint-Guénolé, Lesconil ou " +
+                        "Loctudy). Ces navires sont signalés comme tels dans la liste de chaque port, et en changent " +
+                        "dès qu’une meilleure source donne le leur.</p>" +
                         "<h2>Les engins de pêche et la taille des navires</h2>" +
                         "<p>L’engin principal et la longueur de chaque navire viennent du " +
                         "${PortsSeo.FLEET_REGISTER}. Les engins sont regroupés en familles, par leurs codes FAO " +
