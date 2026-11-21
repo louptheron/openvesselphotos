@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 
 import { COLORS, FONTS } from '../theme'
 
@@ -67,6 +67,15 @@ const buttonBase = css`
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
 
   &:disabled {
     opacity: 0.55;
@@ -79,6 +88,11 @@ export const PrimaryButton = styled.button`
   border: none;
   background: ${COLORS.accent};
   color: ${COLORS.accentInk};
+
+  &:hover:not(:disabled) {
+    background: ${COLORS.accentHover};
+    color: ${COLORS.accentInk};
+  }
 `
 
 export const SecondaryButton = styled.button`
@@ -86,6 +100,11 @@ export const SecondaryButton = styled.button`
   border: 1px solid ${COLORS.ink};
   background: ${COLORS.white};
   color: ${COLORS.ink};
+
+  &:hover:not(:disabled) {
+    background: ${COLORS.ground};
+    color: ${COLORS.ink};
+  }
 `
 
 export const TextButton = styled.button`
@@ -109,6 +128,13 @@ export const Pill = styled.button<{ $active: boolean }>`
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+
+  &:hover {
+    border-color: ${COLORS.ink};
+  }
 `
 
 export const Field = styled.div`
@@ -177,4 +203,23 @@ export const SuccessMessage = styled.div`
   background: ${COLORS.info};
   font-size: 15px;
   line-height: 1.5;
+`
+
+const shimmer = keyframes`
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+`
+
+/** A grey block standing for content being loaded. */
+export const Skeleton = styled.div<{ $height?: string; $width?: string }>`
+  width: ${p => p.$width ?? '100%'};
+  height: ${p => p.$height ?? '14px'};
+  border-radius: 6px;
+  background: linear-gradient(90deg, ${COLORS.divider} 25%, ${COLORS.ground} 50%, ${COLORS.divider} 75%);
+  background-size: 200% 100%;
+  animation: ${shimmer} 1.4s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `

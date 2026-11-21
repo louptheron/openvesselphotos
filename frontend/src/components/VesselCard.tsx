@@ -6,6 +6,7 @@ import { useTranslation } from '../i18n'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../theme'
 import { getNamedPhotoUrl, getPhotoSlug, getVesselPath } from '../utils/vesselKey'
 import { BoatPlaceholder } from './Logo'
+import { Skeleton } from './ui'
 
 export function VesselCard({ index, vessel }: { index: number; vessel: VesselSummary }) {
   const { t } = useTranslation()
@@ -49,7 +50,7 @@ export function VesselCard({ index, vessel }: { index: number; vessel: VesselSum
         </Keys>
         {photo ? (
           <Credit>
-            <span>© {photo.credit}</span>
+            <CreditName title={`© ${photo.credit}`}>© {photo.credit}</CreditName>
             <LicenceBadge>{photo.licenceName}</LicenceBadge>
           </Credit>
         ) : (
@@ -60,6 +61,31 @@ export function VesselCard({ index, vessel }: { index: number; vessel: VesselSum
         )}
       </Body>
     </Article>
+  )
+}
+
+/** Stands for a vessel card while the vessels load */
+export function VesselCardSkeleton() {
+  return (
+    <Article aria-hidden="true">
+      <Skeleton $height="168px" style={{ borderRadius: 0 }} />
+      <Body>
+        <Skeleton $height="20px" $width="60%" />
+        <Skeleton $height="28px" />
+        <Skeleton $height="22px" $width="80%" />
+      </Body>
+    </Article>
+  )
+}
+
+/** A grid of card skeletons, as many as a page of vessels usually fills */
+export function VesselGridSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <VesselGrid>
+      {Array.from({ length: count }, (_, index) => (
+        <VesselCardSkeleton key={index} />
+      ))}
+    </VesselGrid>
   )
 }
 
@@ -87,6 +113,22 @@ const Article = styled.article`
   border: 1px solid ${COLORS.cardBorder};
   display: flex;
   flex-direction: column;
+  transition:
+    box-shadow 150ms ease,
+    transform 150ms ease;
+
+  &:has(a:hover) {
+    box-shadow: 0 6px 18px rgba(11, 34, 51, 0.12);
+    transform: translateY(-2px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:has(a:hover) {
+      transform: none;
+    }
+  }
 `
 
 const Picture = styled.div<{ $sky: string }>`
@@ -110,6 +152,7 @@ const Picture = styled.div<{ $sky: string }>`
 
 const Body = styled.div`
   padding: 14px 16px 16px;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -144,6 +187,7 @@ const Keys = styled.dl`
   gap: 6px;
   font-family: ${FONTS.mono};
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
 
   dt {
     color: ${COLORS.muted};
@@ -164,4 +208,14 @@ const Credit = styled.div`
   color: ${COLORS.text};
   border-top: 1px solid ${COLORS.divider};
   padding-top: 10px;
+  /* Pushed to the bottom, so that the cards of a row line up */
+  margin-top: auto;
+`
+
+/** One line, so that every card has the same height: the full credit shows on hover */
+const CreditName = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
