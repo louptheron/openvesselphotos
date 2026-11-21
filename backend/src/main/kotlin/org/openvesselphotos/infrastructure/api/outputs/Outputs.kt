@@ -258,10 +258,13 @@ data class VesselDataOutput(
     val history: List<HistoryEventDataOutput>,
     /** Other vessels with photos, from the same port or under the same flag */
     val related: List<VesselSummaryDataOutput>,
+    /** The port the vessel is based at, as shown on the ports site */
+    val homePort: VesselHomePortDataOutput?,
 ) {
     companion object {
         fun from(
             baseUrl: String,
+            portsUrl: String,
             details: VesselDetails,
         ) = VesselDataOutput(
             cfr = details.vessel.cfr,
@@ -276,9 +279,28 @@ data class VesselDataOutput(
             photos = details.photos.map { PhotoDataOutput.from(baseUrl, details.vessel, it) },
             history = details.history.map { HistoryEventDataOutput.from(it) },
             related = details.related.map { VesselSummaryDataOutput.from(baseUrl, it) },
+            homePort =
+                details.homePort?.let {
+                    VesselHomePortDataOutput(
+                        locode = it.port.locode,
+                        name = it.port.name,
+                        source = it.source.name,
+                        // The ports site moves its LOCODE URLs to the port's page
+                        pageUrl = "$portsUrl/${it.port.locode}",
+                    )
+                },
         )
     }
 }
+
+data class VesselHomePortDataOutput(
+    val locode: String,
+    val name: String,
+    /** IMPORT, GFW, REGISTER or MANUAL */
+    val source: String,
+    /** Its page on the ports site */
+    val pageUrl: String,
+)
 
 data class ExportedVesselDataOutput(
     val cfr: String?,

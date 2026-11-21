@@ -10,9 +10,9 @@ import { useTranslation } from '../../i18n'
 import { getVesselPath } from '../../utils/vesselKey'
 import { ActiveApiKeys, ApprovedApiKeyBanner } from './ApiKeys'
 
-type Tab = 'apiKeys' | 'keyLinks' | 'photos' | 'reports'
+type Tab = 'apiKeys' | 'homePorts' | 'keyLinks' | 'photos' | 'reports'
 
-const TABS: Tab[] = ['photos', 'keyLinks', 'reports', 'apiKeys']
+const TABS: Tab[] = ['photos', 'keyLinks', 'homePorts', 'reports', 'apiKeys']
 
 type Item = {
   id: string
@@ -67,6 +67,55 @@ export function ReviewQueuePanel({ queue }: { queue: ReviewQueue }) {
       ),
       subtitle: `${request.organisation ?? request.email} · ${t.admin.apiKeyRequest}`,
       title: request.name
+    })),
+    homePorts: queue.homePorts.map(correction => ({
+      id: `home-port-${correction.id}`,
+      render: () => (
+        <Detail>
+          <LinkCompare>
+            <div>
+              <small>{t.admin.currentPort}</small>
+              <code>
+                {correction.currentPort
+                  ? `${correction.currentPort.name} (${correction.currentPort.locode})`
+                  : t.admin.noHomePort}
+              </code>
+              {correction.currentSource && <Muted>{t.homePort.sources[correction.currentSource]}</Muted>}
+            </div>
+            <div>
+              <small>{t.admin.suggestedPort}</small>
+              <code>
+                {correction.suggestedPort.name} ({correction.suggestedPort.locode})
+              </code>
+            </div>
+          </LinkCompare>
+          {correction.isKnownVessel ? (
+            <VesselHeading vessel={{ cfr: correction.cfr, mmsi: null, name: correction.vesselName }} />
+          ) : (
+            <div>
+              <h2>{correction.vesselName ?? t.common.unnamedVessel}</h2>
+              <Muted>
+                CFR {correction.cfr} · {t.admin.onlyOnPortsSite}
+              </Muted>
+            </div>
+          )}
+          <Muted>
+            {t.admin.suggestedBy(formatDate(correction.createdAt), correction.contributor ?? t.admin.anonymous)}
+          </Muted>
+          {correction.comment && <Message>{correction.comment}</Message>}
+          <Checklist items={t.admin.homePortChecks} />
+          <Buttons>
+            <Approve disabled={isLoading} onClick={() => act(`home-ports/${correction.id}/approve`)} type="button">
+              {t.admin.moveToPort(correction.suggestedPort.name)}
+            </Approve>
+            <Reject disabled={isLoading} onClick={() => act(`home-ports/${correction.id}/reject`)} type="button">
+              {t.common.reject}
+            </Reject>
+          </Buttons>
+        </Detail>
+      ),
+      subtitle: `${correction.currentPort?.name ?? t.admin.noHomePort} → ${correction.suggestedPort.name}`,
+      title: correction.vesselName ?? correction.cfr
     })),
     keyLinks: queue.keyLinks.map(link => ({
       id: `link-${link.id}`,

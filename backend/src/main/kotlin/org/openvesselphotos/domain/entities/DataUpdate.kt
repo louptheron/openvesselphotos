@@ -10,6 +10,7 @@ enum class DataSource(
     HOME_PORTS("Ports d’attache, positions des navires"),
     HOME_PORTS_GFW("Ports d’attache, Global Fishing Watch"),
     HOME_PORTS_REGISTER("Ports d’attache, quartiers d’immatriculation"),
+    HOME_PORTS_CORRECTIONS("Ports d’attache, corrections des visiteurs"),
     AUCTION_SALES("Ventes des criées, FranceAgriMer"),
     FLEET_REGISTER("Registre de la flotte de l’UE"),
     PORT_POSITIONS("Positions des ports"),

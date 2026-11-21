@@ -48,6 +48,9 @@ enum class HomePortSource {
      * replaced by any other source
      */
     REGISTER,
+
+    /** Suggested by a visitor and approved by the admin: kept over every other source */
+    MANUAL,
 }
 
 /** A vessel of the EU fleet register without home port, or with one from its place of registration only */

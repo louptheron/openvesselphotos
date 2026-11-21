@@ -111,6 +111,27 @@ data class PendingKeyLinkDataOutput(
     val vessel: AdminVesselDataOutput,
 )
 
+data class AdminPortDataOutput(
+    val locode: String,
+    val name: String,
+)
+
+data class PendingHomePortDataOutput(
+    val id: Int,
+    val cfr: String,
+    /** From Open Vessel Photos, else as named on the ports site */
+    val vesselName: String?,
+    /** Whether Open Vessel Photos has a page for the vessel */
+    val isKnownVessel: Boolean,
+    val currentPort: AdminPortDataOutput?,
+    /** IMPORT, GFW, REGISTER or MANUAL */
+    val currentSource: String?,
+    val suggestedPort: AdminPortDataOutput,
+    val comment: String?,
+    val contributor: String?,
+    val createdAt: ZonedDateTime?,
+)
+
 data class OpenReportDataOutput(
     val id: Int,
     val reason: String,
@@ -125,6 +146,7 @@ data class ReviewQueueDataOutput(
     val keyLinks: List<PendingKeyLinkDataOutput>,
     val reports: List<OpenReportDataOutput>,
     val apiKeyRequests: List<ApiKeyDataOutput>,
+    val homePorts: List<PendingHomePortDataOutput>,
 ) {
     companion object {
         fun from(queue: ReviewQueue) =
@@ -160,6 +182,21 @@ data class ReviewQueueDataOutput(
                         )
                     },
                 apiKeyRequests = queue.apiKeyRequests.map(ApiKeyDataOutput::from),
+                homePorts =
+                    queue.homePorts.map {
+                        PendingHomePortDataOutput(
+                            id = requireNotNull(it.correction.id),
+                            cfr = it.correction.cfr,
+                            vesselName = it.vessel?.name ?: it.currentHomePort?.vesselName,
+                            isKnownVessel = it.vessel != null,
+                            currentPort = it.currentPort?.let { port -> AdminPortDataOutput(port.locode, port.name) },
+                            currentSource = it.currentHomePort?.source?.name,
+                            suggestedPort = AdminPortDataOutput(it.suggestedPort.locode, it.suggestedPort.name),
+                            comment = it.correction.comment,
+                            contributor = it.correction.contributor,
+                            createdAt = it.correction.createdAt,
+                        )
+                    },
             )
     }
 }

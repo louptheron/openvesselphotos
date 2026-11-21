@@ -20,6 +20,7 @@ import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../../theme'
 import { getNamedPhotoUrl, getPhotoSlug, getPhotoUrl, normalizeKey } from '../../utils/vesselKey'
+import { HomePort } from './HomePort'
 import { KeyLinkForm } from './KeyLinkForm'
 import { getVesselType, RegisterFacts, WikidataFacts } from './RegisterFacts'
 import { ReportForm } from './ReportForm'
@@ -276,6 +277,7 @@ function VesselDetails({ vessel }: { vessel: Vessel }) {
             </Card>
           </Keys>
           {(!vessel.cfr || !vessel.mmsi) && <KeyLinkForm vessel={vessel} vesselKey={vesselKey} />}
+          <HomePort vessel={vessel} vesselKey={vesselKey} />
           <RegisterFacts vessel={vessel} />
           {!vessel.register && <WikidataFacts vessel={vessel} />}
 

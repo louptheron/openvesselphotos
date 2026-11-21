@@ -34,4 +34,11 @@ data class VesselDetails(
     val history: List<HistoryEvent>,
     /** Other vessels with photos, from the same port or under the same flag */
     val related: List<VesselWithPhotos> = emptyList(),
+    /** The port the vessel is based at, as shown on the ports site; null without one */
+    val homePort: VesselHomePort? = null,
+)
+
+data class VesselHomePort(
+    val port: Port,
+    val source: HomePortSource,
 )

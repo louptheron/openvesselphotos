@@ -129,6 +129,22 @@ export type Vessel = {
   related: VesselSummary[]
   /** What Wikidata knows of the vessel, if found by its MMSI */
   wikidata: WikidataData | null
+  /** The port the vessel is based at, as shown on the ports site (missing from older responses) */
+  homePort?: VesselHomePort | null
+}
+
+/**
+ * IMPORT: from the imported observations; GFW: the port it visited most in a year, on Global Fishing Watch; REGISTER:
+ * the port of its quartier d'immatriculation, the coarsest; MANUAL: suggested by a visitor, checked by the admin
+ */
+export type HomePortSource = 'GFW' | 'IMPORT' | 'MANUAL' | 'REGISTER'
+
+export type VesselHomePort = {
+  locode: string
+  name: string
+  /** Its page on the ports site */
+  pageUrl: string
+  source: HomePortSource
 }
 
 export type Submission = {
@@ -301,6 +317,22 @@ export type ReviewQueue = {
     reason: ReportReason
     vessel: AdminVessel
   }>
+  homePorts: PendingHomePort[]
+}
+
+/** A home port suggested by a visitor, for the admin to check */
+export type PendingHomePort = {
+  cfr: string
+  comment: string | null
+  contributor: string | null
+  createdAt: string | null
+  currentPort: { locode: string; name: string } | null
+  currentSource: HomePortSource | null
+  id: number
+  /** Whether Open Vessel Photos has a page for the vessel */
+  isKnownVessel: boolean
+  suggestedPort: { locode: string; name: string }
+  vesselName: string | null
 }
 
 /** A port of the ports site, with the vessels based at it (see PortsController) */
@@ -341,11 +373,7 @@ export type PortVessel = {
   /** The company owning the vessel, from a public source */
   owner: { group: string | null; name: string; sourceUrl: string } | null
   registration: string | null
-  /**
-   * IMPORT: from the imported observations; GFW: the port it visited most in a year, on Global Fishing Watch; REGISTER:
-   * the port of its quartier d'immatriculation, the coarsest
-   */
-  homePortSource?: 'GFW' | 'IMPORT' | 'REGISTER'
+  homePortSource?: HomePortSource
   /** Gross tonnage */
   tonnageGt: number | null
   vesselType: string | null

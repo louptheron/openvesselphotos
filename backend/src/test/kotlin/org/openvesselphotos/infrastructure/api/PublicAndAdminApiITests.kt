@@ -1730,5 +1730,106 @@ class PublicAndAdminApiITests {
         pages
             .perform(onPortsHost("/_ports/methodologie"))
             .andExpect(content().string(containsString("rattachés au port de leur quartier d’immatriculation")))
+
+        // A visitor says a vessel is based at another port: nothing changes before the admin approves it
+        fun suggestHomePort(
+            key: String,
+            json: String,
+            onPortsSite: Boolean = false,
+        ) = mockMvc.perform(
+            post("/v1/cfr/$key/home-port")
+                .header("Sec-Fetch-Site", "same-origin")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json)
+                .with {
+                    it.apply {
+                        // A client of its own: the other tests' writes count against the rate limit of 127.0.0.1
+                        remoteAddr = "203.0.113.20"
+                        if (onPortsSite) serverName = Site.PORTS_LOCAL_HOST
+                    }
+                },
+        )
+        mockMvc
+            .perform(get("/v1/cfr/FRA000900009"))
+            .andExpect(jsonPath("$.homePort.locode").value("FRQUY"))
+            .andExpect(jsonPath("$.homePort.name").value("Erquy"))
+            .andExpect(jsonPath("$.homePort.source").value("REGISTER"))
+            .andExpect(jsonPath("$.homePort.pageUrl").value("http://ports.localhost/FRQUY"))
+        suggestHomePort(
+            "FRA000900009",
+            """{"locode":"frcbt","comment":" Toujours à quai à Capbreton ","contributor":"A. Morvan"}""",
+        ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.status").value("PENDING"))
+        // The same port twice, the port it already has, an unknown port or vessel
+        suggestHomePort("FRA000900009", """{"locode":"FRCBT"}""").andExpect(status().isConflict)
+        suggestHomePort("FRA000900009", """{"locode":"FRQUY"}""").andExpect(status().isConflict)
+        suggestHomePort("FRA000900009", """{"locode":"FRZZZ"}""").andExpect(status().isNotFound)
+        suggestHomePort("FRA000999999", """{"locode":"FRCBT"}""").andExpect(status().isNotFound)
+        // From the ports site, for a vessel Open Vessel Photos does not know
+        suggestHomePort("FRA000900002", """{"locode":"FRCBT"}""", onPortsSite = true).andExpect(status().isCreated)
+        mockMvc
+            .perform(get("/v1/ports/FRQUY"))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000900009')].homePortSource").value("REGISTER"))
+
+        val queue =
+            mockMvc
+                .perform(get("/v1/admin/queue").cookie(cookie))
+                .andExpect(jsonPath("$.homePorts.length()").value(2))
+                .andExpect(jsonPath("$.homePorts[0].cfr").value("FRA000900009"))
+                .andExpect(jsonPath("$.homePorts[0].vesselName").value("PETIT LOUP"))
+                .andExpect(jsonPath("$.homePorts[0].isKnownVessel").value(true))
+                .andExpect(jsonPath("$.homePorts[0].currentPort.name").value("Erquy"))
+                .andExpect(jsonPath("$.homePorts[0].currentSource").value("REGISTER"))
+                .andExpect(jsonPath("$.homePorts[0].suggestedPort.locode").value("FRCBT"))
+                .andExpect(jsonPath("$.homePorts[0].comment").value("Toujours à quai à Capbreton"))
+                .andExpect(jsonPath("$.homePorts[0].contributor").value("A. Morvan"))
+                .andExpect(jsonPath("$.homePorts[1].vesselName").value("TROUZ AR MOR"))
+                .andExpect(jsonPath("$.homePorts[1].isKnownVessel").value(false))
+                .andReturn()
+                .response.contentAsString
+        val (approvedId, rejectedId) =
+            Regex(""""homePorts":\[\{"id":(\d+).*?\},\{"id":(\d+)""").find(queue)!!.destructured
+        mockMvc.perform(post("/v1/admin/home-ports/$approvedId/approve")).andExpect(status().isUnauthorized)
+        mockMvc
+            .perform(post("/v1/admin/home-ports/$approvedId/approve").cookie(cookie))
+            .andExpect(status().isNoContent)
+        mockMvc
+            .perform(post("/v1/admin/home-ports/$rejectedId/reject").cookie(cookie))
+            .andExpect(status().isNoContent)
+        mockMvc
+            .perform(post("/v1/admin/home-ports/$approvedId/reject").cookie(cookie))
+            .andExpect(status().isConflict)
+        mockMvc.perform(get("/v1/admin/queue").cookie(cookie)).andExpect(jsonPath("$.homePorts.length()").value(0))
+
+        mockMvc
+            .perform(get("/v1/ports/FRCBT"))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000900009')].homePortSource").value("MANUAL"))
+        mockMvc
+            .perform(get("/v1/ports/FRQUY"))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000900009')]").isEmpty)
+            // Rejected: it stays where it was
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000900002')].homePortSource").value("IMPORT"))
+        mockMvc
+            .perform(get("/v1/cfr/FRA000900009"))
+            .andExpect(jsonPath("$.homePort.locode").value("FRCBT"))
+            .andExpect(jsonPath("$.homePort.source").value("MANUAL"))
+
+        // A corrected home port is kept over a new import and the place of registration
+        import(
+            "/v1/admin/ports/home-ports/import",
+            """
+            cfr,vessel_name,port_locode,port_name,port_country,observations_total,observations_at_port,share,mean_distance_km,other_ports
+            FRA000900001,KER ARMOR,FRQUY,Erquy,FR,5,5,1.0,1.25,
+            FRA000900009,PETIT LOUP,FRQUY,Erquy,FR,5,5,1.0,1.0,
+            """.trimIndent(),
+        )
+        mockMvc.perform(post("/v1/admin/ports/home-ports/from-registration").cookie(cookie)).andExpect(status().isOk)
+        mockMvc
+            .perform(get("/v1/cfr/FRA000900009"))
+            .andExpect(jsonPath("$.homePort.locode").value("FRCBT"))
+            .andExpect(jsonPath("$.homePort.source").value("MANUAL"))
+        pages
+            .perform(onPortsHost("/_ports/mises-a-jour"))
+            .andExpect(content().string(containsString("Port d’attache de PETIT LOUP corrigé : Capbreton")))
     }
 }

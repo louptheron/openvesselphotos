@@ -12,6 +12,7 @@ import { PortPortrait } from './PortPortrait'
 import { AuctionList } from './AuctionList'
 import { AuctionSales } from './AuctionSales'
 import { FishingFacts } from './FishingFacts'
+import { HomePortCorrectionDialog } from './HomePortCorrectionDialog'
 import { type GearFamily, GearIcon, countVessels, hasGear } from './gears'
 import { FactPill, INDUSTRIAL_LENGTH } from './impacts'
 import { type Extent, REGIONS, isInExtent } from './regions'
@@ -296,6 +297,7 @@ function PortView({ gear, locode }: { gear: GearFamily | undefined; locode: stri
   // A vessel found by the search: shown even when the gear filter would hide it, and scrolled to
   const targetCfr = searchParams.get(VESSEL_PARAM)
   const [query, setQuery] = useState('')
+  const [correctedVessel, setCorrectedVessel] = useState<PortVessel | undefined>(undefined)
   const deferredQuery = useDeferredValue(query)
   const portVessels = useMemo(() => data?.vessels ?? [], [data])
 
@@ -386,7 +388,12 @@ function PortView({ gear, locode }: { gear: GearFamily | undefined; locode: stri
                 </SectionHeader>
                 <VesselGrid>
                   {photographed.map(vessel => (
-                    <VesselCard isTarget={vessel.cfr === targetCfr} key={vessel.cfr} vessel={vessel} />
+                    <VesselCard
+                      isTarget={vessel.cfr === targetCfr}
+                      key={vessel.cfr}
+                      onCorrect={() => setCorrectedVessel(vessel)}
+                      vessel={vessel}
+                    />
                   ))}
                 </VesselGrid>
               </Section>
@@ -408,7 +415,12 @@ function PortView({ gear, locode }: { gear: GearFamily | undefined; locode: stri
                 )}
                 <VesselRows>
                   {notPhotographed.map(vessel => (
-                    <VesselRow isTarget={vessel.cfr === targetCfr} key={vessel.cfr} vessel={vessel} />
+                    <VesselRow
+                      isTarget={vessel.cfr === targetCfr}
+                      key={vessel.cfr}
+                      onCorrect={() => setCorrectedVessel(vessel)}
+                      vessel={vessel}
+                    />
                   ))}
                 </VesselRows>
               </Section>
@@ -447,6 +459,14 @@ function PortView({ gear, locode }: { gear: GearFamily | undefined; locode: stri
           </>
         )}
       </Scroll>
+      {correctedVessel && (
+        <HomePortCorrectionDialog
+          key={correctedVessel.cfr}
+          locode={locode}
+          onClose={() => setCorrectedVessel(undefined)}
+          vessel={correctedVessel}
+        />
+      )}
     </>
   )
 }
@@ -474,7 +494,8 @@ function VesselBadges({ vessel }: { vessel: PortVessel }) {
   const isIndustrial = vessel.lengthMeters !== null && vessel.lengthMeters >= INDUSTRIAL_LENGTH
   const isFromPortVisits = vessel.homePortSource === 'GFW'
   const isFromRegistration = vessel.homePortSource === 'REGISTER'
-  if (!isIndustrial && !vessel.owner && !isFromPortVisits && !isFromRegistration) {
+  const isCorrected = vessel.homePortSource === 'MANUAL'
+  if (!isIndustrial && !vessel.owner && !isFromPortVisits && !isFromRegistration && !isCorrected) {
     return null
   }
 
@@ -493,6 +514,9 @@ function VesselBadges({ vessel }: { vessel: PortVessel }) {
           Port de son quartier d’immatriculation
         </PortVisitsNote>
       )}
+      {isCorrected && (
+        <PortVisitsNote title="Rattaché à ce port sur signalement d’un visiteur, vérifié">Port vérifié</PortVisitsNote>
+      )}
       {vessel.owner && (
         <FactPill title={`Source : ${vessel.owner.sourceUrl}`}>
           {vessel.owner.name}
@@ -503,7 +527,14 @@ function VesselBadges({ vessel }: { vessel: PortVessel }) {
   )
 }
 
-function VesselCard({ isTarget, vessel }: { isTarget: boolean; vessel: PortVessel }) {
+type VesselItemProps = {
+  isTarget: boolean
+  /** Opens the form to say the vessel is based at another port */
+  onCorrect: () => void
+  vessel: PortVessel
+}
+
+function VesselCard({ isTarget, onCorrect, vessel }: VesselItemProps) {
   const photo = vessel.mainPhoto
   const name = vessel.name ?? 'Navire sans nom'
   const length = getLength(vessel)
@@ -512,7 +543,7 @@ function VesselCard({ isTarget, vessel }: { isTarget: boolean; vessel: PortVesse
   const slug = getPhotoSlug(vessel)
 
   return (
-    <li id={`navire-${vessel.cfr}`}>
+    <CardItem id={`navire-${vessel.cfr}`}>
       <Card
         $isLink={Boolean(pageUrl)}
         data-target={isTarget}
@@ -546,11 +577,14 @@ function VesselCard({ isTarget, vessel }: { isTarget: boolean; vessel: PortVesse
           <VesselBadges vessel={vessel} />
         </CardBody>
       </Card>
-    </li>
+      <CorrectButton onClick={onCorrect} title={`${name} n’est pas basé à ce port ? Signalez-le`} type="button">
+        Mauvais port&nbsp;?
+      </CorrectButton>
+    </CardItem>
   )
 }
 
-function VesselRow({ isTarget, vessel }: { isTarget: boolean; vessel: PortVessel }) {
+function VesselRow({ isTarget, onCorrect, vessel }: VesselItemProps) {
   const facts = getFacts(vessel)
   const length = getLength(vessel)
   const pageUrl = getVesselPageUrl(vessel)
@@ -596,6 +630,9 @@ function VesselRow({ isTarget, vessel }: { isTarget: boolean; vessel: PortVessel
       ) : (
         <RowContent data-target={isTarget}>{content}</RowContent>
       )}
+      <CorrectButton $inRow onClick={onCorrect} title={`${name} n’est pas basé à ce port ? Signalez-le`} type="button">
+        Mauvais port&nbsp;?
+      </CorrectButton>
     </Row>
   )
 }
@@ -1147,6 +1184,38 @@ const FilterIcon = styled.span`
   color: ${COLORS.ink};
 `
 
+/** The card, then the button to correct its port under it */
+const CardItem = styled.li`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  > ${Card} {
+    flex: 1;
+    height: auto;
+  }
+`
+
+const CorrectButton = styled.button<{ $inRow?: boolean }>`
+  align-self: ${({ $inRow }) => ($inRow ? 'flex-end' : 'flex-start')};
+  min-height: 32px;
+  margin: ${({ $inRow }) => ($inRow ? '-6px 6px 2px 0' : '0')};
+  padding: 0 6px;
+  border: none;
+  background: transparent;
+  color: ${COLORS.muted};
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: ${COLORS.link};
+  }
+`
+
 const PortVisitsNote = styled.span`
   padding: 2px 8px;
   border: 1px dashed ${COLORS.border};
@@ -1244,6 +1313,9 @@ const VesselRows = styled.ul`
 `
 
 const Row = styled.li`
+  display: flex;
+  flex-direction: column;
+
   & + & {
     border-top: 1px solid ${COLORS.divider};
   }

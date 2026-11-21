@@ -263,6 +263,25 @@ export const fr: Messages = {
     yourName: 'Votre nom (facultatif)',
     submit: (keyType: string) => `Proposer ce ${keyType}`
   },
+  homePort: {
+    label: 'Port d’attache',
+    sources: {
+      GFW: 'déduit de ses escales',
+      IMPORT: 'où il est vu à quai le plus souvent',
+      MANUAL: 'vérifié',
+      REGISTER: 'port de son quartier d’immatriculation'
+    },
+    open: `Mauvais port${_}?`,
+    openWithout: `Vous connaissez son port d’attache${_}? Indiquez-le`,
+    port: 'Port où il est basé',
+    portPlaceholder: 'Tapez le nom d’un port',
+    unknownPort: 'Choisissez un port dans la liste.',
+    comment: `Comment le savez-vous${_}? (facultatif)`,
+    commentPlaceholder: 'Par ex. je le vois à quai chaque semaine',
+    yourName: 'Votre nom (facultatif)',
+    submit: 'Proposer ce port',
+    thanks: (port: string) => `Merci${_}! ${port} sera son port d’attache après vérification.`
+  },
   report: {
     reasons: {
       WRONG_VESSEL: 'Ce n’est pas ce navire',
@@ -476,7 +495,7 @@ export const fr: Messages = {
         title: `La Pêche française${_}: ports, flotte et criées`
       },
       review: {
-        text: 'Les photos, liens et signalements envoyés par les contributeurs, et les demandes de clé d’API.',
+        text: 'Les photos, liens, ports d’attache et signalements envoyés par les contributeurs, et les demandes de clé d’API.',
         title: 'Relecture'
       },
       vessels: {
@@ -497,7 +516,13 @@ export const fr: Messages = {
     password: 'Mot de passe d’administration',
     signIn: 'Se connecter',
     queueLabel: 'File',
-    tabs: { photos: 'Photos', keyLinks: 'Identifiants', reports: 'Signalements', apiKeys: 'Clés d’API' },
+    tabs: {
+      photos: 'Photos',
+      keyLinks: 'Identifiants',
+      homePorts: 'Ports d’attache',
+      reports: 'Signalements',
+      apiKeys: 'Clés d’API'
+    },
     rejectReasons: [
       'Le navire ne correspond pas à l’identifiant',
       'Ce n’est pas une photo du contributeur',
@@ -521,6 +546,15 @@ export const fr: Messages = {
     anonymous: 'anonyme',
     linkChecks: ['Les deux identifiants figurent dans un registre public', 'Même nom de navire et même pavillon'],
     linkKeys: 'Associer les identifiants',
+    currentPort: 'Port d’attache actuel',
+    suggestedPort: 'Port proposé',
+    noHomePort: 'Aucun',
+    onlyOnPortsSite: 'Absent d’Open Vessel Photos : uniquement sur le site des ports',
+    homePortChecks: [
+      'Vu à ce port sur ses positions AIS récentes ou des photos',
+      'Le commentaire est plausible (armateur, presse locale, capitainerie)'
+    ],
+    moveToPort: (port: string) => `Le rattacher à ${port}`,
     addKey: (key: string) => `Ajouter le ${key}`,
     newPhoto: 'Nouvelle photo',
     firstPhoto: 'Première photo · crée le navire',

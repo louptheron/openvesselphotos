@@ -56,7 +56,12 @@ export function AdminPage() {
     )
   }
 
-  const pendingCount = queue.photos.length + queue.keyLinks.length + queue.reports.length + queue.apiKeyRequests.length
+  const pendingCount =
+    queue.photos.length +
+    queue.keyLinks.length +
+    queue.homePorts.length +
+    queue.reports.length +
+    queue.apiKeyRequests.length
   const content: Record<AdminSectionId, { body: ReactNode; description?: ReactNode }> = {
     auctionSales: { body: <AuctionSalesImport />, description: t.admin.auctionSalesHelp },
     fishingGrounds: { body: <FishingActivitySync />, description: t.admin.fishingActivityText },

@@ -33,7 +33,7 @@ class JdbcPortRepository(
             """.trimIndent(),
             ports.map { arrayOf<Any>(it.locode, it.name, it.country) },
         )
-        // The home ports found on Global Fishing Watch are kept, unless the import gives one
+        // The home ports found on Global Fishing Watch are kept, unless the import gives one; the corrected ones always are
         jdbcTemplate.update("DELETE FROM vessel_home_ports WHERE source = 'IMPORT'")
         jdbcTemplate.batchUpdate(
             """
@@ -49,6 +49,7 @@ class JdbcPortRepository(
                 mean_distance_km = excluded.mean_distance_km,
                 imported_on = excluded.imported_on,
                 source = 'IMPORT'
+            WHERE vessel_home_ports.source <> 'MANUAL'
             """.trimIndent(),
             homePorts.map {
                 arrayOf<Any?>(
@@ -198,6 +199,36 @@ class JdbcPortRepository(
             HOME_PORT_MAPPER,
             locode,
         )
+
+    override fun findHomePort(cfr: String): HomePort? =
+        jdbcTemplate.query("SELECT * FROM vessel_home_ports WHERE cfr = ?", HOME_PORT_MAPPER, cfr).firstOrNull()
+
+    override fun setManualHomePort(
+        cfr: String,
+        vesselName: String?,
+        locode: String,
+    ) {
+        jdbcTemplate.update(
+            """
+            INSERT INTO vessel_home_ports
+                (cfr, vessel_name, port_locode, observations_total, observations_at_port, mean_distance_km, imported_on,
+                 source)
+            VALUES (?, ?, ?, 0, 0, NULL, ?, 'MANUAL')
+            ON CONFLICT (cfr) DO UPDATE SET
+                vessel_name = coalesce(excluded.vessel_name, vessel_home_ports.vessel_name),
+                port_locode = excluded.port_locode,
+                observations_total = 0,
+                observations_at_port = 0,
+                mean_distance_km = NULL,
+                imported_on = excluded.imported_on,
+                source = 'MANUAL'
+            """.trimIndent(),
+            cfr,
+            vesselName,
+            locode,
+            Date.valueOf(LocalDate.now()),
+        )
+    }
 
     override fun replaceOwners(owners: List<VesselOwner>) {
         jdbcTemplate.update("DELETE FROM vessel_owners")
