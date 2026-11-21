@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.node.ObjectNode
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -18,7 +19,9 @@ import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.pow
 
 /**
  * Global Fishing Watch API v3 (https://globalfishingwatch.org/our-apis/documentation), with the token of the app:
@@ -126,16 +129,18 @@ class HttpGlobalFishingWatchClient(
         if (style.isEmpty()) {
             return style
         }
-        val json = jsonMapper.readTree(java.util.Base64.getDecoder().decode(style)) as tools.jackson.databind.node.ObjectNode
+        val json = jsonMapper.readTree(Base64.getDecoder().decode(style)) as ObjectNode
         val ramp = json.path("ramp").takeIf { it.isArray && it.size() > 1 } ?: return style
         val last = ramp.size() - 1
         val stretched = jsonMapper.createArrayNode()
         ramp.forEachIndexed { index, value ->
-            stretched.add(value.asDouble() * Math.pow(RAMP_STRETCH, index.toDouble() / last))
+            stretched.add(value.asDouble() * RAMP_STRETCH.pow(index.toDouble() / last))
         }
         json.set("ramp", stretched)
 
-        return java.util.Base64.getEncoder().encodeToString(jsonMapper.writeValueAsBytes(json))
+        val bytes = jsonMapper.writeValueAsBytes(json)
+
+        return Base64.getEncoder().encodeToString(bytes)
     }
 
     override fun findVesselIds(identity: VesselIdentity): List<String> {
