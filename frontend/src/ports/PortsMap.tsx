@@ -427,7 +427,10 @@ export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
                 ? portFishingEffort?.trackedVessels
                   ? `Zones de pêche de ${vessels(portFishingEffort.trackedVessels)} suivi${portFishingEffort.trackedVessels > 1 ? 's' : ''} par AIS, ${formatPeriod(fishingEffort)}`
                   : 'Aucun navire de ce port suivi par AIS'
-                : `Zones de pêche, ${formatPeriod(fishingEffort)}${gear ? ` · ${gear.label.toLowerCase()}` : ''}`}
+                : gear
+                  ? `Zones de pêche, ${formatPeriod(fishingEffort)} · ${gear.label.toLowerCase()}`
+                  : // Without a gear, all the French vessels tracked by AIS: mostly trawlers, the small vessels lacking AIS
+                    `Zones de pêche des navires suivis par AIS (surtout des chalutiers), ${formatPeriod(fishingEffort)}`}
           </span>
         )}
       </Legend>
@@ -471,11 +474,11 @@ const HAS_AUCTION = ['==', ['get', 'hasAuction'], 1]
  * short of the ink of the ports so that they stay readable on top
  */
 const EFFORT_RAMP: Array<[number, string]> = [
-  [0.1, 'rgba(207, 224, 234, 0.6)'],
-  [0.3, 'rgba(143, 180, 201, 0.72)'],
-  [0.5, 'rgba(79, 141, 179, 0.8)'],
-  [0.7, 'rgba(45, 106, 146, 0.85)'],
-  [1, 'rgba(28, 90, 128, 0.88)']
+  [0.1, 'rgba(207, 224, 234, 0.4)'],
+  [0.3, 'rgba(143, 180, 201, 0.5)'],
+  [0.5, 'rgba(79, 141, 179, 0.58)'],
+  [0.7, 'rgba(45, 106, 146, 0.64)'],
+  [1, 'rgba(28, 90, 128, 0.7)']
 ]
 
 function effortColor() {
