@@ -67,8 +67,9 @@ class JdbcPortRepository(
     override fun findHomePortCandidates(): List<HomePortCandidate> =
         jdbcTemplate.query(
             """
-            SELECT v.cfr, v.name, v.mmsi, v.call_sign FROM vessels v
-            WHERE v.cfr LIKE 'FRA%' AND NOT EXISTS (SELECT 1 FROM vessel_home_ports h WHERE h.cfr = v.cfr)
+            SELECT v.cfr, v.name, v.mmsi, v.call_sign, v.port, h.source FROM vessels v
+            LEFT JOIN vessel_home_ports h ON h.cfr = v.cfr
+            WHERE v.cfr LIKE 'FRA%' AND (h.cfr IS NULL OR h.source = 'REGISTER')
             ORDER BY v.id
             """.trimIndent(),
         ) { row, _ ->
@@ -77,6 +78,8 @@ class JdbcPortRepository(
                 name = row.getString("name"),
                 mmsi = row.getString("mmsi"),
                 callSign = row.getString("call_sign"),
+                placeOfRegistration = row.getString("port"),
+                source = row.getString("source")?.let { HomePortSource.valueOf(it) },
             )
         }
 
@@ -87,7 +90,16 @@ class JdbcPortRepository(
                 (cfr, vessel_name, port_locode, observations_total, observations_at_port, mean_distance_km, imported_on,
                  source)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (cfr) DO NOTHING
+            ON CONFLICT (cfr) DO UPDATE SET
+                vessel_name = excluded.vessel_name,
+                port_locode = excluded.port_locode,
+                observations_total = excluded.observations_total,
+                observations_at_port = excluded.observations_at_port,
+                mean_distance_km = excluded.mean_distance_km,
+                imported_on = excluded.imported_on,
+                source = excluded.source
+            -- Only a home port from the place of registration is replaced: by a better one, or when found again
+            WHERE vessel_home_ports.source = 'REGISTER'
             """.trimIndent(),
             homePorts.map {
                 arrayOf<Any?>(
@@ -103,6 +115,18 @@ class JdbcPortRepository(
             },
         )
     }
+
+    override fun countHomePortsByPlaceOfRegistration(): Map<String, Map<String, Int>> =
+        jdbcTemplate
+            .queryForList(
+                """
+                SELECT v.port, h.port_locode, count(*) AS count FROM vessels v
+                JOIN vessel_home_ports h ON h.cfr = v.cfr
+                WHERE v.cfr LIKE 'FRA%' AND v.port IS NOT NULL AND h.source <> 'REGISTER'
+                GROUP BY v.port, h.port_locode
+                """.trimIndent(),
+            ).groupBy({ it["port"] as String }, { it["port_locode"] as String to (it["count"] as Number).toInt() })
+            .mapValues { (_, counts) -> counts.toMap() }
 
     override fun findLastHomePortsUpdate(): LocalDate? =
         jdbcTemplate.queryForObject("SELECT max(imported_on) FROM vessel_home_ports", Date::class.java)?.toLocalDate()
@@ -125,6 +149,7 @@ class JdbcPortRepository(
                 withHomePort = row.getInt("with_home_port"),
                 fromObservations = bySource[HomePortSource.IMPORT.name] ?: 0,
                 fromPortVisits = bySource[HomePortSource.GFW.name] ?: 0,
+                fromRegistration = bySource[HomePortSource.REGISTER.name] ?: 0,
             )
         }!!
     }

@@ -203,6 +203,12 @@ the other French fishing vessels are mostly too small to carry AIS, and their ma
 - In `/admin` → "Ports d'attache par les escales", a background search gives a home port to the French vessels of the
   EU fleet register without one: the French port each visited most in a year (any port otherwise), when that port is
   on the map. Imported home ports take precedence (`FindHomePortsFromPortVisits`).
+- In `/admin` → "Ports d'attache par les quartiers", the French vessels still without home port (mostly small ones,
+  without AIS) get the port of their place of registration in the EU fleet register, their quartier maritime: the port
+  of the map of the same name (or an alias), else the port most of the quartier's located vessels are based at
+  (`FindHomePortsFromRegistration`). The coarsest source, flagged on the site: it never replaces another one, and is
+  replaced by the imports and the Global Fishing Watch search. Run it after them; it lists the quartiers matched to no
+  port, to add to its `ALIASES`.
 - In `/admin` → "Vérifier les ports d'attache", a background check compares each imported home port with the port the
   vessel visited most in a year on Global Fishing Watch, and lists the disagreements (also as a CSV). It changes no
   home port (`CheckHomePorts`). In local development, open

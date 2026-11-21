@@ -443,6 +443,7 @@ export const fr: Messages = {
       homePorts: 'Ports d’attache (fichier)',
       homePortsCheck: 'Vérifier les ports d’attache',
       homePortsFromVisits: 'Ports d’attache par les escales',
+      homePortsFromRegistration: 'Ports d’attache par les quartiers',
       owners: 'Armateurs',
       photoNotes: 'Notes des photos',
       photos: 'Importer des photos',
@@ -631,6 +632,12 @@ export const fr: Messages = {
     homePortsFromPortVisitsTitle: 'Ports d’attache par les escales',
     homePortsFromPortVisitsText: `Donne un port d’attache aux navires français du registre de la flotte de l’UE qui n’en ont pas${_}: le port français où chacun a fait le plus d’escales sur un an (ou un autre port à défaut), d’après ses positions sur Global Fishing Watch, quand ce port est sur la carte. Les navires sont cherchés par MMSI, indicatif d’appel, puis nom${_}; les petits navires sans AIS ne sont pas trouvés. Tourne en arrière-plan, environ 3${_}requêtes par navire. Les ports d’attache importés restent prioritaires.`,
     homePortsFromPortVisitsStart: 'Lancer',
+    homePortsFromRegistrationText: `Faute de mieux, donne aux navires français du registre de la flotte de l’UE encore sans port d’attache le port de leur quartier d’immatriculation (le «${_}Place of registration${_}» du registre)${_}: le port de la carte du même nom, sinon celui où sont basés la plupart des navires du quartier au port d’attache connu. Une approximation, signalée sur le site${_}: un quartier compte souvent plusieurs ports. Les autres sources restent prioritaires et remplacent ces ports${_}; à relancer après elles.`,
+    homePortsFromRegistrationStart: 'Rattacher aux quartiers',
+    homePortsFromRegistrationResult: r =>
+      `${r.placed}${_}navires rattachés au port de leur quartier, sur ${r.candidates}${_}sans meilleure source${_}; ${r.withoutPlace}${_}sans quartier au registre.`,
+    homePortsFromRegistrationMatched: `Quartiers rattachés${_}:`,
+    homePortsFromRegistrationUnmatched: `Quartiers sans port sur la carte (à ajouter aux alias)${_}:`,
     homePortsFromPortVisitsProgress: s =>
       `${s.done}/${s.total}${_}navires${_}: ${s.found}${_}trouvés sur Global Fishing Watch, ${s.placed}${_}rattachés à un port, ${s.withoutVisits}${_}avec trop peu d’escales, ${s.farFromPorts}${_}dans un port absent de la carte, ${s.failed}${_}en échec.`,
     homePortsFromPortVisitsUnknownPorts: `Ports les plus fréquentés absents de la carte${_}:`,

@@ -542,6 +542,7 @@ class PortsPagesController(
             if (homePorts.isEmpty()) return null
             val observed = homePorts.filter { it.source == HomePortSource.IMPORT }
             val fromVisits = homePorts.filter { it.source == HomePortSource.GFW }
+            val fromRegistration = homePorts.filter { it.source == HomePortSource.REGISTER }
             val shares =
                 observed
                     .filter { it.observationsTotal > 0 }
@@ -558,6 +559,10 @@ class PortsPagesController(
                 fromVisits.takeIf { it.isNotEmpty() }?.let {
                     "${vessels(it.size)} ${if (it.size > 1) "y ont" else "y a"} fait le plus d’escales en un an " +
                         "(Global Fishing Watch)"
+                },
+                fromRegistration.takeIf { it.isNotEmpty() }?.let {
+                    "${vessels(it.size)} n’${if (it.size > 1) "y sont rattachés" else "y est rattaché"} que par " +
+                        "${if (it.size > 1) "leur" else "son"} quartier d’immatriculation"
                 },
             ).joinToString(", ").replaceFirstChar { it.uppercase() } + "."
         }

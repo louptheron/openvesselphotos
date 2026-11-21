@@ -276,7 +276,10 @@ function DataQualityNote() {
         <>
           Port d’attache connu pour {formatPercent(data.share)} des {formatNumber(data.registerVessels)} navires
           français du registre de la flotte de l’UE : {formatNumber(data.fromObservations)} d’après leurs positions à
-          quai, {formatNumber(data.fromPortVisits)} d’après leurs escales (Global Fishing Watch).{' '}
+          quai, {formatNumber(data.fromPortVisits)} d’après leurs escales (Global Fishing Watch)
+          {data.fromRegistration > 0 &&
+            `, ${formatNumber(data.fromRegistration)} d’après leur quartier d’immatriculation, faute de mieux`}
+          .{' '}
         </>
       )}
       {data.lastUpdate && <>Mis à jour le {formatDate(data.lastUpdate)} · </>}
@@ -469,7 +472,8 @@ function getVesselPageUrl(vessel: PortVessel): string | undefined {
 function VesselBadges({ vessel }: { vessel: PortVessel }) {
   const isIndustrial = vessel.lengthMeters !== null && vessel.lengthMeters >= INDUSTRIAL_LENGTH
   const isFromPortVisits = vessel.homePortSource === 'GFW'
-  if (!isIndustrial && !vessel.owner && !isFromPortVisits) {
+  const isFromRegistration = vessel.homePortSource === 'REGISTER'
+  if (!isIndustrial && !vessel.owner && !isFromPortVisits && !isFromRegistration) {
     return null
   }
 
@@ -481,6 +485,11 @@ function VesselBadges({ vessel }: { vessel: PortVessel }) {
           title={`Port de ${vessel.observationsAtPort} de ses ${vessel.observationsTotal} escales en un an, d’après ses positions AIS (Global Fishing Watch)`}
         >
           Port déduit de ses escales
+        </PortVisitsNote>
+      )}
+      {isFromRegistration && (
+        <PortVisitsNote title="Ni observé à quai ni suivi par AIS : rattaché au port de son quartier d’immatriculation, qui en compte souvent plusieurs">
+          Port de son quartier d’immatriculation
         </PortVisitsNote>
       )}
       {vessel.owner && (

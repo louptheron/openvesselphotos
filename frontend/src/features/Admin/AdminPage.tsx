@@ -28,6 +28,7 @@ import { ADMIN_GROUPS, ADMIN_SECTIONS, type AdminSectionId, sectionAnchor } from
 import { FishingActivitySync } from './FishingActivitySync'
 import { HomePortsCheck } from './HomePortsCheck'
 import { HomePortsFromPortVisits } from './HomePortsFromPortVisits'
+import { HomePortsFromRegistration } from './HomePortsFromRegistration'
 import { PhotoImport } from './PhotoImport'
 import { PhotoNotes } from './PhotoNotes'
 import { AuctionSalesImport, HomePortsImport, PortPositionsImport, VesselOwnersImport } from './PortsSiteImports'
@@ -62,6 +63,10 @@ export function AdminPage() {
     homePorts: { body: <HomePortsImport />, description: t.admin.homePortsText },
     homePortsCheck: { body: <HomePortsCheck />, description: t.admin.homePortsCheckText },
     homePortsFromVisits: { body: <HomePortsFromPortVisits />, description: t.admin.homePortsFromPortVisitsText },
+    homePortsFromRegistration: {
+      body: <HomePortsFromRegistration />,
+      description: t.admin.homePortsFromRegistrationText
+    },
     owners: { body: <VesselOwnersImport />, description: t.admin.vesselOwnersText },
     photoNotes: { body: <PhotoNotes />, description: t.admin.photoNotesText },
     photos: { body: <PhotoImport />, description: t.admin.photoImportText },

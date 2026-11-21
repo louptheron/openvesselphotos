@@ -42,14 +42,24 @@ enum class HomePortSource {
 
     /** The port it visited most in a year, on Global Fishing Watch */
     GFW,
+
+    /**
+     * The port of its place of registration in the EU fleet register (in France, its quartier maritime): the coarsest,
+     * replaced by any other source
+     */
+    REGISTER,
 }
 
-/** A vessel of the EU fleet register without home port */
+/** A vessel of the EU fleet register without home port, or with one from its place of registration only */
 data class HomePortCandidate(
     val cfr: String,
     val name: String?,
     val mmsi: String?,
     val callSign: String?,
+    /** In the EU fleet register, e.g. "LE GUILVINEC": in France, the quartier maritime */
+    val placeOfRegistration: String? = null,
+    /** Its home port from its place of registration, when it has one */
+    val source: HomePortSource? = null,
 )
 
 /** The company owning a vessel (armement), from a public source. */

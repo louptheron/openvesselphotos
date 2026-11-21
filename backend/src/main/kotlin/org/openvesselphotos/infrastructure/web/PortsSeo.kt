@@ -91,7 +91,15 @@ object PortsSeo {
             "Port d’attache connu pour ${percent(it)} des ${PortsPagesController.number(coverage.registerVessels)} " +
                 "navires français du $FLEET_REGISTER : ${PortsPagesController.number(coverage.fromObservations)} " +
                 "d’après leurs positions à quai, ${PortsPagesController.number(coverage.fromPortVisits)} d’après " +
-                "leurs escales (Global Fishing Watch)."
+                "leurs escales (Global Fishing Watch)" +
+                (
+                    if (coverage.fromRegistration > 0) {
+                        ", ${PortsPagesController.number(coverage.fromRegistration)} d’après leur quartier " +
+                            "d’immatriculation, faute de mieux"
+                    } else {
+                        ""
+                    }
+                ) + "."
         }
 
     /** e.g. "92 %", with a no-break space */

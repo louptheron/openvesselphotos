@@ -42,7 +42,10 @@ interface PortRepository {
         limit: Int,
     ): List<HomePortSearchResult>
 
-    /** French vessels of the EU fleet register (by their CFR) without home port */
+    /**
+     * French vessels of the EU fleet register (by their CFR) without home port, or with one from their place of
+     * registration only
+     */
     fun findHomePortCandidates(): List<HomePortCandidate>
 
     /** The day the home ports last changed, by an import or from Global Fishing Watch; null without home port */
@@ -51,6 +54,15 @@ interface PortRepository {
     /** How much of the French fleet of the EU register has a known home port */
     fun findCoverage(): HomePortCoverage
 
-    /** Adds home ports to vessels without one; the ones with a home port already keep it */
+    /**
+     * Adds home ports to vessels without one; the ones with a home port already keep it, unless it comes from their
+     * place of registration
+     */
     fun addHomePorts(homePorts: List<HomePort>)
+
+    /**
+     * For each place of registration of the French vessels of the EU fleet register (e.g. "LE GUILVINEC"), the number
+     * of its vessels based at each port, from the observations or Global Fishing Watch, by locode
+     */
+    fun countHomePortsByPlaceOfRegistration(): Map<String, Map<String, Int>>
 }
