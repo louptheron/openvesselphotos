@@ -7,11 +7,11 @@ import ScaleLine from 'ol/control/ScaleLine'
 import Point from 'ol/geom/Point'
 import VectorLayer from 'ol/layer/Vector'
 import HeatmapLayer from 'ol/layer/Heatmap'
-import TileLayer from 'ol/layer/Tile'
+import WebGLTileLayer from 'ol/layer/WebGLTile'
 import WebGLVectorLayer from 'ol/layer/WebGLVector'
 import { fromLonLat, transformExtent } from 'ol/proj'
 import VectorSource from 'ol/source/Vector'
-import XYZ from 'ol/source/XYZ'
+import ImageTileSource from 'ol/source/ImageTile'
 import type { FlatStyle } from 'ol/style/flat'
 import { Fill, Stroke, Style, Text } from 'ol/style'
 import { MapboxVectorLayer } from 'ol-mapbox-style'
@@ -63,7 +63,7 @@ export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
   handle
 ) {
   const elementRef = useRef<HTMLDivElement>(null)
-  const effortLayerRef = useRef<TileLayer<XYZ>>(undefined)
+  const effortLayerRef = useRef<WebGLTileLayer>(undefined)
   const portEffortSourceRef = useRef(new VectorSource<Feature<Point>>())
   const portEffortLayerRef = useRef<HeatmapLayer>(undefined)
   const [isEffortShown, setIsEffortShown] = useState(true)
@@ -109,12 +109,13 @@ export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
         getLabelStyle(feature.get('port') as Port, feature.get('vesselCount') as number, resolution)
     })
     // Where the vessels fish, between the basemap and the ports
-    const effortLayer = new TileLayer<XYZ>({ opacity: 0.55, visible: false })
+    // GFW draws the effort in one hue, its intensity in the alpha: recoloured here along a multi-hue ramp
+    const effortLayer = new WebGLTileLayer({ style: { color: effortColor() }, visible: false })
     effortLayerRef.current = effortLayer
     // The fishing grounds of a port's vessels, from their cells
     const portEffortLayer = new HeatmapLayer({
       blur: 18,
-      gradient: ['rgba(11, 155, 150, 0)', 'rgba(11, 155, 150, 0.7)', '#0B9B96', '#077571', '#04403D'],
+      gradient: ['rgba(0, 0, 0, 0)', ...EFFORT_RAMP.map(([, color]) => color)],
       radius: 9,
       source: portEffortSourceRef.current,
       visible: false,
@@ -230,8 +231,9 @@ export const PortsMap = forwardRef<PortsMapHandle, Props>(function PortsMap(
       return
     }
     layer.setSource(
-      new XYZ({
+      new ImageTileSource({
         attributions: GFW_ATTRIBUTION,
+        crossOrigin: 'anonymous',
         maxZoom: FISHING_EFFORT_MAX_ZOOM,
         url: `/v1/ports/fishing-effort/{z}/{x}/{y}.png${gear ? `?engin=${gear.id}` : ''}`
       })
@@ -464,6 +466,33 @@ const RADIUS = [
 const IS_SELECTED = ['==', ['get', 'locode'], ['var', 'selected']]
 const IS_HOVERED = ['==', ['get', 'locode'], ['var', 'hovered']]
 const HAS_AUCTION = ['==', ['get', 'hasAuction'], 1]
+/**
+ * [GFW tile alpha, colour] stops, from the least to the most fished grounds: the site's blues (sky, sea, fleet charts),
+ * short of the ink of the ports so that they stay readable on top
+ */
+const EFFORT_RAMP: Array<[number, string]> = [
+  [0.1, 'rgba(207, 224, 234, 0.6)'],
+  [0.3, 'rgba(143, 180, 201, 0.72)'],
+  [0.5, 'rgba(79, 141, 179, 0.8)'],
+  [0.7, 'rgba(45, 106, 146, 0.85)'],
+  [1, 'rgba(28, 90, 128, 0.88)']
+]
+
+function effortColor() {
+  return [
+    'interpolate',
+    ['linear'],
+    ['band', 4],
+    0,
+    [0, 0, 0, 0],
+    ...EFFORT_RAMP.flatMap(([stop, color]) => [stop, rgba(color)])
+  ]
+}
+
+function rgba(color: string): number[] {
+  return (color.match(/[\d.]+/g) ?? []).map(Number)
+}
+
 /** The ring of the ports with a fish auction */
 export const AUCTION_COLOR = '#D99A1E'
 
@@ -666,7 +695,7 @@ const Legend = styled.div`
     width: 22px;
     height: 10px;
     border-radius: 3px;
-    background: linear-gradient(90deg, rgba(11, 155, 150, 0.08), rgba(11, 155, 150, 0.6));
+    background: linear-gradient(90deg, ${EFFORT_RAMP.map(([, color]) => color).join(', ')});
   }
 
   @media ${MOBILE_QUERY} {

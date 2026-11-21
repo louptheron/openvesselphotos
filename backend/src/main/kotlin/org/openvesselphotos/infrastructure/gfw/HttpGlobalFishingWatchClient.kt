@@ -114,6 +114,28 @@ class HttpGlobalFishingWatchClient(
             ?.firstOrNull { it.startsWith("style=") }
             ?.removePrefix("style=")
             ?.let { java.net.URLDecoder.decode(it, Charsets.UTF_8) }
+            ?.let(::stretchRamp)
+    }
+
+    /**
+     * The style is `base64({"color": [r, g, b], "ramp": [8 breaks]})`. GFW's top break leaves the busiest half of the
+     * French grounds in its last step, drawn as one flat block: the upper breaks are raised, up to 4 times at the top,
+     * so that the last steps are kept for the real hot spots.
+     */
+    private fun stretchRamp(style: String): String {
+        if (style.isEmpty()) {
+            return style
+        }
+        val json = jsonMapper.readTree(java.util.Base64.getDecoder().decode(style)) as tools.jackson.databind.node.ObjectNode
+        val ramp = json.path("ramp").takeIf { it.isArray && it.size() > 1 } ?: return style
+        val last = ramp.size() - 1
+        val stretched = jsonMapper.createArrayNode()
+        ramp.forEachIndexed { index, value ->
+            stretched.add(value.asDouble() * Math.pow(RAMP_STRETCH, index.toDouble() / last))
+        }
+        json.set("ramp", stretched)
+
+        return java.util.Base64.getEncoder().encodeToString(jsonMapper.writeValueAsBytes(json))
     }
 
     override fun findVesselIds(identity: VesselIdentity): List<String> {
@@ -293,6 +315,7 @@ class HttpGlobalFishingWatchClient(
 
         /** The style of a query without data */
         private const val NO_DATA = ""
+        private const val RAMP_STRETCH = 4.0
 
         /** A transparent 1 px PNG, for the tiles without fishing */
         val EMPTY_TILE: ByteArray =
