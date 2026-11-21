@@ -14,7 +14,8 @@ import {
   Pill,
   PrimaryButton,
   SecondaryButton,
-  SectionTitle
+  SectionTitle,
+  Skeleton
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
@@ -59,7 +60,7 @@ export function VesselPage() {
   )
 
   if (isLoading) {
-    return <Container>{t.common.loading}</Container>
+    return <VesselPageSkeleton label={t.common.loading} />
   }
   if (!vessel) {
     const status = getErrorStatus(error)
@@ -90,6 +91,31 @@ export function VesselPage() {
   }
 
   return <VesselDetails key={`${keyType}-${key}`} vessel={vessel} />
+}
+
+/** The page's layout while the vessel loads */
+function VesselPageSkeleton({ label }: { label: string }) {
+  return (
+    <>
+      <Breadcrumb aria-hidden="true">
+        <Skeleton $height="14px" $width="160px" style={{ margin: '12px 0' }} />
+      </Breadcrumb>
+      <Main aria-busy="true" aria-label={label}>
+        <Gallery>
+          <Skeleton $height="min(560px, 60vw)" style={{ borderRadius: 8 }} />
+        </Gallery>
+        <Aside>
+          <Heading>
+            <Skeleton $height="40px" $width="70%" />
+          </Heading>
+          <Skeleton $height="16px" $width="40%" />
+          <Skeleton $height="72px" />
+          <Skeleton $height="64px" />
+          <Skeleton $height="220px" />
+        </Aside>
+      </Main>
+    </>
+  )
 }
 
 /**
@@ -419,6 +445,12 @@ const Gallery = styled.div`
   flex-direction: column;
   gap: 12px;
 
+  /* Stays in view while the longer details column scrolls */
+  @media (min-width: 960px) {
+    position: sticky;
+    top: 16px;
+  }
+
   /* In the one-column layout, the flex-basis would become a minimum height */
   @media (max-width: 959px) {
     flex: none;
@@ -429,7 +461,8 @@ const Figure = styled.figure`
   margin: 0;
   border-radius: 8px;
   overflow: hidden;
-  background: ${SKIES[0]};
+  /* Letterboxed photos sit on the same dark ground as their caption */
+  background: ${COLORS.ink};
 
   img {
     display: block;
@@ -441,12 +474,21 @@ const Figure = styled.figure`
   figcaption {
     background: ${COLORS.ink};
     color: ${COLORS.white};
-    padding: 12px 16px;
+    padding: 12px 16px 14px;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 8px;
+    flex-direction: column;
+    gap: 4px;
     font-size: 14px;
+    line-height: 1.45;
+  }
+
+  figcaption > span + span {
+    color: ${COLORS.inkSoft};
+    font-size: 13px;
+  }
+
+  figcaption a {
+    color: ${COLORS.white};
   }
 `
 
@@ -544,9 +586,10 @@ const Heading = styled.div`
     margin: 6px 0 0;
     font-family: ${FONTS.display};
     font-weight: 700;
-    font-size: clamp(34px, 9vw, 48px);
-    line-height: 1.02;
+    font-size: clamp(32px, 9vw, 40px);
+    line-height: 1.05;
     overflow-wrap: anywhere;
+    text-wrap: balance;
   }
 
   @media (max-width: 959px) {
@@ -599,6 +642,9 @@ const UsePanel = styled(Card)`
 
   pre {
     font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-x: visible;
   }
 `
 

@@ -10,19 +10,20 @@ import { COMMONS_VESSELS } from './commonsVessels'
 
 /**
  * Where the vessels sit on the chart (in its 1440×620 coordinates, before its 60 px offset). The cards are larger than
- * in the mockup and placed so that they stay visible on 1360 px wide screens, where the chart is cropped on the sides.
+ * in the mockup and placed so that they stay visible on 1360 px wide screens, where the chart is cropped on the sides,
+ * and within y = 130–490, which the hero's minimum height keeps in view on wider screens (see Hero in HomePage).
  */
 const SPOTS = [
-  { boat: COLORS.ink, card: [1130, 140], heading: 225, line: [1130, 262], position: [1098, 312], sky: '#CFE0EA' },
+  { boat: COLORS.ink, card: [1140, 150], heading: 225, line: [1140, 272], position: [1104, 318], sky: '#CFE0EA' },
   {
     boat: CHART_COLORS.photoCount,
-    card: [900, 40],
+    card: [900, 130],
     heading: 305,
-    line: [950, 174],
-    position: [952, 232],
+    line: [950, 264],
+    position: [960, 318],
     sky: '#E6D9C6'
   },
-  { boat: '#2D5B7A', card: [1070, 404], heading: 165, line: [1070, 466], position: [1012, 468], sky: '#D5E3DA' }
+  { boat: '#2D5B7A', card: [1060, 352], heading: 165, line: [1060, 414], position: [1004, 420], sky: '#D5E3DA' }
 ] as const
 
 /** Cards are drawn at 156×124 and scaled up, to give their photos more room. */

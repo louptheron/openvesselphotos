@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import { useGetVesselFilterOptionsQuery, useGetVesselsPageQuery } from '../../api/api'
 import type { FilterOption, VesselFilter } from '../../api/types'
-import { VesselCard, VesselGrid } from '../../components/VesselCard'
+import { VesselCard, VesselGrid, VesselGridSkeleton } from '../../components/VesselCard'
 import { Container, Field, Label, Lead, Muted, Select, TextButton, Title } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
@@ -113,7 +113,7 @@ export function VesselsPage() {
         )}
       </Filters>
       {isError && <p>{t.vessels.unavailable}</p>}
-      {isFetching && <Muted>{t.common.loading}</Muted>}
+      {isFetching && (data ? <Muted>{t.common.loading}</Muted> : <VesselGridSkeleton />)}
       {data && data.vessels.length === 0 && <p>{t.vessels.noMatch}</p>}
       {data && data.vessels.length > 0 && (
         <>

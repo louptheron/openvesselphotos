@@ -13,6 +13,8 @@ export const GlobalStyle = createGlobalStyle`
     -webkit-font-smoothing: antialiased;
   }
 
+  h1, h2, h3 { text-wrap: balance; }
+
   a { color: ${COLORS.link}; }
   a:hover { color: ${COLORS.linkHover}; }
 

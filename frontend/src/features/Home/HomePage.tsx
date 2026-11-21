@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import { useGetRecentVesselsQuery, useSearchVesselsQuery } from '../../api/api'
 import { ChartCard, ChartSection, WaveDivider } from '../../components/Chart'
-import { VesselCard, VesselGrid } from '../../components/VesselCard'
+import { VesselCard, VesselGrid, VesselGridSkeleton } from '../../components/VesselCard'
 import { CodeBlock, Container, Muted, PrimaryButton, SectionTitle } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
@@ -102,6 +102,7 @@ export function HomePage() {
           )}
         </ResultsHeader>
         {isError && <p>{t.home.searchUnavailable}</p>}
+        {!vessels && !isError && <VesselGridSkeleton />}
         {vessels && vessels.length === 0 && (
           <Empty>
             {isSearching ? (
@@ -184,6 +185,14 @@ const Hero = styled(Container).attrs({ as: 'section' })`
   padding-bottom: 64px;
   /* Lets the clicks through to the vessels drawn on the chart */
   pointer-events: none;
+
+  /* Tall enough, as the chart is cropped to the screen's width, to show its vessels (see SPOTS in ChartVessels) */
+  @media (min-width: 960px) {
+    min-height: 27vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 
   @media (max-width: 600px) {
     padding-top: 24px;
