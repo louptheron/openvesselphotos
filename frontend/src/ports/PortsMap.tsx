@@ -26,7 +26,7 @@ import { MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH } from './layout'
 import { formatNumber, vessels } from './texts'
 
 /** Free vector tiles from OpenStreetMap data, no key needed (openfreemap.org) */
-const BASEMAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/positron'
+export const BASEMAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/positron'
 const PORT_ZOOM = 10.5
 /** Port names are shown from this zoom level, the vessel counts of the biggest ports at any level */
 const LABEL_ZOOM = 8.5

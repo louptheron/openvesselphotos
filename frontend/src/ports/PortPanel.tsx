@@ -85,7 +85,8 @@ export function PortPanel({ gear, isError, isLoading, locode, onFitExtent, onHig
         />
       )}
       <Footer>
-        <a href="/especes">Espèces et prix</a> · <a href="/methodologie">Méthodologie et sources</a> · Photos de{' '}
+        <a href="/especes">Espèces et prix</a> · <a href="/petite-peche-cotiere">Petite pêche</a> ·{' '}
+        <a href="/methodologie">Méthodologie et sources</a> · Photos de{' '}
         <a href={OPEN_VESSEL_PHOTOS_URL} rel="noopener" target="_blank">
           Open Vessel Photos
         </a>{' '}

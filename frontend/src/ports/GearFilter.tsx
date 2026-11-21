@@ -17,7 +17,7 @@ import {
   getCarbonLevel,
   getCarbonRange
 } from './impacts'
-import { MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH } from './layout'
+import { glass, MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH } from './layout'
 import { formatNumber, vessels } from './texts'
 
 type Props = {
@@ -167,12 +167,6 @@ function GearExplanation({ count, family, onClear }: { count: number; family: Ge
     </Explanation>
   )
 }
-
-const glass = css`
-  border: 1px solid ${COLORS.border};
-  background: #fbfaf6;
-  box-shadow: 0 1px 2px rgba(11, 34, 51, 0.1);
-`
 
 const Wrapper = styled.div`
   position: absolute;

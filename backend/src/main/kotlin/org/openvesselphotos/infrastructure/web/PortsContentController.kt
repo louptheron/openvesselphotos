@@ -437,6 +437,7 @@ class PortsContentController(
             |- Un port, sa flotte par engin et par taille, ses navires et sa criée : `$baseUrl/ports/{slug}`${examplePort ?: ""}
             |- [Espèces vendues en criée]($baseUrl${PortsSeo.SPECIES_PATH}): prix, tonnages et premières criées
             |- Une espèce : `$baseUrl${PortsSeo.SPECIES_PATH}/{slug}`${exampleSpecies ?: ""}
+            |- [La petite pêche côtière en chiffres]($baseUrl${PortsSeo.SMALL_SCALE_PATH}): emplois, valeur ajoutée et limites, d’après la recherche française de 2025
             |- [Méthodologie et sources]($baseUrl${PortsSeo.METHODOLOGY_PATH})
             |- [Historique des mises à jour]($baseUrl${PortsSeo.CHANGELOG_PATH})
             |
