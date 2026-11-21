@@ -135,6 +135,16 @@ export const api = createApi({
         url: `/${keyType}/${encodeURIComponent(key)}/photos`
       })
     }),
+    suggestHomePort: builder.mutation<
+      Submission,
+      VesselKeyParams & { comment: string; contributor: string; locode: string }
+    >({
+      query: ({ comment, contributor, key, keyType, locode }) => ({
+        body: { comment, contributor, locode },
+        method: 'POST',
+        url: `/${keyType}/${encodeURIComponent(key)}/home-port`
+      })
+    }),
     suggestKeyLink: builder.mutation<
       Submission,
       VesselKeyParams & { contributor: string; missingKey: string; missingKeyType: KeyType }
@@ -281,6 +291,7 @@ export const {
   useSearchVesselsQuery,
   useSetPhotoNotesMutation,
   useSubmitPhotoMutation,
+  useSuggestHomePortMutation,
   useSuggestKeyLinkMutation
 } = api
 

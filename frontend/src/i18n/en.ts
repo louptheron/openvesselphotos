@@ -268,6 +268,25 @@ export const en = {
     yourName: 'Your name (optional)',
     submit: (keyType: string) => `Suggest this ${keyType}`
   },
+  homePort: {
+    label: 'Home port',
+    sources: {
+      GFW: 'deduced from its port visits',
+      IMPORT: 'where it is seen at quay most often',
+      MANUAL: 'checked',
+      REGISTER: 'the port of its quartier d’immatriculation'
+    },
+    open: 'Wrong port?',
+    openWithout: 'Know its home port? Tell us',
+    port: 'Port it is based at',
+    portPlaceholder: 'Type a port name',
+    unknownPort: 'Pick a port from the list.',
+    comment: 'How do you know? (optional)',
+    commentPlaceholder: 'e.g. I see it at quay there every week',
+    yourName: 'Your name (optional)',
+    submit: 'Suggest this port',
+    thanks: (port: string) => `Thanks! ${port} will be its home port once a reviewer has checked it.`
+  },
   report: {
     reasons: {
       WRONG_VESSEL: 'It is not this vessel',
@@ -487,7 +506,7 @@ export const en = {
         title: 'La Pêche française: ports, fleet and auctions'
       },
       review: {
-        text: 'Photos, links and reports sent by contributors, and API key requests.',
+        text: 'Photos, links, home ports and reports sent by contributors, and API key requests.',
         title: 'Review'
       },
       vessels: {
@@ -510,7 +529,7 @@ export const en = {
     password: 'Admin password',
     signIn: 'Sign in',
     queueLabel: 'Queue',
-    tabs: { photos: 'Photos', keyLinks: 'Key links', reports: 'Reports', apiKeys: 'API keys' },
+    tabs: { photos: 'Photos', keyLinks: 'Key links', homePorts: 'Home ports', reports: 'Reports', apiKeys: 'API keys' },
     rejectReasons: [
       "Vessel doesn't match the key",
       "Not the contributor's own photo",
@@ -534,6 +553,15 @@ export const en = {
     anonymous: 'anonymous',
     linkChecks: ['Both keys found in a public register', 'Same vessel name and flag'],
     linkKeys: 'Link the keys',
+    currentPort: 'Current home port',
+    suggestedPort: 'Suggested port',
+    noHomePort: 'None',
+    onlyOnPortsSite: 'Not on Open Vessel Photos: only on the ports site',
+    homePortChecks: [
+      'Seen at this port in recent AIS positions or photos',
+      'The comment is plausible (owner, local press, harbour office)'
+    ],
+    moveToPort: (port: string) => `Move it to ${port}`,
     addKey: (key: string) => `Add ${key}`,
     newPhoto: 'New photo',
     firstPhoto: 'First photo · creates vessel',

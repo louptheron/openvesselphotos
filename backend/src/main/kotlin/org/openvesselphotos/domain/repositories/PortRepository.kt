@@ -28,6 +28,16 @@ interface PortRepository {
 
     fun findByLocode(locode: String): Port?
 
+    /** The home port of the vessel, by its CFR */
+    fun findHomePort(cfr: String): HomePort?
+
+    /** Sets the home port of the vessel, from an approved correction: kept over the imports and the other sources */
+    fun setManualHomePort(
+        cfr: String,
+        vesselName: String?,
+        locode: String,
+    )
+
     /** The vessels based at the port, by name. */
     fun findHomePorts(locode: String): List<HomePort>
 

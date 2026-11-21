@@ -550,6 +550,7 @@ class PortsPagesController(
             val observed = homePorts.filter { it.source == HomePortSource.IMPORT }
             val fromVisits = homePorts.filter { it.source == HomePortSource.GFW }
             val fromRegistration = homePorts.filter { it.source == HomePortSource.REGISTER }
+            val corrected = homePorts.filter { it.source == HomePortSource.MANUAL }
             val shares =
                 observed
                     .filter { it.observationsTotal > 0 }
@@ -570,6 +571,12 @@ class PortsPagesController(
                 fromRegistration.takeIf { it.isNotEmpty() }?.let {
                     "${vessels(it.size)} n’${if (it.size > 1) "y sont rattachés" else "y est rattaché"} que par " +
                         "${if (it.size > 1) "leur" else "son"} quartier d’immatriculation"
+                },
+                corrected.takeIf { it.isNotEmpty() }?.let {
+                    "${vessels(
+                        it.size,
+                    )} ${if (it.size > 1) "y ont" else "y a"} été rattaché${if (it.size > 1) "s" else ""} " +
+                        "sur signalement d’un visiteur, vérifié"
                 },
             ).joinToString(", ").replaceFirstChar { it.uppercase() } + "."
         }

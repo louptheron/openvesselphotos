@@ -37,6 +37,15 @@ class PublicUrl(
             }
         }
 
+    /**
+     * The URL of the ports site from Open Vessel Photos, to link to it: next to localhost (on ports.localhost) in
+     * local development
+     */
+    fun portsSite(): String =
+        urls.getValue(Site.PORTS).ifEmpty {
+            get(Site.OPENVESSELPHOTOS).replace("//localhost", "//${Site.PORTS_LOCAL_HOST}")
+        }
+
     /** The configured URL of the site, empty when not set */
     fun configured(site: Site): String = urls.getValue(site)
 

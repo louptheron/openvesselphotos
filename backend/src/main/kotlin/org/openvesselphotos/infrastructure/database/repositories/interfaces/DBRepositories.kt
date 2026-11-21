@@ -5,6 +5,7 @@ import org.openvesselphotos.domain.entities.PhotoStatus
 import org.openvesselphotos.domain.entities.ReportStatus
 import org.openvesselphotos.domain.entities.ReviewStatus
 import org.openvesselphotos.infrastructure.database.entities.ApiKeyEntity
+import org.openvesselphotos.infrastructure.database.entities.HomePortCorrectionEntity
 import org.openvesselphotos.infrastructure.database.entities.KeyLinkRequestEntity
 import org.openvesselphotos.infrastructure.database.entities.PhotoEntity
 import org.openvesselphotos.infrastructure.database.entities.PhotoFileEntity
@@ -212,6 +213,15 @@ interface DBKeyLinkRequestRepository : JpaRepository<KeyLinkRequestEntity, Int> 
         vesselId: Int,
         status: ReviewStatus,
     ): List<KeyLinkRequestEntity>
+}
+
+interface DBHomePortCorrectionRepository : JpaRepository<HomePortCorrectionEntity, Int> {
+    fun findByStatusOrderByCreatedAt(status: ReviewStatus): List<HomePortCorrectionEntity>
+
+    fun findByCfrAndStatus(
+        cfr: String,
+        status: ReviewStatus,
+    ): List<HomePortCorrectionEntity>
 }
 
 interface DBReportRepository : JpaRepository<ReportEntity, Int> {

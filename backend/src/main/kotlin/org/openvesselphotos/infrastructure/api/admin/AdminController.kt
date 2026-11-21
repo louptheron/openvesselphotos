@@ -33,6 +33,7 @@ import org.openvesselphotos.domain.use_cases.admin.PortPositionImportResult
 import org.openvesselphotos.domain.use_cases.admin.RejectApiKeyRequest
 import org.openvesselphotos.domain.use_cases.admin.RejectPhoto
 import org.openvesselphotos.domain.use_cases.admin.ResolveReport
+import org.openvesselphotos.domain.use_cases.admin.ReviewHomePort
 import org.openvesselphotos.domain.use_cases.admin.ReviewKeyLink
 import org.openvesselphotos.domain.use_cases.admin.RevokeApiKey
 import org.openvesselphotos.domain.use_cases.admin.SetPhotoNotes
@@ -72,6 +73,7 @@ class AdminController(
     private val approvePhoto: ApprovePhoto,
     private val rejectPhoto: RejectPhoto,
     private val reviewKeyLink: ReviewKeyLink,
+    private val reviewHomePort: ReviewHomePort,
     private val resolveReport: ResolveReport,
     private val getActiveApiKeys: GetActiveApiKeys,
     private val approveApiKeyRequest: ApproveApiKeyRequest,
@@ -160,6 +162,22 @@ class AdminController(
         @PathVariable id: Int,
     ) {
         reviewKeyLink.execute(id, approve = false)
+    }
+
+    @PostMapping("/home-ports/{id}/approve")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun approveHomePort(
+        @PathVariable id: Int,
+    ) {
+        reviewHomePort.execute(id, approve = true)
+    }
+
+    @PostMapping("/home-ports/{id}/reject")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun rejectHomePort(
+        @PathVariable id: Int,
+    ) {
+        reviewHomePort.execute(id, approve = false)
     }
 
     @PostMapping("/reports/{id}/dismiss")

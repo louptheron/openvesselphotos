@@ -6,6 +6,13 @@ data class KeyLinkDataInput(
     val contributor: String? = null,
 )
 
+data class HomePortCorrectionDataInput(
+    /** UN/LOCODE of the port the vessel is based at, e.g. FRQUY */
+    val locode: String,
+    val comment: String? = null,
+    val contributor: String? = null,
+)
+
 data class ReportDataInput(
     val reason: String,
     val message: String? = null,

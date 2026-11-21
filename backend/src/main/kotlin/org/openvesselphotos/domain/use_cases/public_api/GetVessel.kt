@@ -5,11 +5,13 @@ import org.openvesselphotos.domain.entities.HistoryEvent
 import org.openvesselphotos.domain.entities.HistoryEventType
 import org.openvesselphotos.domain.entities.KeyType
 import org.openvesselphotos.domain.entities.VesselDetails
+import org.openvesselphotos.domain.entities.VesselHomePort
 import org.openvesselphotos.domain.entities.VesselKey
 import org.openvesselphotos.domain.exceptions.BackendUsageErrorCode
 import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.repositories.KeyLinkRequestRepository
 import org.openvesselphotos.domain.repositories.PhotoRepository
+import org.openvesselphotos.domain.repositories.PortRepository
 import org.openvesselphotos.domain.repositories.VesselRepository
 
 @UseCase
@@ -18,6 +20,7 @@ class GetVessel(
     private val photoRepository: PhotoRepository,
     private val keyLinkRequestRepository: KeyLinkRequestRepository,
     private val vesselPhotosLoader: VesselPhotosLoader,
+    private val portRepository: PortRepository,
 ) {
     fun execute(key: VesselKey): VesselDetails {
         val vessel =
@@ -73,6 +76,10 @@ class GetVessel(
             photos = photos,
             history = (photoEvents + linkEvents + listOfNotNull(creationEvent)).sortedByDescending { it.date },
             related = vesselPhotosLoader.load(vesselRepository.findRelatedWithApprovedPhotos(vessel, RELATED_VESSELS)),
+            homePort =
+                vessel.cfr?.let(portRepository::findHomePort)?.let { homePort ->
+                    portRepository.findByLocode(homePort.portLocode)?.let { VesselHomePort(it, homePort.source) }
+                },
         )
     }
 

@@ -17,9 +17,11 @@ import org.openvesselphotos.domain.use_cases.public_api.ReportPhoto
 import org.openvesselphotos.domain.use_cases.public_api.RequestApiKey
 import org.openvesselphotos.domain.use_cases.public_api.SearchVessels
 import org.openvesselphotos.domain.use_cases.public_api.SubmitPhoto
+import org.openvesselphotos.domain.use_cases.public_api.SuggestHomePort
 import org.openvesselphotos.domain.use_cases.public_api.SuggestKeyLink
 import org.openvesselphotos.domain.use_cases.public_api.vesselFilter
 import org.openvesselphotos.infrastructure.api.inputs.ApiKeyRequestDataInput
+import org.openvesselphotos.infrastructure.api.inputs.HomePortCorrectionDataInput
 import org.openvesselphotos.infrastructure.api.inputs.KeyLinkDataInput
 import org.openvesselphotos.infrastructure.api.inputs.ReportDataInput
 import org.openvesselphotos.infrastructure.api.outputs.ExportedVesselDataOutput
@@ -30,6 +32,7 @@ import org.openvesselphotos.infrastructure.api.outputs.VesselFilterOptionsDataOu
 import org.openvesselphotos.infrastructure.api.outputs.VesselSummaryDataOutput
 import org.openvesselphotos.infrastructure.api.outputs.VesselsPageDataOutput
 import org.openvesselphotos.infrastructure.api.security.ApiKeyCheckFilter
+import org.openvesselphotos.infrastructure.web.PublicUrl
 import org.springframework.http.CacheControl
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -60,9 +63,11 @@ class PublicVesselController(
     private val getPhotoImage: GetPhotoImage,
     private val submitPhoto: SubmitPhoto,
     private val suggestKeyLink: SuggestKeyLink,
+    private val suggestHomePort: SuggestHomePort,
     private val reportPhoto: ReportPhoto,
     private val exportDataset: ExportDataset,
     private val requestApiKey: RequestApiKey,
+    private val publicUrl: PublicUrl,
 ) {
     @GetMapping("/search")
     fun search(
@@ -121,7 +126,8 @@ class PublicVesselController(
     fun vessel(
         @PathVariable keyType: String,
         @PathVariable key: String,
-    ): VesselDataOutput = VesselDataOutput.from(baseUrl(), getVessel.execute(toKey(keyType, key)))
+    ): VesselDataOutput =
+        VesselDataOutput.from(baseUrl(), publicUrl.portsSite(), getVessel.execute(toKey(keyType, key)))
 
     @GetMapping("/{keyType:cfr|mmsi}/{key:[A-Za-z0-9]+}.jpg", produces = [MediaType.IMAGE_JPEG_VALUE])
     fun mainPhoto(
@@ -218,6 +224,19 @@ class PublicVesselController(
             )
 
         return SubmissionDataOutput(requireNotNull(request.id), request.status.name)
+    }
+
+    /** From both sites: the vessel page of Open Vessel Photos, and the port pages of the ports site */
+    @PostMapping("/{keyType:cfr|mmsi}/{key:[A-Za-z0-9]+}/home-port")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun suggestHomePort(
+        @PathVariable keyType: String,
+        @PathVariable key: String,
+        @RequestBody input: HomePortCorrectionDataInput,
+    ): SubmissionDataOutput {
+        val correction = suggestHomePort.execute(toKey(keyType, key), input.locode, input.comment, input.contributor)
+
+        return SubmissionDataOutput(requireNotNull(correction.id), correction.status.name)
     }
 
     @PostMapping("/{keyType:cfr|mmsi}/{key:[A-Za-z0-9]+}/photos/{n:[0-9]+}/reports")
