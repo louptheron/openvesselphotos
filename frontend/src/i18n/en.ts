@@ -275,7 +275,7 @@ export const en = {
       IMPORT: 'where it is seen at quay most often',
       MANUAL: 'checked',
       REGISTER: 'the port of its quartier d’immatriculation',
-      RETURNS: 'where it returns to port most often'
+      RETURNS: 'where it is seen most often'
     },
     open: 'Wrong port?',
     openWithout: 'Know its home port? Tell us',

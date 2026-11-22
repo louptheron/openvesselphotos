@@ -511,10 +511,8 @@ function VesselBadges({ vessel }: { vessel: PortVessel }) {
     <Badges>
       {isIndustrial && <FactPill title="Navire de 24 m ou plus">Pêche industrielle</FactPill>}
       {isFromPortReturns && (
-        <PortVisitsNote
-          title={`Port de ${vessel.observationsAtPort} de ses ${vessel.observationsTotal} retours au port relevés`}
-        >
-          Port de ses retours
+        <PortVisitsNote title="Vu le plus souvent à ce port, d’après ses retours au port relevés">
+          Vu le plus souvent à ce port
         </PortVisitsNote>
       )}
       {isFromPortVisits && (

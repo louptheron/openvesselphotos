@@ -95,8 +95,8 @@ object PortsSeo {
                     if (coverage.fromPortReturns > 0) {
                         "${PortsPagesController.number(
                             coverage.fromPortReturns,
-                        )} d’après le port de la plupart de leurs " +
-                            "retours au port, "
+                        )} d’après le port où ils ont été vus le plus " +
+                            "souvent, "
                     } else {
                         ""
                     }

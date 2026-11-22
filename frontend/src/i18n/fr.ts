@@ -270,7 +270,7 @@ export const fr: Messages = {
       IMPORT: 'où il est vu à quai le plus souvent',
       MANUAL: 'vérifié',
       REGISTER: 'port de son quartier d’immatriculation',
-      RETURNS: 'où il rentre au port le plus souvent'
+      RETURNS: 'où il est vu le plus souvent'
     },
     open: `Mauvais port${_}?`,
     openWithout: `Vous connaissez son port d’attache${_}? Indiquez-le`,

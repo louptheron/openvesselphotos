@@ -542,7 +542,7 @@ class PortsPagesController(
         }
 
         /**
-         * How the home ports of a port's vessels were found, e.g. "20 navires y sont rentrés le plus souvent, 12 navires
+         * How the home ports of a port's vessels were found, e.g. "20 navires y ont été vus au port le plus souvent, 12 navires
          * y ont été vus à quai le plus souvent
          * (81 % de leurs positions au port en moyenne), 3 y ont fait le plus d’escales en un an (Global Fishing Watch)."
          */
@@ -564,7 +564,7 @@ class PortsPagesController(
                 fromPortReturns.takeIf { it.isNotEmpty() }?.let {
                     "${vessels(
                         it.size,
-                    )} ${if (it.size > 1) "y sont" else "y est"} rentré${if (it.size > 1) "s" else ""} le plus souvent"
+                    )} ${if (it.size > 1) "y ont" else "y a"} été vu${if (it.size > 1) "s" else ""} au port le plus souvent"
                 },
                 observed.takeIf { it.isNotEmpty() }?.let {
                     val plural = it.size > 1
