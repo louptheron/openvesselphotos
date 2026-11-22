@@ -140,6 +140,7 @@ In-memory counters per container (`RateLimitFilter`), adjustable with environmen
 | `POST /v1/**` without key (website forms)  | 20 per hour per IP     | `OPENVESSELPHOTOS_RATE_LIMIT_WRITES_PER_HOUR`           |
 | `POST /v1/**` with an API key              | 1,000 per hour per key | `OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_WRITES_PER_HOUR`   |
 | `POST /v1/api-key-requests`                | 5 per hour per IP      | `OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_REQUESTS_PER_HOUR` |
+| `POST /v1/page-views` (the sites' pages)   | 600 per hour per IP    | `OPENVESSELPHOTOS_RATE_LIMIT_PAGE_VIEWS_PER_HOUR`       |
 
 Above a limit, the API returns a `429` with `Retry-After`. With several containers, each counts separately.
 

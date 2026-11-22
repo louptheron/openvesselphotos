@@ -764,10 +764,17 @@ export const en = {
     key: 'Key',
     calls: 'Calls',
     lastUsed: 'Last used',
-    website: 'This website',
+    website: 'Open Vessel Photos pages',
+    portsWebsite: 'La Pêche française pages',
+    bySite: 'By website',
+    bySiteHint: 'Pages shown, and the photos and API calls of the site’s own pages.',
+    pageViews: 'Page views',
+    pageViewsPerDay: 'Page views per day',
+    topPages: 'Most viewed pages',
+    page: 'Page',
     direct: 'Apps and scripts (no referrer)',
     other: 'Other sites',
-    note: 'Counted without personal data: images by the site that shows them (Referer header), API calls by key. A browser keeps a photo for a day, so it is counted once a day per visitor at most; the last minute is not counted yet.'
+    note: 'Counted without personal data: images by the site that shows them (Referer header), API calls by key. A browser keeps a photo for a day, so it is counted once a day per visitor at most; the last minute is not counted yet. Page views are sent by the pages themselves (path only), so visitors blocking scripts and most robots are not counted. Before page views were counted, “Open Vessel Photos pages” included those of La Pêche française.'
   }
 }
 

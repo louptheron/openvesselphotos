@@ -36,3 +36,8 @@ data class ApprovePhotoDataInput(
 data class RejectPhotoDataInput(
     val reason: String? = null,
 )
+
+data class PageViewDataInput(
+    /** The path of the page shown, e.g. "/vessels/cfr/FRA000123456" */
+    val path: String,
+)

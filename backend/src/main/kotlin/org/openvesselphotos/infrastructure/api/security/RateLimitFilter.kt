@@ -3,6 +3,7 @@ package org.openvesselphotos.infrastructure.api.security
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.openvesselphotos.infrastructure.api.public_api.PageViewsController
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
@@ -25,6 +26,8 @@ class RateLimitFilter(
     private val apiKeyWritesPerHour: Int,
     @param:Value("\${openvesselphotos.rate-limits.api-key-requests-per-hour}")
     private val apiKeyRequestsPerHour: Int,
+    @param:Value("\${openvesselphotos.rate-limits.page-views-per-hour:600}")
+    private val pageViewsPerHour: Int,
 ) : OncePerRequestFilter() {
     private val rateLimiter = RateLimiter()
 
@@ -52,6 +55,8 @@ class RateLimitFilter(
             when {
                 request.method == "GET" || request.method == "HEAD" ->
                     Rule("read", readsPerMinute, Duration.ofMinutes(1)) to clientIp.of(request)
+                path == PageViewsController.PATH ->
+                    Rule("page-view", pageViewsPerHour, Duration.ofHours(1)) to clientIp.of(request)
                 path == ApiKeyCheckFilter.API_KEY_REQUESTS_PATH ->
                     Rule("api-key-request", apiKeyRequestsPerHour, Duration.ofHours(1)) to clientIp.of(request)
                 apiKeyId != null ->

@@ -40,6 +40,8 @@ openvesselphotos:
         api-key-writes-per-hour: ${OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_WRITES_PER_HOUR:1000}
         # POST /v1/api-key-requests, per IP
         api-key-requests-per-hour: ${OPENVESSELPHOTOS_RATE_LIMIT_API_KEY_REQUESTS_PER_HOUR:5}
+        # POST /v1/page-views, per IP: the page views counted for the statistics, apart from the forms' limit
+        page-views-per-hour: ${OPENVESSELPHOTOS_RATE_LIMIT_PAGE_VIEWS_PER_HOUR:600}
     # Pages of vessels without photo, described by the EU fleet register, released to search engines a few a day
     # from this day (YYYY-MM-DD). Empty = none.
     vessels-without-photos:

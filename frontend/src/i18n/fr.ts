@@ -718,9 +718,16 @@ export const fr: Messages = {
     key: 'Clé',
     calls: 'Appels',
     lastUsed: 'Dernière utilisation',
-    website: 'Ce site',
+    website: 'Pages d’Open Vessel Photos',
+    portsWebsite: 'Pages de La Pêche française',
+    bySite: 'Par site',
+    bySiteHint: 'Pages affichées, et photos et appels à l’API des pages du site lui-même.',
+    pageViews: 'Pages vues',
+    pageViewsPerDay: 'Pages vues par jour',
+    topPages: 'Pages les plus vues',
+    page: 'Page',
     direct: 'Applications et scripts (sans référent)',
     other: 'Autres sites',
-    note: `Compté sans donnée personnelle${_}: les images par le site qui les affiche (en-tête Referer), les appels à l’API par clé. Un navigateur garde une photo un jour${_}: elle est comptée au plus une fois par jour et par visiteur${_}; la dernière minute n’est pas encore comptée.`
+    note: `Compté sans donnée personnelle${_}: les images par le site qui les affiche (en-tête Referer), les appels à l’API par clé. Un navigateur garde une photo un jour${_}: elle est comptée au plus une fois par jour et par visiteur${_}; la dernière minute n’est pas encore comptée. Les pages vues sont envoyées par les pages elles-mêmes (chemin seul)${_}: les visiteurs qui bloquent les scripts et la plupart des robots ne sont pas comptés. Avant le comptage des pages vues, «${_}Pages d’Open Vessel Photos${_}» incluait celles de La Pêche française.`
   }
 }

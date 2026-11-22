@@ -6,8 +6,10 @@ import jakarta.servlet.http.HttpServletResponse
 import org.openvesselphotos.domain.entities.UsageKey
 import org.openvesselphotos.domain.entities.UsageKind
 import org.openvesselphotos.domain.use_cases.public_api.RecordUsage
+import org.openvesselphotos.infrastructure.api.public_api.PageViewsController
 import org.openvesselphotos.infrastructure.api.security.ApiKeyCheckFilter
-import org.springframework.beans.factory.annotation.Value
+import org.openvesselphotos.infrastructure.web.PublicUrl
+import org.openvesselphotos.infrastructure.web.Site
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
@@ -17,20 +19,24 @@ import java.net.URI
  * Counts the successful requests to the public API, after [ApiKeyCheckFilter] has identified the API key. Images are
  * counted by the site showing them, read from the Referer header: browsers send the origin of the page of an `<img>`
  * (e.g. "https://monitorfish.fr/"). Images are cached for a day, so a browser showing a photo again is not counted.
+ * Requests from the pages of Open Vessel Photos and of La Pêche française are counted apart. Page views are not API
+ * usage: see [PageViewsController].
  */
 @Component
 @Order(2)
 class UsageCountingFilter(
     private val recordUsage: RecordUsage,
-    @param:Value("\${openvesselphotos.public-url}")
-    publicUrl: String,
+    private val publicUrl: PublicUrl,
 ) : OncePerRequestFilter() {
-    private val publicHost = publicUrl.takeIf { it.isNotBlank() }?.let { hostOf(it) }
+    private val publicHost = publicUrl.configured(Site.OPENVESSELPHOTOS).takeIf { it.isNotBlank() }?.let { hostOf(it) }
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.requestURI.removePrefix(request.contextPath)
 
-        return !path.startsWith("/v1/") || path.startsWith("/v1/admin/") || request.method == "OPTIONS"
+        return !path.startsWith("/v1/") ||
+            path.startsWith("/v1/admin/") ||
+            path == PageViewsController.PATH ||
+            request.method == "OPTIONS"
     }
 
     override fun doFilterInternal(
@@ -55,7 +61,10 @@ class UsageCountingFilter(
     private fun sourceOf(request: HttpServletRequest): String {
         val host = request.getHeader("Referer")?.let { hostOf(it) } ?: return UsageKey.DIRECT
 
-        return if (host == hostOf("http://${request.serverName}") || host == publicHost) UsageKey.WEBSITE else host
+        val site = publicUrl.siteOf(host)
+        val isOwnPage = host == hostOf("http://${request.serverName}") || host == publicHost || site == Site.PORTS
+
+        return if (isOwnPage) site.website.usageSource else host
     }
 
     /** The host without "www.", e.g. "monitorfish.fr", or null for an invalid URL. */

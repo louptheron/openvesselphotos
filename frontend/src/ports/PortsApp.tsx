@@ -8,6 +8,7 @@ import {
   useGetPortQuery,
   useGetPortsQuery
 } from '../api/api'
+import { usePageViewBeacon } from '../hooks/usePageViewBeacon'
 import { of } from '../i18n/fr'
 import { COLORS } from '../theme'
 import { AuctionSales } from './AuctionSales'
@@ -26,6 +27,8 @@ type Props = {
 }
 
 export function PortsApp({ serverHtml }: Props) {
+  usePageViewBeacon()
+
   return (
     <Routes>
       <Route element={<MapPage />} path="/" />
