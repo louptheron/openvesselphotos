@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { type PointerEvent, type RefObject, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 
@@ -7,7 +7,7 @@ import type { Port, PortVessel } from '../api/types'
 import { fr } from '../i18n/fr'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../theme'
 import { getNamedPhotoUrl, getPhotoSlug } from '../utils/vesselKey'
-import { MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH, SHEET_HEIGHT } from './layout'
+import { MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH, PORT_SHEET_HEIGHT, SHEET_HEIGHT, SHEET_TOP_OFFSET } from './layout'
 import { PortPortrait } from './PortPortrait'
 import { AuctionList } from './AuctionList'
 import { AuctionSales } from './AuctionSales'
@@ -52,26 +52,37 @@ type Props = {
 export function PortPanel({ gear, isError, isLoading, locode, onFitExtent, onHighlight, onSelect, ports }: Props) {
   const [isExpanded, setIsExpanded] = useState(false)
   const { search } = useLocation()
+  const panelRef = useRef<HTMLElement>(null)
+  const dragHandlers = useSheetDrag(panelRef, setIsExpanded)
+
+  // A port chosen on the map or in the list opens at its own height, with the map around it
+  const [shownLocode, setShownLocode] = useState(locode)
+  if (locode !== shownLocode) {
+    setShownLocode(locode)
+    setIsExpanded(false)
+  }
 
   return (
-    <Panel $isExpanded={isExpanded} aria-label="Ports et navires">
-      <SheetHandle
-        aria-expanded={isExpanded}
-        aria-label={isExpanded ? 'Réduire le panneau' : 'Agrandir le panneau'}
-        onClick={() => setIsExpanded(!isExpanded)}
-        type="button"
-      />
-      <Brand>
-        <BrandLink to={{ pathname: '/', search }}>
-          <BrandMark>
-            <SiteMark size={32} />
-          </BrandMark>
-          <span>
-            <BrandName>{SITE_NAME}</BrandName>
-            <BrandTagline>{SITE_TAGLINE}</BrandTagline>
-          </span>
-        </BrandLink>
-      </Brand>
+    <Panel $hasPort={!!locode} $isExpanded={isExpanded} aria-label="Ports et navires" ref={panelRef}>
+      <SheetTop {...dragHandlers}>
+        <SheetHandle
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? 'Réduire le panneau' : 'Agrandir le panneau'}
+          onClick={() => setIsExpanded(!isExpanded)}
+          type="button"
+        />
+        <Brand>
+          <BrandLink draggable={false} to={{ pathname: '/', search }}>
+            <BrandMark>
+              <SiteMark size={32} />
+            </BrandMark>
+            <span>
+              <BrandName>{SITE_NAME}</BrandName>
+              <BrandTagline>{SITE_TAGLINE}</BrandTagline>
+            </span>
+          </BrandLink>
+        </Brand>
+      </SheetTop>
       {locode ? (
         <PortView gear={gear} key={locode} locode={locode} />
       ) : (
@@ -95,6 +106,90 @@ export function PortPanel({ gear, isError, isLoading, locode, onFitExtent, onHig
       </Footer>
     </Panel>
   )
+}
+
+/** Past this many pixels, a touch on the top of the sheet is a drag, not a tap */
+const DRAG_THRESHOLD = 8
+/** A drag longer than this expands or folds the sheet, a shorter one puts it back */
+const SNAP_DISTANCE = 40
+/** The sheet never gets lower than its top strip */
+const MIN_SHEET_HEIGHT = 96
+
+/**
+ * On phones, dragging the top of the sheet (its handle and the site name) resizes it,
+ * then lets it go expanded or folded. A tap still toggles the handle, or follows the link.
+ */
+/** A drag ends with a click on what is under the finger: it neither toggles the sheet nor follows a link */
+function swallowClick(event: Event) {
+  event.preventDefault()
+  event.stopPropagation()
+}
+
+function useSheetDrag(panelRef: RefObject<HTMLElement | null>, setIsExpanded: (isExpanded: boolean) => void) {
+  /** Ends the drag under way, if any */
+  const stopDrag = useRef<(() => void) | undefined>(undefined)
+
+  useEffect(() => () => stopDrag.current?.(), [])
+
+  return {
+    onPointerDown: (event: PointerEvent<HTMLElement>) => {
+      const panel = panelRef.current
+      if (!panel || !window.matchMedia(MOBILE_QUERY).matches || (event.pointerType === 'mouse' && event.button !== 0)) {
+        return
+      }
+      stopDrag.current?.()
+      const { pointerId } = event
+      const startY = event.clientY
+      const startHeight = panel.getBoundingClientRect().height
+      let hasMoved = false
+
+      // Followed on the whole window: the finger soon leaves the top of the sheet
+      const onMove = (moveEvent: globalThis.PointerEvent) => {
+        if (moveEvent.pointerId !== pointerId) {
+          return
+        }
+        const deltaY = moveEvent.clientY - startY
+        if (!hasMoved) {
+          if (Math.abs(deltaY) < DRAG_THRESHOLD) {
+            return
+          }
+          hasMoved = true
+          panel.style.transition = 'none'
+        }
+        const maxHeight = window.innerHeight - SHEET_TOP_OFFSET
+        panel.style.height = `${Math.min(maxHeight, Math.max(MIN_SHEET_HEIGHT, startHeight - deltaY))}px`
+      }
+      const onEnd = (endEvent: globalThis.PointerEvent) => {
+        if (endEvent.pointerId !== pointerId) {
+          return
+        }
+        stop()
+        if (!hasMoved) {
+          return
+        }
+        window.addEventListener('click', swallowClick, { capture: true, once: true })
+        setTimeout(() => window.removeEventListener('click', swallowClick, { capture: true }), 0)
+        const deltaY = endEvent.clientY - startY
+        if (deltaY < -SNAP_DISTANCE) {
+          setIsExpanded(true)
+        } else if (deltaY > SNAP_DISTANCE) {
+          setIsExpanded(false)
+        }
+      }
+      const stop = () => {
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onEnd)
+        window.removeEventListener('pointercancel', onEnd)
+        panel.style.removeProperty('height')
+        panel.style.removeProperty('transition')
+        stopDrag.current = undefined
+      }
+      window.addEventListener('pointermove', onMove)
+      window.addEventListener('pointerup', onEnd)
+      window.addEventListener('pointercancel', onEnd)
+      stopDrag.current = stop
+    }
+  }
 }
 
 type SortOrder = 'count' | 'name'
@@ -749,7 +844,7 @@ function BoatIcon() {
 
 /* Layout */
 
-const Panel = styled.aside<{ $isExpanded: boolean }>`
+const Panel = styled.aside<{ $hasPort: boolean; $isExpanded: boolean }>`
   position: absolute;
   top: ${PANEL_MARGIN}px;
   bottom: ${PANEL_MARGIN}px;
@@ -770,9 +865,23 @@ const Panel = styled.aside<{ $isExpanded: boolean }>`
     bottom: 0;
     left: 0;
     width: auto;
-    height: ${({ $isExpanded }) => ($isExpanded ? '88dvh' : `${SHEET_HEIGHT * 100}dvh`)};
+    height: ${({ $hasPort, $isExpanded }) =>
+      $isExpanded
+        ? `calc(100dvh - ${SHEET_TOP_OFFSET}px)`
+        : `${($hasPort ? PORT_SHEET_HEIGHT : SHEET_HEIGHT) * 100}dvh`};
     border-radius: 6px 22px 0 0;
     transition: height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+`
+
+/** On phones, the strip to drag: the handle and the site name */
+const SheetTop = styled.div`
+  flex: none;
+
+  @media (max-width: 760px) {
+    touch-action: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
 `
 
@@ -781,11 +890,9 @@ const SheetHandle = styled.button`
 
   @media (max-width: 760px) {
     display: block;
-    flex: none;
-    align-self: center;
-    width: 64px;
-    height: 20px;
-    margin: 4px 0 -8px;
+    width: 100%;
+    height: 28px;
+    padding: 0;
     border: none;
     background: transparent;
     cursor: pointer;
@@ -805,6 +912,10 @@ const SheetHandle = styled.button`
 const Brand = styled.header`
   flex: none;
   padding: 18px 20px 6px;
+
+  @media (max-width: 760px) {
+    padding-top: 4px;
+  }
 `
 
 const BrandLink = styled(Link)`
