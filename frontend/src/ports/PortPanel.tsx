@@ -17,7 +17,7 @@ import { type GearFamily, GearIcon, countVessels, hasGear } from './gears'
 import { FactPill, INDUSTRIAL_LENGTH } from './impacts'
 import { type Extent, REGIONS, isInExtent } from './regions'
 import { SiteMark } from './SiteMark'
-import { formatDate, formatNumber, formatPercent, getPortPath, normalize, SITE_NAME, SITE_TAGLINE } from './texts'
+import { formatDate, formatNumber, getPortPath, normalize, SITE_NAME, SITE_TAGLINE } from './texts'
 
 const OPEN_VESSEL_PHOTOS_URL = 'https://openvesselphotos.org/fr'
 /** In the URL of a port, the CFR of the vessel found by the search, e.g. ?navire=FRA000123456 */
@@ -274,16 +274,7 @@ function DataQualityNote() {
 
   return (
     <SourcesNote>
-      {data.share !== null && (
-        <>
-          Port d’attache connu pour {formatPercent(data.share)} des {formatNumber(data.registerVessels)} navires
-          français du registre de la flotte de l’UE : {formatNumber(data.fromObservations)} d’après leurs positions à
-          quai, {formatNumber(data.fromPortVisits)} d’après leurs escales (Global Fishing Watch)
-          {data.fromRegistration > 0 &&
-            `, ${formatNumber(data.fromRegistration)} d’après leur quartier d’immatriculation, faute de mieux`}
-          .{' '}
-        </>
-      )}
+      {data.share !== null && <>Port d’attache connu · </>}
       {data.lastUpdate && <>Mis à jour le {formatDate(data.lastUpdate)} · </>}
       <a href="/mises-a-jour">Historique des mises à jour</a> · <a href="/methodologie">Méthodologie</a>
     </SourcesNote>

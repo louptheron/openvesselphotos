@@ -86,32 +86,35 @@ object PortsSeo {
                 """<a href="$CHANGELOG_PATH">historique des mises à jour</a></p>"""
         } ?: ""
 
-    /** e.g. "Port d’attache connu pour 92 % des 6 012 navires français du registre de la flotte de l’UE." */
-    fun coverageSentence(coverage: HomePortCoverage): String? =
-        coverage.share?.let {
-            "Port d’attache connu pour ${percent(it)} des ${PortsPagesController.number(coverage.registerVessels)} " +
-                "navires français du $FLEET_REGISTER : " +
-                (
-                    if (coverage.fromPortReturns > 0) {
-                        "${PortsPagesController.number(
-                            coverage.fromPortReturns,
-                        )} d’après le port où ils ont été vus le plus " +
-                            "souvent, "
-                    } else {
-                        ""
-                    }
-                ) + "${PortsPagesController.number(coverage.fromObservations)} " +
-                "d’après leurs positions à quai, ${PortsPagesController.number(coverage.fromPortVisits)} d’après " +
-                "leurs escales (Global Fishing Watch)" +
-                (
-                    if (coverage.fromRegistration > 0) {
-                        ", ${PortsPagesController.number(coverage.fromRegistration)} d’après leur quartier " +
-                            "d’immatriculation, faute de mieux"
-                    } else {
-                        ""
-                    }
-                ) + "."
-        }
+    /**
+     * e.g. "5 400 des 6 012 navires français du registre de la flotte de pêche de l’Union européenne ont un port
+     * d’attache : 4 320 d’après leurs retours au port relevés par nos bénévoles, 73 d’après leurs positions à quai…"
+     */
+    fun coverageSentence(coverage: HomePortCoverage): String? {
+        if (coverage.registerVessels == 0) return null
+        val number = PortsPagesController::number
+        val vessels = "navires français du $FLEET_REGISTER"
+        val withHomePort =
+            if (coverage.withHomePort >= coverage.registerVessels) {
+                "Les ${number(coverage.registerVessels)} $vessels ont tous un port d’attache"
+            } else {
+                val total = number(coverage.registerVessels)
+                "${number(coverage.withHomePort)} des $total $vessels ont un port d’attache"
+            }
+        val sources =
+            listOfNotNull(
+                coverage.fromPortReturns.takeIf { it > 0 }?.let {
+                    "${number(it)} d’après leurs retours au port relevés par nos bénévoles"
+                },
+                "${number(coverage.fromObservations)} d’après leurs positions à quai",
+                "${number(coverage.fromPortVisits)} d’après leurs escales relevées par Global Fishing Watch",
+                coverage.fromRegistration.takeIf { it > 0 }?.let {
+                    "${number(it)} d’après leur quartier d’immatriculation"
+                },
+            )
+
+        return "$withHomePort : " + sources.dropLast(1).joinToString(", ") + " et " + sources.last() + "."
+    }
 
     /** e.g. "92 %", with a no-break space */
     fun percent(share: Double): String = "${Math.round(share * 100)} %"

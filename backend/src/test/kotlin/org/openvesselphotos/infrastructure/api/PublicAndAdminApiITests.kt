@@ -1710,7 +1710,7 @@ class PublicAndAdminApiITests {
                     containsString("<strong>Ventes des criées, FranceAgriMer</strong> : Ventes 2025 de 2 criées"),
                 ),
             ).andExpect(content().string(containsString("Ports d’attache de 4 navires, dans 3 ports")))
-            .andExpect(content().string(containsString("Port d’attache connu pour ")))
+            .andExpect(content().string(containsString("un port d’attache : ")))
         assertThat(portPage)
             .contains("<h3>Fiabilité des données</h3><p>2 navires y ont été vus à quai le plus souvent")
             .contains(
@@ -1770,7 +1770,7 @@ class PublicAndAdminApiITests {
         mockMvc.perform(post("/v1/admin/ports/home-ports/from-registration")).andExpect(status().isUnauthorized)
         pages
             .perform(onPortsHost("/_ports/methodologie"))
-            .andExpect(content().string(containsString("rattachés au port de leur quartier d’immatriculation")))
+            .andExpect(content().string(containsString("rattachés à leur quartier maritime")))
 
         // A visitor says a vessel is based at another port: nothing changes before the admin approves it
         fun suggestHomePort(
