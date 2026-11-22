@@ -1,6 +1,8 @@
 package org.openvesselphotos.infrastructure.web
 
 import org.openvesselphotos.domain.entities.SpeciesSales
+import org.openvesselphotos.domain.entities.SpeciesStocks
+import org.openvesselphotos.domain.entities.StockStatus
 import org.openvesselphotos.domain.entities.slugOf
 import org.openvesselphotos.domain.use_cases.public_api.GetPorts
 import org.openvesselphotos.domain.use_cases.public_api.GetSpecies
@@ -43,6 +45,8 @@ class PortsContentController(
         val species = getSpecies.execute()
         val year = species.firstOrNull()?.year
         val updatedOn = getPorts.lastUpdate()
+        val stockAssessment = getSpecies.stockAssessment()
+        val hasStocks = species.any { it.stocks != null }
         val description =
             if (year == null) {
                 "Les espèces de poissons, coquillages et crustacés vendues dans les criées françaises."
@@ -68,13 +72,26 @@ class PortsContentController(
                                 "les criées françaises en $year (source : ${PortsSeo.FRANCE_AGRIMER}).",
                         )
                     },
-                )
+                ) +
+                    species
+                        .filter { it.stocks?.status == StockStatus.BON_ETAT }
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { sustainable ->
+                            Question(
+                                "Quelles espèces sont pêchées durablement ?",
+                                "D’après l’Ifremer, les espèces vendues en criée dont les stocks sont en bon état " +
+                                    "sont, d’abord en valeur : " +
+                                    sustainable.take(8).joinToString(", ") { it.name.lowercase() } +
+                                    " (source : ${PortsSeo.IFREMER}, ${stockAssessment.edition}).",
+                            )
+                        }.let { listOfNotNull(it) }
             }
         val rows =
             species.joinToString("") {
                 """<tr><th scope="row"><a href="${PortsSeo.speciesPath(it.slug)}">${escapeHtml(it.name)}</a></th>""" +
                     "<td>${number(it.quantityTonnes)} t</td><td>${millions(it.valueThousandEuros)}</td>" +
-                    "<td>${it.priceEurosPerKg?.let { p -> price(p) } ?: ""}</td></tr>"
+                    "<td>${it.priceEurosPerKg?.let { p -> price(p) } ?: ""}</td>" +
+                    (if (hasStocks) """<td class="stock">${stockCell(it.stocks)}</td>""" else "") + "</tr>"
             }
 
         return render(
@@ -99,9 +116,21 @@ class PortsContentController(
                             } else {
                                 "<h2>Les espèces en $year, par valeur vendue</h2>" +
                                     "<table><thead><tr><th scope=\"col\">Espèce</th><th scope=\"col\">Quantité</th>" +
-                                    "<th scope=\"col\">Valeur</th><th scope=\"col\">Prix moyen</th></tr></thead>" +
-                                    "<tbody>$rows</tbody></table>" +
-                                    "<p>Source : ${PortsSeo.FRANCE_AGRIMER}, $year.</p>"
+                                    "<th scope=\"col\">Valeur</th><th scope=\"col\">Prix moyen</th>" +
+                                    (if (hasStocks) "<th scope=\"col\" class=\"stock\">État des stocks</th>" else "") +
+                                    "</tr></thead><tbody>$rows</tbody></table>" +
+                                    "<p>Sources : ${PortsSeo.FRANCE_AGRIMER}, $year" +
+                                    (
+                                        if (hasStocks) {
+                                            """ ; <a href="${escapeHtml(stockAssessment.url)}">""" +
+                                                "${PortsSeo.IFREMER}</a>, ${stockAssessment.edition}. " +
+                                                "Un stock est une population d’une espèce dans une zone de pêche ; " +
+                                                """<a href="${PortsSeo.METHODOLOGY_PATH}#stocks">ce que veut dire """ +
+                                                "chaque état</a>"
+                                        } else {
+                                            ""
+                                        }
+                                    ) + ".</p>"
                             }
                         ) + links() + "</main>",
             ),
@@ -220,14 +249,15 @@ class PortsContentController(
     fun methodology(): ResponseEntity<String> {
         val updatedOn = getPorts.lastUpdate()
         val auctionYear = getPorts.execute().mapNotNull { it.auction?.year }.maxOrNull()
+        val stockAssessment = getSpecies.stockAssessment()
         val gearItems =
             GEAR_FAMILIES.joinToString(
                 "",
             ) { (label, codes) -> "<li>$label : ${codes.sorted().joinToString(", ")}</li>" }
         val description =
             "D’où viennent les chiffres de ${Site.PORTS.siteName}, comment chaque navire est rattaché à un port et " +
-                "ce que les données ne disent pas. Les sources sont FranceAgriMer, le registre de la flotte de l’UE " +
-                "et Global Fishing Watch."
+                "ce que les données ne disent pas. Les sources sont FranceAgriMer, le registre de la flotte de l’UE, " +
+                "Global Fishing Watch et l’Ifremer."
 
         return render(
             HtmlPage(
@@ -274,6 +304,23 @@ class PortsContentController(
                         (auctionYear?.let { ". Les chiffres affichés sont ceux de $it" } ?: "") +
                         ". Le prix moyen est simplement la valeur divisée par la quantité. Seules les ventes en " +
                         "criée y figurent, sans la vente directe ni le poisson débarqué à l’étranger.</p>" +
+                        """<h2 id="stocks">L’état des stocks</h2>""" +
+                        "<p>Un stock est la population d’une espèce dans une zone de pêche : la sole de la Manche " +
+                        "Est n’est pas celle du golfe de Gascogne. L’état de chaque stock vient du " +
+                        """<a href="${escapeHtml(stockAssessment.url)}">bilan ${stockAssessment.edition}</a> de """ +
+                        "l’Ifremer, qui classe les stocks débarqués par la pêche française d’après la pression de " +
+                        "pêche et la quantité de poissons en âge de se reproduire :</p><ul>" +
+                        "<li>en bon état : pêché sans excès, avec assez de reproducteurs ;</li>" +
+                        "<li>reconstituable : pêché sans excès, mais avec encore trop peu de reproducteurs ;</li>" +
+                        "<li>surpêché : pêché plus qu’il ne peut durablement le supporter ;</li>" +
+                        "<li>surpêché et dégradé : surpêché, et avec trop peu de reproducteurs ;</li>" +
+                        "<li>effondré : trop peu de reproducteurs pour que le stock se renouvelle ;</li>" +
+                        "<li>non classifié : évalué, mais sans seuils de référence.</li></ul>" +
+                        "<p>Une espèce pêchée dans plusieurs stocks dans des états différents est dite « variable " +
+                        "selon le stock ». Sur la carte, chaque port montre l’état des stocks de sa façade " +
+                        "(Manche Est et mer du Nord, Manche Ouest et mer Celtique, golfe de Gascogne, Méditerranée). " +
+                        "Beaucoup d’espèces ne sont pas évaluées (maigre, dorade royale, congre, saint-pierre, " +
+                        "etc.) : elles n’ont pas d’état affiché.</p>" +
                         "<h2>Les photos des navires</h2>" +
                         """<p>Elles viennent d’<a href="${publicUrl.get()}/fr">Open Vessel Photos</a>. """ +
                         "Chaque photo est créditée à son auteur et publiée sous sa licence.</p>" +
@@ -459,9 +506,36 @@ class PortsContentController(
 
     private fun baseUrl() = publicUrl.get(Site.PORTS)
 
+    /**
+     * The status of the stocks of a species, as a pill styled by the React app (see ContentPage), with each stock in
+     * its title
+     */
+    private fun stockCell(stocks: SpeciesStocks?): String {
+        if (stocks == null) return ""
+        val status = stocks.status
+        val title =
+            (status?.let { "Stock ${it.label} (Ifremer) : " } ?: "Stocks dans des états différents (Ifremer) : ") +
+                stocks.stocks.joinToString(" ; ") { "${it.region.label}, ${number(it.tonnes)} t : ${it.status.label}" }
+
+        return """<span class="stock-status" data-stock="${status?.name ?: "VARIABLE"}" """ +
+            """title="${escapeHtml(title)}">${STOCK_LABELS[status]}</span>"""
+    }
+
     private fun render(page: HtmlPage) = htmlPageRenderer.render(page.copy(language = Language.FR, site = Site.PORTS))
 
     companion object {
+        /** As in the port sheet of the React app (see AuctionSales); null: variable */
+        private val STOCK_LABELS =
+            mapOf(
+                StockStatus.BON_ETAT to "Bon état",
+                StockStatus.RECONSTITUABLE to "Reconstituable",
+                StockStatus.SURPECHE to "Surpêché",
+                StockStatus.SURPECHE_DEGRADE to "Surpêché, dégradé",
+                StockStatus.EFFONDRE to "Effondré",
+                StockStatus.NON_CLASSIFIE to "Non classifié",
+                null to "Variable",
+            )
+
         private const val TOP_AUCTIONS = 10
         private val FRENCH = Locale.FRANCE
 

@@ -1,0 +1,155 @@
+# Ifremer, « Bilan 2025 du statut des ressources halieutiques débarquées par la pêche française », 02/03/2026, Annexe 3:
+# the status of each stock, assessed in 2025, with the French landings of 2024 in each region of the Hexagone.
+# species: as named by FranceAgriMer; region: a section of Annexe 3 (see FishingRegion); tonnes: French landings from
+# the stock in the region. Stocks without French landings in a region are left out.
+# edition: 2025
+# url: https://archimer.ifremer.fr/doc/01012/112398/126792.pdf
+species;region;stock;status;tonnes
+Coquille Saint-Jacques;MNMEST;Coquille St-Jacques Atlantique (Pecten maximus), Division VIId;BON_ETAT;28413
+Calmars;MNMEST;Calmars côtiers nca (Loliginidae), Divisions VIId et VIIe;BON_ETAT;2600
+Raie bouclée;MNMEST;Raie bouclée (Raja clavata), Sous-zone IV et Divisions IIIa, VIId;BON_ETAT;1711
+Émissoles;MNMEST;Émissoles (Mustelus spp), Atlantique Nord-Est;BON_ETAT;1472
+Merlan;MNMEST;Merlan (Merlangius merlangus), Sous-zone IV et division VIId;BON_ETAT;1226
+Églefin;MNMEST;Églefin (Melanogrammus aeglefinus), Sous-zone IV et Divisions IIIan et VIa;BON_ETAT;630
+Merlu;MNMEST;Merlu européen (Merluccius merluccius), Sous-zones IV, VI et VII, divisions IIIa VIIIa VIIIb VIIId;BON_ETAT;546
+Bar;MNMEST;Bar (Dicentrarchus labrax), Divisions IVbc VIIa et VIId à VIIh;BON_ETAT;244
+Baudroies;MNMEST;Baudroies nca (Lophius piscatorius and L. budegassa), Sous-zone IV et VI, divisions IIIa;BON_ETAT;70
+Cardine franche;MNMEST;Cardines (Lepidorhombus spp), Sous-zone IV et division VIa;BON_ETAT;48
+Raie lisse (blonde);MNMEST;Raie lisse (Raja brachyura), Divisions IVb, IVc et VIId;BON_ETAT;42
+Baudroies;MNMEST;Baudroie commune (Lophius piscatorius), Sous-zones VII et Sous division VIIIa, VIIIb et VIIId;BON_ETAT;17
+Barbue;MNMEST;Barbue (Scophthalmus rhombus), Sous-zone IV et Divisions IIIa, VIId et VIIe;BON_ETAT;16
+Baudroies;MNMEST;Baudroie rousse (L. budegassa), Divisions de VIIb à VIIk, VIIIa VIIIb et VIIId;BON_ETAT;13
+Plie;MNMEST;Plie d'Europe (Pleuronectes platessa), Sous-zone IV et sous-division IIIa 20;BON_ETAT;6
+Sole;MNMEST;Sole commune (Solea solea), Sous-zone IV;BON_ETAT;3
+Raie fleurie;MNMEST;Raie fleurie (Leucoraja naevus), Sous-zones VI, VII et Divisions VIIIa, VIIIb et VIIId;BON_ETAT;3
+Aiguillat;MNMEST;Aiguillat commun (Squalus acanthias), Atlantique Nord-Est;BON_ETAT;2
+Lieu jaune;MNMEST;Lieu jaune (Pollachius pollachius), Sous-zones VI et VII;RECONSTITUABLE;12
+Flet;MNMEST;Flet d'Europe (Platichthys flesus), Division IIIa et sous-zone IV;RECONSTITUABLE;4
+Hareng;MNMEST;Hareng de l'Atlantique (Clupea harengus), Sous-zone IV et Divisions IIIa et VIId;SURPECHE;28169
+Sardine;MNMEST;Sardine (Sardina pilchardus), Division VII;SURPECHE;3112
+Petite roussette;MNMEST;Petite roussette (Scyliorhinus canicula), Sous-zone IV, divisions IIIa et VIId;SURPECHE;1282
+Lingue franche;MNMEST;Lingue franche (Molva molva), Divisions IIIa et IVa, Sous-zones VI, VII, VIII, IX, XII et XIV;SURPECHE;1049
+Rouget-Barbet;MNMEST;Rouget de roche (Mullus surmuletus), Sous-zone IV et divisions VIId, IIIa;SURPECHE;674
+Grande roussette;MNMEST;Grande roussette (Scyliorhinus stellaris), Sous-zones VI et VII;SURPECHE;408
+Grondin rouge;MNMEST;Grondin rouge (Chelidonichthys cuculus), Zones III-VIII (Atlantique Nord-Est);SURPECHE;338
+Lieu noir;MNMEST;Lieu noir (Pollachius virens), Sous-zones IV et VI, division IIIa;SURPECHE_DEGRADE;9305
+Seiche;MNMEST;Seiche commune (Sepia officinalis), Divisions VIId et VIIe;SURPECHE_DEGRADE;2622
+Tourteau;MNMEST;Tourteau (Cancer pagurus), Sous-zone VII et Divisions VIIIa, VIIIb et VIIId;SURPECHE_DEGRADE;179
+Églefin;MNMEST;Églefin (Melanogrammus aeglefinus), Divisions VIIb à VIIk;SURPECHE_DEGRADE;1
+Maquereau;MNMEST;Maquereau commun (Scomber scombrus), Atlantique Nord-Est;EFFONDRE;9896
+Sole;MNMEST;Sole commune (Solea solea), Division VIId;EFFONDRE;544
+Chinchard;MNMEST;Chinchard d'Europe (Trachurus trachurus), Divisions IVb et IVc et VIId;EFFONDRE;469
+Plie;MNMEST;Plie d'Europe (Pleuronectes platessa), Division VIId;EFFONDRE;199
+Buccin (bulot);MNMEST;Buccin (Buccinum undatum), Division VIId;NON_CLASSIFIE;4518
+Lieu jaune;MNMEST;Lieu jaune (Pollachius pollachius), Sous-zone IV et Division IIIa;NON_CLASSIFIE;86
+Lingue bleue;MNMEST;Lingue bleue (Molva dypterygia), Divisions IIIa et Sous-zones I II IV;NON_CLASSIFIE;31
+Raie mêlée;MNMEST;Raie mêlée (Raja microocellata), Divisions VIId et VIIe;NON_CLASSIFIE;3
+Coquille Saint-Jacques;MOMCOE;Coquille St-Jacques Atlantique (Pecten maximus), Division VIIe;BON_ETAT;17156
+Merlu;MOMCOE;Merlu européen (Merluccius merluccius), Sous-zones IV, VI et VII, divisions IIIa VIIIa VIIIb VIIId;BON_ETAT;11210
+Baudroies;MOMCOE;Baudroie commune (Lophius piscatorius), Sous-zones VII et Sous division VIIIa, VIIIb et VIIId;BON_ETAT;7062
+Baudroies;MOMCOE;Baudroie rousse (L. budegassa), Divisions de VIIb à VIIk, VIIIa VIIIb et VIIId;BON_ETAT;5525
+Araignée de mer;MOMCOE;Araignée européenne (Maja squinado), Division VIIe;BON_ETAT;5189
+Émissoles;MOMCOE;Émissoles (Mustelus spp), Atlantique Nord-Est;BON_ETAT;2110
+Lingue bleue;MOMCOE;Lingue bleue (Molva dypterygia), Divisions IVb et Sous-zones VI VII et XII;BON_ETAT;2004
+Cardine franche;MOMCOE;Cardines (Lepidorhombus whiffiagonis), Divisions de VIIb à VIIk, VIIIa VIIIb et VIIId;BON_ETAT;2002
+thon germon;MOMCOE;Germon (Thunnus alalunga), Atlantique Nord-Est;BON_ETAT;1163
+Aiguillat;MOMCOE;Aiguillat commun (Squalus acanthias), Atlantique Nord-Est;BON_ETAT;1115
+Petite roussette;MOMCOE;Petite roussette (Scyliorhinus canicula), Sous-zone VI, divisions VII a à e et e à j;BON_ETAT;1071
+Raie fleurie;MOMCOE;Raie fleurie (Leucoraja naevus), Sous-zones VI, VII et Divisions VIIIa, VIIIb et VIIId;BON_ETAT;1051
+Calmars;MOMCOE;Calmars côtiers nca (Loliginidae), Divisions VIId et VIIe;BON_ETAT;852
+Baudroies;MOMCOE;Baudroies nca (Lophius piscatorius and L. budegassa), Sous-zone IV et VI, divisions IIIa;BON_ETAT;537
+Bar;MOMCOE;Bar (Dicentrarchus labrax), Divisions IVbc VIIa et VIId à VIIh;BON_ETAT;262
+Sole;MOMCOE;Sole commune (Solea solea), Division VIIe;BON_ETAT;213
+Barbue;MOMCOE;Barbue (Scophthalmus rhombus), Sous-zone IV et Divisions IIIa, VIId et VIIe;BON_ETAT;189
+Chinchard;MOMCOE;Chinchard d'Europe (Trachurus trachurus), Divisions IIa, IVa, Vb, VIa, de VIIa à VIIc, de VIIe à VIIk, VIII;BON_ETAT;95
+Anchois;MOMCOE;Anchois (Engraulis encrasicolus), Sous-zone VIII (Golfe de Gascogne);BON_ETAT;65
+Églefin;MOMCOE;Églefin (Melanogrammus aeglefinus), Sous-zone IV et Divisions IIIan et VIa;BON_ETAT;60
+Cardine franche;MOMCOE;Cardines (Lepidorhombus spp), Division VIb (Rockall);BON_ETAT;39
+Cardine franche;MOMCOE;Cardines (Lepidorhombus spp), Sous-zone IV et division VIa;BON_ETAT;14
+Raie mêlée;MOMCOE;Raie mêlée (Raja microocellata), Divisions VIIf et VIIg;BON_ETAT;12
+Raie bouclée;MOMCOE;Raie bouclée (Raja clavata), Sous-zone VI;BON_ETAT;8
+Plie;MOMCOE;Plie d'Europe (Pleuronectes platessa), Divisions de VIIh à VIIk;BON_ETAT;8
+Églefin;MOMCOE;Églefin (Melanogrammus aeglefinus), Division VIb (Rockall);BON_ETAT;4
+Églefin;MOMCOE;Églefin (Melanogrammus aeglefinus), Division Vb;BON_ETAT;1
+Sardine;MOMCOE;Sardine (Sardina pilchardus), Divisions VIIIa, VIIIb et VIIId;RECONSTITUABLE;6905
+Lieu jaune;MOMCOE;Lieu jaune (Pollachius pollachius), Sous-zones VI et VII;RECONSTITUABLE;450
+Plie;MOMCOE;Plie d'Europe (Pleuronectes platessa), Division VIIe;RECONSTITUABLE;64
+Hareng;MOMCOE;Hareng de l'Atlantique (Clupea harengus), Divisions VIas (Nord);RECONSTITUABLE;55
+Merlan;MOMCOE;Merlan (Merlangius merlangus), Division VIa;RECONSTITUABLE;10
+Langoustine;MOMCOE;Langoustine (Nephrops norvegicus), Divisions VIIa VIIg VIIj (FU 19);RECONSTITUABLE;4
+Grondin rouge;MOMCOE;Grondin rouge (Chelidonichthys cuculus), Zones III-VIII (Atlantique Nord-Est);SURPECHE;1530
+Lingue franche;MOMCOE;Lingue franche (Molva molva), Divisions IIIa et IVa, Sous-zones VI, VII, VIII, IX, XII et XIV;SURPECHE;258
+Grande roussette;MOMCOE;Grande roussette (Scyliorhinus stellaris), Sous-zones VI et VII;SURPECHE;248
+Langoustine;MOMCOE;Langoustine (Nephrops norvegicus), Divisions VIIg VIIh (FU 20 et FU 21);SURPECHE;164
+Sole;MOMCOE;Sole commune (Solea solea), Divisions VIIf et VIIg;SURPECHE;59
+Sardine;MOMCOE;Sardine (Sardina pilchardus), Division VII;SURPECHE;39
+Raie bouclée;MOMCOE;Raie bouclée (Raja clavata), Divisions VIIa, VIIf et VIIg;SURPECHE;38
+Lieu noir;MOMCOE;Lieu noir (Pollachius virens), Division Vb;SURPECHE;15
+Buccin (bulot);MOMCOE;Buccin (Buccinum undatum), Division VIIe;SURPECHE_DEGRADE;3149
+Églefin;MOMCOE;Églefin (Melanogrammus aeglefinus), Divisions VIIb à VIIk;SURPECHE_DEGRADE;1891
+Seiche;MOMCOE;Seiche commune (Sepia officinalis), Divisions VIId et VIIe;SURPECHE_DEGRADE;1736
+Lieu noir;MOMCOE;Lieu noir (Pollachius virens), Sous-zones IV et VI, division IIIa;SURPECHE_DEGRADE;511
+Langoustine;MOMCOE;Langoustine (Nephrops norvegicus), Divisions VIIb VIIc VIIj VIIk (FU 16);SURPECHE_DEGRADE;467
+Tourteau;MOMCOE;Tourteau (Cancer pagurus), Sous-zone VII et Divisions VIIIa, VIIIb et VIIId;SURPECHE_DEGRADE;377
+Plie;MOMCOE;Plie d'Europe (Pleuronectes platessa), Divisions VIIf et VIIg (Mer Celtique);SURPECHE_DEGRADE;20
+Langoustine;MOMCOE;Langoustine (Nephrops norvegicus), Divisions VIIg VIIf (FU 22);SURPECHE_DEGRADE;5
+Maquereau;MOMCOE;Maquereau commun (Scomber scombrus), Atlantique Nord-Est;EFFONDRE;4537
+Merlan;MOMCOE;Merlan (Merlangius merlangus), Divisions VIIb, VIIc, VIIe à VIIk;EFFONDRE;2173
+Lingue franche;MOMCOE;Lingue franche (Molva molva), Division Vb;EFFONDRE;1
+Raie lisse (blonde);MOMCOE;Raie lisse (Raja brachyura), Division VIIe;NON_CLASSIFIE;766
+Raie bouclée;MOMCOE;Raie bouclée (Raja clavata), Division VIIe;NON_CLASSIFIE;449
+Rouget-Barbet;MOMCOE;Rouget de roche (Mullus surmuletus), Sous-zones VI, VIII et divisions de VIIa à VIIc et de VIIe à VIIk, IXa;NON_CLASSIFIE;199
+Raie lisse (blonde);MOMCOE;Raie lisse (Raja brachyura), Divisions VIIa, VIIf et VIIg;NON_CLASSIFIE;186
+Sole;MOMCOE;Sole commune (Solea solea), Divisions de VIIh à VIIk;NON_CLASSIFIE;53
+Lieu noir;MOMCOE;Lieu noir (Pollachius virens), Sous-zones VII à X;NON_CLASSIFIE;20
+Langoustine;MOMCOE;Langoustine (Nephrops norvegicus), Sous-zone VII hors unités fonctionnelles;NON_CLASSIFIE;14
+Raie mêlée;MOMCOE;Raie mêlée (Raja microocellata), Divisions VIId et VIIe;NON_CLASSIFIE;6
+Merlu;GASCOGNE;Merlu européen (Merluccius merluccius), Sous-zones IV, VI et VII, divisions IIIa VIIIa VIIIb VIIId;BON_ETAT;9400
+Baudroies;GASCOGNE;Baudroie commune (Lophius piscatorius), Sous-zones VII et Sous division VIIIa, VIIIb et VIIId;BON_ETAT;2569
+thon germon;GASCOGNE;Germon (Thunnus alalunga), Atlantique Nord-Est;BON_ETAT;2385
+Baudroies;GASCOGNE;Baudroie rousse (L. budegassa), Divisions de VIIb à VIIk, VIIIa VIIIb et VIIId;BON_ETAT;2010
+Bar;GASCOGNE;Bar (Dicentrarchus labrax), Divisions VIIIa b (Golfe de Gascogne);BON_ETAT;1943
+Calmars;GASCOGNE;Calmars côtiers nca (Loliginidae), Divisions VIIIa, VIIIb et VIIId;BON_ETAT;1834
+Cardine franche;GASCOGNE;Cardines (Lepidorhombus whiffiagonis), Divisions de VIIb à VIIk, VIIIa VIIIb et VIIId;BON_ETAT;1209
+Pieuvre, poulpe;GASCOGNE;Pieuvres, poulpes nca (Octopodidae), Divisions VIIIa et VIIIb;BON_ETAT;1162
+Anchois;GASCOGNE;Anchois (Engraulis encrasicolus), Sous-zone VIII (Golfe de Gascogne);BON_ETAT;1009
+Raie fleurie;GASCOGNE;Raie fleurie (Leucoraja naevus), Sous-zones VI, VII et Divisions VIIIa, VIIIb et VIIId;BON_ETAT;607
+Petite roussette;GASCOGNE;Petite roussette (Scyliorhinus canicula), Divisions VIIIa, VIIIb et VIIId;BON_ETAT;465
+Émissoles;GASCOGNE;Émissoles (Mustelus spp), Atlantique Nord-Est;BON_ETAT;407
+Raie bouclée;GASCOGNE;Raie bouclée (Raja clavata), Sous-zone VIII;BON_ETAT;349
+Araignée de mer;GASCOGNE;Araignée européenne (Maja squinado), Divisions VIIIa et VIIIb;BON_ETAT;298
+Aiguillat;GASCOGNE;Aiguillat commun (Squalus acanthias), Atlantique Nord-Est;BON_ETAT;75
+Merlu;GASCOGNE;Merlu européen (Merluccius merluccius), Divisions VIIIc and IXa;BON_ETAT;50
+Chinchard;GASCOGNE;Chinchard d'Europe (Trachurus trachurus), Divisions IIa, IVa, Vb, VIa, de VIIa à VIIc, de VIIe à VIIk, VIII;BON_ETAT;21
+Baudroies;GASCOGNE;Baudroie commune (Lophius piscatorius), Divisions VIIIc et IXa;BON_ETAT;3
+Cardine franche;GASCOGNE;Cardines (Lepidorhombus whiffiagonis), Divisions VIIIc et IXa;BON_ETAT;1
+Sardine;GASCOGNE;Sardine (Sardina pilchardus), Divisions VIIIa, VIIIb et VIIId;RECONSTITUABLE;7925
+Sole;GASCOGNE;Sole commune (Solea solea), Divisions VIIIa et VIIIb (Golfe de Gascogne);RECONSTITUABLE;2262
+Lieu jaune;GASCOGNE;Lieu jaune (Pollachius pollachius), Sous-zone VIII et division IXa;RECONSTITUABLE;755
+Thon rouge;GASCOGNE;Thon rouge de l'Atlantique (Thunnus thynnus), Atlantique Nord-Est, Méditerranée et Mer Noire;RECONSTITUABLE;671
+Merlan;GASCOGNE;Merlan (Merlangius merlangus), Sous-zone VIII et division IXa;RECONSTITUABLE;546
+Lingue franche;GASCOGNE;Lingue franche (Molva molva), Divisions IIIa et IVa, Sous-zones VI, VII, VIII, IX, XII et XIV;SURPECHE;109
+Grondin rouge;GASCOGNE;Grondin rouge (Chelidonichthys cuculus), Zones III-VIII (Atlantique Nord-Est);SURPECHE;65
+Sardine;GASCOGNE;Sardine (Sardina pilchardus), Divisions VIIIc et IXa;SURPECHE;6
+Baudroies;GASCOGNE;Baudroie rousse (L. budegassa), Divisions VIIIc et IXa;SURPECHE;4
+Raie fleurie;GASCOGNE;Raie fleurie (Leucoraja naevus), Division VIIIc;SURPECHE;1
+Seiche;GASCOGNE;Seiche commune (Sepia officinalis), Divisions VIIIa, VIIIb et VIIId;SURPECHE_DEGRADE;2848
+Langoustine;GASCOGNE;Langoustine (Nephrops norvegicus), Divisions VIIIa VIIIb (FU 23 - 24);SURPECHE_DEGRADE;1826
+Tourteau;GASCOGNE;Tourteau (Cancer pagurus), Sous-zone VII et Divisions VIIIa, VIIIb et VIIId;SURPECHE_DEGRADE;266
+Maquereau;GASCOGNE;Maquereau commun (Scomber scombrus), Atlantique Nord-Est;EFFONDRE;1199
+Rouget-Barbet;GASCOGNE;Rouget de roche (Mullus surmuletus), Sous-zones VI, VIII et divisions de VIIa à VIIc et de VIIe à VIIk, IXa;NON_CLASSIFIE;827
+Plie;GASCOGNE;Plie d'Europe (Pleuronectes platessa), Sous-zone VIII et division IXa;NON_CLASSIFIE;30
+Lieu noir;GASCOGNE;Lieu noir (Pollachius virens), Sous-zones VII à X;NON_CLASSIFIE;2
+Anchois;MED;Anchois (Engraulis encrasicolus), Division 37.GSA7 (Golfe du Lion);BON_ETAT;704
+Sardine;MED;Sardine (Sardina pilchardus), Division 37.GSA7 (Golfe du Lion);BON_ETAT;48
+Thon rouge;MED;Thon rouge de l'Atlantique (Thunnus thynnus), Atlantique Nord-Est, Méditerranée et Mer Noire;RECONSTITUABLE;5965
+Rouget de vase;MED;Rouget de vase (Mullus barbatus), Division 37.GSA7 (Golfe du Lion);RECONSTITUABLE;253
+Crevette rose du large;MED;Crevette rose du large (Parapenaeus longirostris), Méditerranée GSA 5 6 7;RECONSTITUABLE;69
+Baudroies;MED;Baudroies nca (Lophius piscatorius and L. budegassa), Méditerranée GSA 5 6 7;SURPECHE_DEGRADE;725
+Merlu;MED;Merlu européen (Merluccius merluccius), Division 37.GSA8 9 10 11;SURPECHE_DEGRADE;11
+Crevette rose du large;MED;Crevette rose du large (Parapenaeus longirostris), Méditerranée GSA 8 9 10;SURPECHE_DEGRADE;5
+thon germon;MED;Germon (Thunnus alalunga), Méditerranée et Mer Noire;SURPECHE_DEGRADE;2
+Lieu noir;BARENTS;Lieu noir (Pollachius virens), Sous-zones I et II;BON_ETAT;859
+Églefin;BARENTS;Églefin (Melanogrammus aeglefinus), Sous-zones I et II;SURPECHE;185
+Lingue franche;BARENTS;Lingue franche (Molva molva), Sous-divisions I et II;SURPECHE;16
+Lingue bleue;BARENTS;Lingue bleue (Molva dypterygia), Divisions IIIa et Sous-zones I II IV;NON_CLASSIFIE;3

@@ -1551,6 +1551,16 @@ class PublicAndAdminApiITests {
             .andExpect(jsonPath("$[2].auction.name").value("Erquy"))
             .andExpect(jsonPath("$[2].auction.valueThousandEuros").value(400.0))
         mockMvc.perform(get("/v1/ports/FRCBT")).andExpect(jsonPath("$.auction").doesNotExist())
+        // With the status of the stocks off the port (Ifremer): Erquy is in the Western Channel, where bass is in good state
+        mockMvc
+            .perform(get("/v1/ports/FRQUY"))
+            .andExpect(jsonPath("$.auction.species[0].name").value("Bar"))
+            .andExpect(jsonPath("$.auction.species[0].stockStatus.status").value("BON_ETAT"))
+            .andExpect(
+                jsonPath("$.auction.species[0].stockStatus.stocks[0].region").value(
+                    "Manche Ouest – mer Celtique – Ouest Écosse",
+                ),
+            ).andExpect(jsonPath("$.auction.stockAssessment.edition").value(2025))
 
         // Owners, each with its source; a row without source is skipped
         import(
@@ -1651,6 +1661,9 @@ class PublicAndAdminApiITests {
             .perform(onPortsHost("/_ports/especes"))
             .andExpect(status().isOk)
             .andExpect(content().string(containsString("""<a href="/especes/bar">Bar</a>""")))
+            .andExpect(content().string(containsString("<th scope=\"col\" class=\"stock\">État des stocks</th>")))
+            .andExpect(content().string(containsString("""data-stock="BON_ETAT"""")))
+            .andExpect(content().string(containsString("Ifremer, bilan du statut des ressources halieutiques")))
         val speciesPage =
             pages
                 .perform(onPortsHost("/_ports/especes/bar"))
@@ -1668,6 +1681,7 @@ class PublicAndAdminApiITests {
             .perform(onPortsHost("/_ports/methodologie"))
             .andExpect(status().isOk)
             .andExpect(content().string(containsString("<h1>Méthodologie et sources</h1>")))
+            .andExpect(content().string(containsString("""<h2 id="stocks">L’état des stocks</h2>""")))
         pages
             .perform(onPortsHost("/_ports/petite-peche-cotiere"))
             .andExpect(status().isOk)

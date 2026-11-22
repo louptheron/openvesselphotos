@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import styled from 'styled-components'
 
-import type { AuctionSpecies, PortAuction } from '../api/types'
+import type { AuctionSpecies, PortAuction, StockStatus } from '../api/types'
 import { of } from '../i18n/fr'
 import { COLORS, FONTS } from '../theme'
+import { STOCK_STYLES } from './stockStatus'
 import { formatNumber } from './texts'
 
 const MONTH_INITIALS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
@@ -99,6 +100,16 @@ export function AuctionSales({ auction, isFloating = false }: { auction: PortAuc
             FranceAgriMer
           </a>
           .
+          {auction.stockAssessment && (
+            <>
+              {' '}
+              État des stocks de la façade :{' '}
+              <a href={auction.stockAssessment.url} rel="noopener" target="_blank">
+                Ifremer, bilan {auction.stockAssessment.edition}
+              </a>{' '}
+              (<a href="/methodologie#stocks">ce que veut dire chaque état</a>).
+            </>
+          )}
         </Note>
       )}
     </Card>
@@ -117,6 +128,7 @@ function SpeciesRow({ maxQuantity, species }: { maxQuantity: number; species: Au
         <SpeciesName>
           {capitalize(species.name)}
           {isInSeason && <InSeason title="Plus vendue que la moyenne ce mois-ci">de saison</InSeason>}
+          {species.stockStatus && <StockBadge stockStatus={species.stockStatus} />}
         </SpeciesName>
         <Quantity>
           <span>
@@ -141,6 +153,29 @@ function SpeciesRow({ maxQuantity, species }: { maxQuantity: number; species: Au
         <NoSeason />
       )}
     </li>
+  )
+}
+
+/** The status of the stocks a species is landed from in the waters of the port; nothing when not classified */
+function StockBadge({ stockStatus }: { stockStatus: StockStatus }) {
+  if (stockStatus.status === 'NON_CLASSIFIE') {
+    return null
+  }
+  const style = STOCK_STYLES[stockStatus.status]
+  const title = [
+    stockStatus.status === 'VARIABLE'
+      ? 'Stocks dans des états différents (Ifremer) :'
+      : `Stock ${stockStatus.label} (Ifremer) :`,
+    ...stockStatus.stocks.map(
+      stock => `${stock.name} : ${stock.label} (${formatNumber(Math.round(stock.tonnes))} t débarquées)`
+    )
+  ].join('\n')
+
+  return (
+    <Stock $background={style.background} $color={style.color} title={title}>
+      <span className="visually-hidden">Stock : </span>
+      {style.label}
+    </Stock>
   )
 }
 
@@ -306,6 +341,20 @@ const InSeason = styled.span`
   color: #1d6b3d;
   font-size: 11px;
   font-weight: 500;
+`
+
+/** Right-aligned on the name line, so that the statuses make a column */
+const Stock = styled.span<{ $background: string; $color: string }>`
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: ${({ $background }) => $background};
+  color: ${({ $color }) => $color};
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  cursor: help;
 `
 
 const Quantity = styled.div`

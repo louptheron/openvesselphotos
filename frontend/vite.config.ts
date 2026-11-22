@@ -41,7 +41,7 @@ function portsSiteInDevelopment(): Plugin {
           // Without the built frontend, the backend renders a bare page: its head is all metadata
           const head = /<head>([\s\S]*)<\/head>/.exec(html)?.[1]
           // and its content all of #root
-          const body = /<div id="root">([\s\S]*)<\/div><\/body>/.exec(html)?.[1] ?? ''
+          const body = /<div id="root">([\s\S]*)<\/div>\s*<\/body>/.exec(html)?.[1] ?? ''
           const filled = entry.replace(SEO_HEAD, match => head ?? match).replace('<!-- seo:body -->', () => body)
           outgoing.writeHead(page?.status ?? 200, { 'Content-Type': 'text/html; charset=utf-8' }).end(filled)
         }
