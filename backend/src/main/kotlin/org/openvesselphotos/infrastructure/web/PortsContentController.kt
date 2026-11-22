@@ -246,8 +246,9 @@ class PortsContentController(
                         PortsSeo.updatedOn(updatedOn) +
                         "<h2>Le port d’attache des navires</h2>" +
                         (PortsSeo.coverageSentence(getPorts.coverage())?.let { "<p>${escapeHtml(it)}</p>" } ?: "") +
-                        "<p>Chaque navire de pêche professionnelle est rattaché au port où il a été le plus souvent " +
-                        "observé à quai, d’après ses positions (AIS). Pour les navires du " +
+                        "<p>Chaque navire de pêche professionnelle est rattaché au port où il a été vu le plus " +
+                        "souvent, d’après ses retours au port relevés. Sans relevé, c’est le port où il a été le " +
+                        "plus souvent observé à quai, d’après ses positions (AIS). Pour les navires du " +
                         """<a href="${PortsSeo.FLEET_REGISTER_URL}">${PortsSeo.FLEET_REGISTER}</a> """ +
                         "sans observation, c’est le port qu’il a le plus visité en un an d’après " +
                         """<a href="${PortsSeo.GFW_URL}">Global Fishing Watch</a>. """ +

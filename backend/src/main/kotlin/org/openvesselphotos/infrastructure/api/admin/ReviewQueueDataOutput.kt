@@ -124,7 +124,7 @@ data class PendingHomePortDataOutput(
     /** Whether Open Vessel Photos has a page for the vessel */
     val isKnownVessel: Boolean,
     val currentPort: AdminPortDataOutput?,
-    /** IMPORT, GFW, REGISTER or MANUAL */
+    /** IMPORT, GFW, REGISTER, MANUAL or RETURNS */
     val currentSource: String?,
     val suggestedPort: AdminPortDataOutput,
     val comment: String?,

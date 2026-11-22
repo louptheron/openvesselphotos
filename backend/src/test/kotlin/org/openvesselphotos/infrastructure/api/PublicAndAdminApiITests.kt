@@ -1872,5 +1872,43 @@ class PublicAndAdminApiITests {
         pages
             .perform(onPortsHost("/_ports/mises-a-jour"))
             .andExpect(content().string(containsString("Port d’attache de PETIT LOUP corrigé : Capbreton")))
+
+        // The port a vessel returned to most is kept over the other sources, but the corrections; a tie is left out
+        import(
+            "/v1/admin/ports/home-ports/port-returns/import",
+            """
+            cfr,port_locode,returns
+            FRA000900001,FRCBT,10
+            FRA000900001,FRQUY,3
+            FRA000900002,FRQUY,4
+            FRA000900002,FRCBT,4
+            FRA000900009,FRQUY,9
+            FRA000910001,FRZZQ,2
+            FRA000900003,FRQUY,0
+            """.trimIndent(),
+        ).andExpect(jsonPath("$.read").value(7))
+            .andExpect(jsonPath("$.imported").value(3))
+            .andExpect(jsonPath("$.ties[0]").value("FRA000900002"))
+            .andExpect(jsonPath("$.skipped").value(1))
+        mockMvc
+            .perform(get("/v1/ports/FRCBT"))
+            // Known ports keep their name
+            .andExpect(jsonPath("$.port.name").value("Capbreton"))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000900001')].homePortSource").value("RETURNS"))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000900001')].name").value("KER ARMOR"))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000900001')].observationsAtPort").value(10))
+            .andExpect(jsonPath("$.vessels[?(@.cfr == 'FRA000900009')].homePortSource").value("MANUAL"))
+        // A later import of observations leaves them
+        import(
+            "/v1/admin/ports/home-ports/import",
+            """
+            cfr,vessel_name,port_locode,port_name,port_country,observations_total,observations_at_port
+            FRA000900001,KER ARMOR,FRQUY,Erquy,FR,5,5
+            """.trimIndent(),
+        )
+        mockMvc
+            .perform(get("/v1/cfr/FRA000900001"))
+            .andExpect(jsonPath("$.homePort.locode").value("FRCBT"))
+            .andExpect(jsonPath("$.homePort.source").value("RETURNS"))
     }
 }

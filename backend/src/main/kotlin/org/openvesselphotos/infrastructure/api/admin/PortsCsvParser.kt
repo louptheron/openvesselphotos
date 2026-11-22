@@ -4,6 +4,7 @@ import org.openvesselphotos.domain.exceptions.BackendUsageErrorCode
 import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.use_cases.admin.HomePortImportRow
 import org.openvesselphotos.domain.use_cases.admin.PortPositionImportRow
+import org.openvesselphotos.domain.use_cases.admin.PortReturnImportRow
 import org.openvesselphotos.domain.use_cases.admin.VesselOwnerImportRow
 
 /**
@@ -57,6 +58,24 @@ object PortsCsvParser {
             )
         }
 
+    /** The returns to port of the vessels, by port: columns cfr, port_locode and returns (their number) */
+    fun parsePortReturns(content: String): List<PortReturnImportRow> =
+        parse(
+            content,
+            mapOf(
+                "cfr" to listOf("cfr"),
+                "portLocode" to listOf("portlocode", "locode"),
+                "returns" to listOf("returns", "portreturns", "returnsatport", "landings", "count"),
+            ),
+        ) { line, cell ->
+            PortReturnImportRow(
+                line = line,
+                cfr = cell("cfr"),
+                portLocode = cell("portLocode"),
+                returns = cell("returns"),
+            )
+        }
+
     /** Columns cfr, armateur (or owner), groupe (or group, optional) and source (a link) */
     fun parseOwners(content: String): List<VesselOwnerImportRow> =
         parse(
@@ -84,7 +103,7 @@ object PortsCsvParser {
         required: Set<String> = columns.keys,
         toRow: (line: Int, cell: (String) -> String?) -> T,
     ): List<T> {
-        val records = PhotosCsvParser.readRecords(content.removePrefix("﻿"))
+        val records = PhotosCsvParser.readRecords(content.removePrefix(""))
         val (headerLine, header) = records.firstOrNull() ?: throw invalid("The file is empty.")
         val headerNames = header.map { PhotosCsvParser.normalize(it) }
         val indexes =

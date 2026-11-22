@@ -274,7 +274,8 @@ export const en = {
       GFW: 'deduced from its port visits',
       IMPORT: 'where it is seen at quay most often',
       MANUAL: 'checked',
-      REGISTER: 'the port of its quartier d’immatriculation'
+      REGISTER: 'the port of its quartier d’immatriculation',
+      RETURNS: 'where it is seen most often'
     },
     open: 'Wrong port?',
     openWithout: 'Know its home port? Tell us',
@@ -471,6 +472,7 @@ export const en = {
       auctionSales: 'Auction sales',
       fishingGrounds: 'Fishing grounds of the ports',
       homePorts: 'Home ports (file)',
+      homePortsFromPortReturns: 'Home ports from returns to port',
       homePortsCheck: 'Check the home ports',
       homePortsFromVisits: 'Home ports from port visits',
       homePortsFromRegistration: 'Home ports from quartiers',
@@ -516,6 +518,8 @@ export const en = {
     },
     homePortsText:
       'A CSV with the columns cfr, vessel_name, port_locode, port_name, port_country, observations_total, observations_at_port and mean_distance_km. Replaces all the imported home ports and creates the missing ports; the home ports found from port visits are kept for the vessels not in the file.',
+    homePortsFromPortReturnsText:
+      'A CSV with the columns cfr, port_locode and returns (the number of returns of the vessel to the port). Each vessel gets the port it returned to most, kept over every other source but the corrections of visitors. Vessels returning as often to two ports are left out. Replaces all the home ports of the previous file of returns to port; the ports missing from the map are created with their LOCODE as name.',
     portPositionsText:
       'A CSV with the columns locode, latitude and longitude: places the ports on the map. Only the ports of the file change. A port without position is not on the map, and port visits are not matched to it.',
     vesselOwnersText:
@@ -725,6 +729,9 @@ export const en = {
       }`,
     homePortsResult: (r: { read: number; imported: number; ports: number; withoutPort: number; skipped: number }) =>
       `${r.read} lines read: ${r.imported} vessels in ${r.ports} ports, ${r.withoutPort} without a port, ${r.skipped} skipped.`,
+    portReturnsResult: (r: { read: number; imported: number; ports: number; skipped: number }) =>
+      `${r.read} lines read: ${r.imported} vessels in ${r.ports} ports, ${r.skipped} skipped.`,
+    portReturnsTies: 'Returning as often to two ports, left out:',
     portPositionsResult: (r: { read: number; updated: number; unknown: number; skipped: number }) =>
       `${r.read} lines read: ${r.updated} ports placed, ${r.unknown} unknown ports, ${r.skipped} skipped.`,
     importResult: (r: {

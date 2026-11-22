@@ -269,7 +269,8 @@ export const fr: Messages = {
       GFW: 'déduit de ses escales',
       IMPORT: 'où il est vu à quai le plus souvent',
       MANUAL: 'vérifié',
-      REGISTER: 'port de son quartier d’immatriculation'
+      REGISTER: 'port de son quartier d’immatriculation',
+      RETURNS: 'où il est vu le plus souvent'
     },
     open: `Mauvais port${_}?`,
     openWithout: `Vous connaissez son port d’attache${_}? Indiquez-le`,
@@ -460,6 +461,7 @@ export const fr: Messages = {
       auctionSales: 'Ventes en criée',
       fishingGrounds: 'Zones de pêche des ports',
       homePorts: 'Ports d’attache (fichier)',
+      homePortsFromPortReturns: 'Ports d’attache par les retours au port',
       homePortsCheck: 'Vérifier les ports d’attache',
       homePortsFromVisits: 'Ports d’attache par les escales',
       homePortsFromRegistration: 'Ports d’attache par les quartiers',
@@ -504,6 +506,7 @@ export const fr: Messages = {
       }
     },
     homePortsText: `Un CSV avec les colonnes cfr, vessel_name, port_locode, port_name, port_country, observations_total, observations_at_port et mean_distance_km. Remplace tous les ports d’attache importés et crée les ports absents${_}; les ports d’attache trouvés par les escales sont gardés pour les navires absents du fichier.`,
+    homePortsFromPortReturnsText: `Un CSV avec les colonnes cfr, port_locode et returns (le nombre de retours du navire à ce port). Chaque navire reçoit le port où il est rentré le plus souvent, prioritaire sur toutes les autres sources sauf les corrections des visiteurs. Les navires rentrés aussi souvent à deux ports sont laissés de côté. Remplace tous les ports d’attache du fichier de retours au port précédent${_}; les ports absents de la carte sont créés avec leur LOCODE pour nom.`,
     portPositionsText: `Un CSV avec les colonnes locode, latitude et longitude${_}: place les ports sur la carte. Seuls les ports du fichier changent. Un port sans position n’est pas sur la carte, et les escales n’y sont pas rattachées.`,
     vesselOwnersText:
       'Un CSV avec les colonnes cfr, armateur, groupe et source (un lien public). Remplace tous les armateurs.',
@@ -685,6 +688,9 @@ export const fr: Messages = {
       }`,
     homePortsResult: r =>
       `${r.read}${_}lignes lues${_}: ${r.imported}${_}navires dans ${r.ports}${_}ports, ${r.withoutPort}${_}sans port, ${r.skipped}${_}ignorées.`,
+    portReturnsResult: r =>
+      `${r.read}${_}lignes lues${_}: ${r.imported}${_}navires dans ${r.ports}${_}ports, ${r.skipped}${_}ignorées.`,
+    portReturnsTies: `Rentrés aussi souvent à deux ports, laissés de côté${_}:`,
     portPositionsResult: r =>
       `${r.read}${_}lignes lues${_}: ${r.updated}${_}ports placés, ${r.unknown}${_}ports inconnus, ${r.skipped}${_}ignorées.`,
     importResult: r =>

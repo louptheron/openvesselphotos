@@ -90,10 +90,13 @@ export function PortPortrait({ vessels }: { vessels: PortVessel[] }) {
 /**
  * How the home ports of the vessels were found, e.g. "Port d’attache : 12 navires vus à quai le plus souvent (81 % de
  * leurs positions à quai en moyenne), 3 d’après leurs escales (Global Fishing Watch), 5 d’après leur quartier
- * d’immatriculation seulement." Same as PortsPagesController.
+ * d’immatriculation seulement." The vessels placed by their returns to port are not detailed.
  */
 function getReliability(vessels: PortVessel[]): string {
-  const observed = vessels.filter(vessel => vessel.homePortSource !== 'GFW' && vessel.homePortSource !== 'REGISTER')
+  const observed = vessels.filter(
+    vessel =>
+      vessel.homePortSource !== 'GFW' && vessel.homePortSource !== 'REGISTER' && vessel.homePortSource !== 'RETURNS'
+  )
   const fromVisits = vessels.filter(vessel => vessel.homePortSource === 'GFW').length
   const fromRegistration = vessels.filter(vessel => vessel.homePortSource === 'REGISTER').length
   const shares = observed

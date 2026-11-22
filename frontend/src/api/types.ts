@@ -135,9 +135,10 @@ export type Vessel = {
 
 /**
  * IMPORT: from the imported observations; GFW: the port it visited most in a year, on Global Fishing Watch; REGISTER:
- * the port of its quartier d'immatriculation, the coarsest; MANUAL: suggested by a visitor, checked by the admin
+ * the port of its quartier d'immatriculation, the coarsest; MANUAL: suggested by a visitor, checked by the admin;
+ * RETURNS: the port it returned to most, from a file of returns to port
  */
-export type HomePortSource = 'GFW' | 'IMPORT' | 'MANUAL' | 'REGISTER'
+export type HomePortSource = 'GFW' | 'IMPORT' | 'MANUAL' | 'REGISTER' | 'RETURNS'
 
 export type VesselHomePort = {
   locode: string
@@ -443,6 +444,16 @@ export type HomePortImportResult = {
   read: number
   skipped: number
   withoutPort: number
+}
+
+export type PortReturnsImportResult = {
+  errors: string[]
+  imported: number
+  ports: number
+  read: number
+  skipped: number
+  /** Vessels returning as often to two ports or more, by CFR: left out */
+  ties: string[]
 }
 
 export type PortPositionImportResult = {

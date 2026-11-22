@@ -20,6 +20,16 @@ interface PortRepository {
         importedOn: LocalDate,
     )
 
+    /**
+     * Replaces the home ports from returns to port with the given ones; they take precedence over every other source
+     * but the corrections. Only the unknown ports are created: the known ones keep their name and position.
+     */
+    fun replaceHomePortsFromPortReturns(
+        ports: List<Port>,
+        homePorts: List<HomePort>,
+        importedOn: LocalDate,
+    )
+
     /** Sets the positions of the known ports, by locode. Returns the number of ports updated. */
     fun savePositions(ports: List<Port>): Int
 

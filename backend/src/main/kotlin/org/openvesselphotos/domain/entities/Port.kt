@@ -51,6 +51,12 @@ enum class HomePortSource {
 
     /** Suggested by a visitor and approved by the admin: kept over every other source */
     MANUAL,
+
+    /**
+     * The port it returned to most, in a file of the returns to port noted in France: kept over the other sources but
+     * [MANUAL]
+     */
+    RETURNS,
 }
 
 /** A vessel of the EU fleet register without home port, or with one from its place of registration only */

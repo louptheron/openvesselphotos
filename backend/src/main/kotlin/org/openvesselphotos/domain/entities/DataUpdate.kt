@@ -10,6 +10,7 @@ enum class DataSource(
     HOME_PORTS("Ports d’attache, positions des navires"),
     HOME_PORTS_GFW("Ports d’attache, Global Fishing Watch"),
     HOME_PORTS_REGISTER("Ports d’attache, quartiers d’immatriculation"),
+    HOME_PORTS_PORT_RETURNS("Ports d’attache, retours au port"),
     HOME_PORTS_CORRECTIONS("Ports d’attache, corrections des visiteurs"),
     AUCTION_SALES("Ventes des criées, FranceAgriMer"),
     FLEET_REGISTER("Registre de la flotte de l’UE"),
@@ -37,6 +38,8 @@ data class HomePortCoverage(
     val fromPortVisits: Int,
     /** Home ports from the place of registration (quartier maritime) in the EU fleet register */
     val fromRegistration: Int = 0,
+    /** Home ports from the port of most of their returns to port */
+    val fromPortReturns: Int = 0,
 ) {
     /** From 0 to 1; null without register */
     val share: Double? get() = if (registerVessels > 0) withHomePort.toDouble() / registerVessels else null
