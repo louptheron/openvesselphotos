@@ -225,9 +225,9 @@ class PortsContentController(
                 "",
             ) { (label, codes) -> "<li>$label : ${codes.sorted().joinToString(", ")}</li>" }
         val description =
-            "Comment ${Site.PORTS.siteName} compte les navires de pêche professionnelle de chaque port et les ventes " +
-                "des criées : sources (FranceAgriMer, registre de la flotte de l’UE, Global Fishing Watch), méthode, " +
-                "limites et données à télécharger."
+            "D’où viennent les chiffres de ${Site.PORTS.siteName}, comment chaque navire est rattaché à un port et " +
+                "ce que les données ne disent pas. Les sources sont FranceAgriMer, le registre de la flotte de l’UE " +
+                "et Global Fishing Watch."
 
         return render(
             HtmlPage(
@@ -246,42 +246,41 @@ class PortsContentController(
                         PortsSeo.updatedOn(updatedOn) +
                         "<h2>Le port d’attache des navires</h2>" +
                         (PortsSeo.coverageSentence(getPorts.coverage())?.let { "<p>${escapeHtml(it)}</p>" } ?: "") +
-                        "<p>Chaque navire de pêche professionnelle est rattaché au port où il a été vu le plus " +
-                        "souvent, d’après ses retours au port relevés. Sans relevé, c’est le port où il a été le " +
-                        "plus souvent observé à quai, d’après ses positions (AIS). Pour les navires du " +
+                        "<p>Nous rattachons chaque navire au port où il revient le plus souvent, d’après ses " +
+                        "retours au port relevés par nos bénévoles. Quand il n’y en a pas, nous prenons le port " +
+                        "où ses positions AIS le montrent le plus souvent à quai. Pour les navires du " +
                         """<a href="${PortsSeo.FLEET_REGISTER_URL}">${PortsSeo.FLEET_REGISTER}</a> """ +
-                        "sans observation, c’est le port qu’il a le plus visité en un an d’après " +
+                        "qui n’ont jamais été vus à quai, c’est le port qu’ils ont le plus fréquenté sur un an selon " +
                         """<a href="${PortsSeo.GFW_URL}">Global Fishing Watch</a>. """ +
-                        "Le port d’attache ainsi trouvé peut différer du quartier d’immatriculation, " +
-                        "inscrit sur la coque.</p>" +
-                        "<p>Les petits navires n’ont souvent pas d’AIS : ni observés à quai, ni suivis par Global " +
-                        "Fishing Watch. Faute de mieux, ils sont rattachés au port de leur quartier " +
-                        "d’immatriculation (ou quartier maritime), inscrit au registre et sur la coque (GV pour " +
-                        "Le Guilvinec, CC pour " +
-                        "Concarneau…) : le port du même nom, ou à défaut celui où sont basés la plupart des navires " +
-                        "du quartier dont le port d’attache est connu. C’est une approximation : un quartier compte " +
-                        "souvent plusieurs ports (celui du Guilvinec couvre aussi Saint-Guénolé, Lesconil ou " +
-                        "Loctudy). Ces navires sont signalés comme tels dans la liste de chaque port, et en changent " +
-                        "dès qu’une meilleure source donne le leur.</p>" +
+                        "Ce port n’est pas forcément celui du quartier d’immatriculation peint sur la coque.</p>" +
+                        "<p>Beaucoup de petits navires n’ont pas d’AIS. On ne les voit donc ni à quai, ni dans " +
+                        "Global Fishing Watch. Ceux-là sont rattachés à leur quartier maritime, celui dont les " +
+                        "lettres figurent au registre et sur la coque (GV pour Le Guilvinec, CC pour Concarneau, " +
+                        "etc.). Nous prenons le port qui porte le nom du quartier ou, s’il n’y en a pas, celui où " +
+                        "sont basés la plupart des autres navires du quartier. C’est approximatif, car un quartier " +
+                        "regroupe souvent plusieurs ports : celui du Guilvinec couvre aussi Saint-Guénolé, Lesconil " +
+                        "et Loctudy. Ces navires sont signalés dans la liste de chaque port, et nous les déplaçons " +
+                        "dès qu’une meilleure source indique leur vrai port.</p>" +
                         "<h2>Les engins de pêche et la taille des navires</h2>" +
-                        "<p>L’engin principal et la longueur de chaque navire viennent du " +
-                        "${PortsSeo.FLEET_REGISTER}. Les engins sont regroupés en familles, par leurs codes FAO " +
-                        "(ISSCFG) :</p><ul>$gearItems</ul>" +
-                        "<p>Tailles : petite pêche (moins de 12 m), pêche au large (12 à 24 m), pêche industrielle " +
-                        "(24 m et plus).</p>" +
+                        "<p>L’engin principal et la longueur de chaque navire sont ceux déclarés au " +
+                        "${PortsSeo.FLEET_REGISTER}. Nous regroupons les engins en grandes familles à partir de " +
+                        "leurs codes FAO (ISSCFG) :</p><ul>$gearItems</ul>" +
+                        "<p>Pour la taille, nous distinguons la petite pêche (moins de 12 m), la pêche au large " +
+                        "(de 12 à 24 m) et la pêche industrielle (24 m et plus).</p>" +
                         "<h2>Les ventes des criées</h2>" +
-                        "<p>Les tonnages et valeurs par criée et par espèce sont ceux des « ventes déclarées en " +
-                        """halles à marée » publiées chaque année par <a href="${PortsSeo.FRANCE_AGRIMER_URL}">""" +
-                        "FranceAgriMer</a>" + (auctionYear?.let { ", ici pour $it" } ?: "") +
-                        ". Le prix moyen est la valeur divisée par la quantité. Seules les ventes en criée sont " +
-                        "comptées : pas la vente directe, ni le poisson débarqué à l’étranger.</p>" +
+                        "<p>Les tonnages et les montants par criée et par espèce viennent des « ventes déclarées " +
+                        "en halles à marée », que " +
+                        """<a href="${PortsSeo.FRANCE_AGRIMER_URL}">FranceAgriMer</a> publie chaque année""" +
+                        (auctionYear?.let { ". Les chiffres affichés sont ceux de $it" } ?: "") +
+                        ". Le prix moyen est simplement la valeur divisée par la quantité. Seules les ventes en " +
+                        "criée y figurent, sans la vente directe ni le poisson débarqué à l’étranger.</p>" +
                         "<h2>Les photos des navires</h2>" +
-                        """<p>Elles viennent d’<a href="${publicUrl.get()}/fr">Open Vessel Photos</a>, """ +
-                        "chacune avec son auteur et sa licence.</p>" +
+                        """<p>Elles viennent d’<a href="${publicUrl.get()}/fr">Open Vessel Photos</a>. """ +
+                        "Chaque photo est créditée à son auteur et publiée sous sa licence.</p>" +
                         "<h2>Mises à jour</h2>" +
-                        "<p>Les ports d’attache sont mis à jour à chaque nouvel import des positions, les ventes des " +
-                        "criées à chaque publication annuelle de FranceAgriMer. Chaque mise à jour est datée dans " +
-                        """l’<a href="${PortsSeo.CHANGELOG_PATH}">historique des mises à jour</a>.</p>""" +
+                        "<p>Les ports d’attache sont recalculés à chaque nouvel import de positions. Les ventes des " +
+                        "criées sont mises à jour quand FranceAgriMer publie ses chiffres de l’année. Toutes les " +
+                        """mises à jour sont datées dans l’<a href="${PortsSeo.CHANGELOG_PATH}">historique</a>.</p>""" +
                         "<h2>Télécharger les données</h2><ul>" +
                         """<li><a href="${PortsSeo.PORTS_CSV_PATH}">Les ports et leur flotte</a> (CSV)</li>""" +
                         """<li><a href="${PortsSeo.SALES_CSV_PATH}">Les ventes des criées par espèce</a> (CSV)</li>""" +
