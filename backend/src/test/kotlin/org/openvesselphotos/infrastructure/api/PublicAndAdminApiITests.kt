@@ -1371,6 +1371,47 @@ class PublicAndAdminApiITests {
     }
 
     @Test
+    fun `Usage statistics Should count the page views and the usage of each website apart`() {
+        val cookie = adminCookie()
+
+        fun pageView(
+            path: String,
+            host: String = "localhost",
+        ) = post("/v1/page-views")
+            .with { it.apply { serverName = host } }
+            .header("Sec-Fetch-Site", "same-origin")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""{"path":"$path"}""")
+
+        repeat(2) { mockMvc.perform(pageView("/vessels/mmsi/227000555?tab=photos")).andExpect(status().isNoContent) }
+        mockMvc.perform(pageView("/ports/stats-port/", Site.PORTS_LOCAL_HOST)).andExpect(status().isNoContent)
+        mockMvc.perform(pageView("https://elsewhere.example/")).andExpect(status().isBadRequest)
+        // Not from the websites' own pages
+        mockMvc
+            .perform(
+                post("/v1/page-views")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"path":"/forged"}"""),
+            ).andExpect(status().isUnauthorized)
+        // An API call from a page of the ports site
+        mockMvc.perform(get("/v1/ports").header("Referer", "http://ports.localhost/ports/stats-port"))
+        recordUsage.flush()
+
+        mockMvc
+            .perform(get("/v1/admin/usage").cookie(cookie))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.sites.length()").value(2))
+            .andExpect(jsonPath("$.sites[0].site").value("OPEN_VESSEL_PHOTOS"))
+            .andExpect(jsonPath("$.sites[0].topPages[?(@.path == '/vessels/mmsi/227000555')].count").value(2))
+            .andExpect(jsonPath("$.sites[0].topPages[?(@.path == '/forged')]").isEmpty)
+            .andExpect(jsonPath("$.sites[0].daily.length()").value(30))
+            .andExpect(jsonPath("$.sites[1].site").value("LA_PECHE_FRANCAISE"))
+            .andExpect(jsonPath("$.sites[1].topPages[?(@.path == '/ports/stats-port')].count").value(1))
+            .andExpect(jsonPath("$.sites[1].apiCalls").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+            .andExpect(jsonPath("$.apiSources[?(@.source == 'ports-website')]").isNotEmpty)
+    }
+
+    @Test
     fun `Imported home ports Should be on the ports API and the ports site, served on its own host only`() {
         val cookie = adminCookie()
 

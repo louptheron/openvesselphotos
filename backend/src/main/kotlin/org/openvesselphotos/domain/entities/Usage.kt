@@ -13,13 +13,16 @@ enum class UsageKind {
 data class UsageKey(
     val day: LocalDate,
     val kind: UsageKind,
-    /** [WEBSITE], [DIRECT] or the host of the site the request comes from */
+    /** [WEBSITE], [PORTS_WEBSITE], [DIRECT] or the host of the site the request comes from */
     val source: String,
     val apiKeyId: Int?,
 ) {
     companion object {
-        /** Requests from this website's own pages */
+        /** Requests from the pages of Open Vessel Photos (before page views were counted: of both websites) */
         const val WEBSITE = "website"
+
+        /** Requests from the pages of La Pêche française, the ports site */
+        const val PORTS_WEBSITE = "ports-website"
 
         /** Requests without a Referer: apps, scripts, or browsers that do not send it */
         const val DIRECT = "direct"

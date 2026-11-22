@@ -11,9 +11,12 @@ import { HomePage } from './features/Home/HomePage'
 import { NotFoundPage } from './features/NotFound/NotFoundPage'
 import { VesselPage } from './features/Vessel/VesselPage'
 import { VesselsPage } from './features/Vessels/VesselsPage'
+import { usePageViewBeacon } from './hooks/usePageViewBeacon'
 
 export function App() {
   const { pathname } = useLocation()
+  // The admin's own pages are not counted
+  usePageViewBeacon({ skip: /^(\/fr)?\/admin(\/|$)/.test(pathname) })
   // Scroll to the top on each page change. The braces matter: scrollTo returns a Promise in recent browsers, which
   // React would take for the effect's clean-up function and call on the next page change, unmounting the app.
   useEffect(() => {

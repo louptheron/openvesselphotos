@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { getErrorMessage, getErrorStatus, useGetUsageQuery } from '../../api/api'
-import type { DailyUsage, SourceUsage } from '../../api/types'
+import type { SiteUsage, SourceUsage } from '../../api/types'
 import { Card, Container, ErrorMessage, Muted, Pill, SectionTitle, Title } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
@@ -11,6 +11,11 @@ import { COLORS, FONTS } from '../../theme'
 import { LoginForm } from './AdminPage'
 
 const PERIODS = [7, 30, 90, 365]
+
+const SITE_NAMES: Record<SiteUsage['site'], string> = {
+  LA_PECHE_FRANCAISE: 'La Pêche française',
+  OPEN_VESSEL_PHOTOS: 'Open Vessel Photos'
+}
 
 /** Usage of the photos (by the sites showing them) and of the API (by key), for the admin. */
 export function StatsPage() {
@@ -25,7 +30,12 @@ export function StatsPage() {
   }
 
   const sourceName = (source: string) =>
-    ({ direct: t.stats.direct, other: t.stats.other, website: t.stats.website })[source] ?? source
+    ({
+      direct: t.stats.direct,
+      other: t.stats.other,
+      'ports-website': t.stats.portsWebsite,
+      website: t.stats.website
+    })[source] ?? source
 
   return (
     <Page>
@@ -133,6 +143,15 @@ export function StatsPage() {
               title={t.stats.apiSources}
             />
           </Tables>
+          <SiteSections>
+            <div>
+              <SectionTitle>{t.stats.bySite}</SectionTitle>
+              <Muted>{t.stats.bySiteHint}</Muted>
+            </div>
+            {stats.sites.map(site => (
+              <SiteSection key={site.site} format={format} site={site} />
+            ))}
+          </SiteSections>
           <Muted>{t.stats.note}</Muted>
         </>
       )}
@@ -140,16 +159,80 @@ export function StatsPage() {
   )
 }
 
-function DailyChart({
+/** The usage of one website by its own pages: page views, photos and API calls, and the most viewed pages */
+function SiteSection({ format, site }: { format: (value: number) => string; site: SiteUsage }) {
+  const { t } = useTranslation()
+  // The admin is on Open Vessel Photos: the pages of La Pêche française are on another host, unknown here
+  const isLinked = site.site === 'OPEN_VESSEL_PHOTOS'
+
+  return (
+    <SiteCard as="section" aria-labelledby={`site-${site.site}`}>
+      <h2 id={`site-${site.site}`}>{SITE_NAMES[site.site]}</h2>
+      <Figures>
+        <Figure>
+          <strong>{format(site.pageViews)}</strong>
+          <span>{t.stats.pageViews}</span>
+        </Figure>
+        <Figure>
+          <strong>{format(site.imageViews)}</strong>
+          <span>{t.stats.imageViews}</span>
+        </Figure>
+        <Figure>
+          <strong>{format(site.apiCalls)}</strong>
+          <span>{t.stats.apiCalls}</span>
+        </Figure>
+      </Figures>
+      <Charts>
+        <DailyChart color={COLORS.accent} daily={site.daily} title={t.stats.pageViewsPerDay} value="pageViews" />
+        <DailyChart color={COLORS.link} daily={site.daily} title={t.stats.apiCallsPerDay} value="apiCalls" />
+      </Charts>
+      <Tables>
+        <section>
+          <SectionTitle>{t.stats.topPages}</SectionTitle>
+          {site.topPages.length === 0 ? (
+            <Muted>{t.stats.noData}</Muted>
+          ) : (
+            <Table>
+              <thead>
+                <tr>
+                  <th>{t.stats.page}</th>
+                  <th>{t.stats.count}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {site.topPages.map(page => (
+                  <tr key={page.path}>
+                    <td>
+                      {page.path === 'other' ? (
+                        t.stats.other
+                      ) : isLinked ? (
+                        <Link to={page.path}>{page.path}</Link>
+                      ) : (
+                        page.path
+                      )}
+                    </td>
+                    <td>{format(page.count)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </section>
+      </Tables>
+    </SiteCard>
+  )
+}
+
+function DailyChart<Key extends string>({
   color,
   daily,
   title,
   value
 }: {
   color: string
-  daily: DailyUsage[]
+  daily: ({ day: string } & Record<Key, number>)[]
   title: string
-  value: 'apiCalls' | 'imageViews' | 'vesselsAdded'
+  value: Key
 }) {
   const { formatDate } = useTranslation()
   const max = Math.max(1, ...daily.map(day => day[value]))
@@ -286,6 +369,28 @@ const Figure = styled(Card)`
 
   span {
     font-weight: 500;
+  }
+`
+
+const SiteSections = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  h2 {
+    font-size: 24px;
+  }
+`
+
+const SiteCard = styled(Card)`
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  > h2 {
+    margin: 0;
+    font-family: ${FONTS.display};
   }
 `
 

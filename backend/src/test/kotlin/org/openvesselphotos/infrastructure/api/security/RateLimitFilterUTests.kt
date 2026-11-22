@@ -14,6 +14,7 @@ class RateLimitFilterUTests {
             writesPerHour = 1,
             apiKeyWritesPerHour = 2,
             apiKeyRequestsPerHour = 1,
+            pageViewsPerHour = 2,
         )
 
     private fun send(
@@ -60,5 +61,14 @@ class RateLimitFilterUTests {
         assertThat(send("POST", "/v1/api-key-requests").status).isEqualTo(200)
         assertThat(send("POST", "/v1/api-key-requests").status).isEqualTo(429)
         assertThat((1..5).map { send("GET", "/v1/admin/queue").status }).containsOnly(200)
+    }
+
+    @Test
+    fun `Page views Should be limited apart from the forms' writes`() {
+        val pageViews = (1..3).map { send("POST", "/v1/page-views").status }
+        val write = send("POST", "/v1/mmsi/227000555/photos").status
+
+        assertThat(pageViews).containsExactly(200, 200, 429)
+        assertThat(write).isEqualTo(200)
     }
 }

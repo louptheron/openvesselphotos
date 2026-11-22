@@ -239,8 +239,26 @@ export type DailyUsage = {
 
 export type SourceUsage = {
   count: number
-  /** "website", "direct", "other" or the host of a site */
+  /** "website" (Open Vessel Photos), "ports-website" (La Pêche française), "direct", "other" or the host of a site */
   source: string
+}
+
+export type SiteDailyUsage = {
+  apiCalls: number
+  day: string
+  imageViews: number
+  pageViews: number
+}
+
+/** The usage of one website by its own pages */
+export type SiteUsage = {
+  apiCalls: number
+  daily: SiteDailyUsage[]
+  imageViews: number
+  pageViews: number
+  site: 'LA_PECHE_FRANCAISE' | 'OPEN_VESSEL_PHOTOS'
+  /** path: e.g. "/vessels/cfr/FRA000123456", or "other" */
+  topPages: { count: number; path: string }[]
 }
 
 export type UsageStatistics = {
@@ -264,6 +282,7 @@ export type UsageStatistics = {
   imageViewsElsewhere: number
   photoCount: number
   siteCount: number
+  sites: SiteUsage[]
   vesselCount: number
   vesselsAdded: number
 }
