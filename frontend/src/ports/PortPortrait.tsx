@@ -88,19 +88,33 @@ export function PortPortrait({ vessels }: { vessels: PortVessel[] }) {
 }
 
 /**
- * How the home ports of the vessels were found, e.g. "Port d’attache : 12 navires vus à quai le plus souvent (81 % de
+ * How the home ports of the vessels were found, e.g. "Port d’attache : 20 navires rentrés le plus souvent à ce port
+ * (85 % de leurs retours au port en moyenne), 12 navires vus à quai le plus souvent (81 % de
  * leurs positions à quai en moyenne), 3 d’après leurs escales (Global Fishing Watch), 5 d’après leur quartier
  * d’immatriculation seulement." Same as PortsPagesController.
  */
 function getReliability(vessels: PortVessel[]): string {
-  const observed = vessels.filter(vessel => vessel.homePortSource !== 'GFW' && vessel.homePortSource !== 'REGISTER')
+  const fromReturns = vessels.filter(vessel => vessel.homePortSource === 'RETURNS')
+  const observed = vessels.filter(
+    vessel =>
+      vessel.homePortSource !== 'GFW' && vessel.homePortSource !== 'REGISTER' && vessel.homePortSource !== 'RETURNS'
+  )
   const fromVisits = vessels.filter(vessel => vessel.homePortSource === 'GFW').length
   const fromRegistration = vessels.filter(vessel => vessel.homePortSource === 'REGISTER').length
   const shares = observed
     .filter(vessel => vessel.observationsTotal > 0)
     .map(vessel => vessel.observationsAtPort / vessel.observationsTotal)
   const average = shares.length > 0 ? shares.reduce((sum, share) => sum + share, 0) / shares.length : undefined
+  const returnShares = fromReturns
+    .filter(vessel => vessel.observationsTotal > 0)
+    .map(vessel => vessel.observationsAtPort / vessel.observationsTotal)
+  const returnAverage =
+    returnShares.length > 0 ? returnShares.reduce((sum, share) => sum + share, 0) / returnShares.length : undefined
   const parts = [
+    fromReturns.length > 0 &&
+      `${fromReturns.length} navire${fromReturns.length > 1 ? 's' : ''} rentré${fromReturns.length > 1 ? 's' : ''} le plus souvent à ce port${
+        returnAverage === undefined ? '' : ` (${formatPercent(returnAverage)} de leurs retours au port en moyenne)`
+      }`,
     observed.length > 0 &&
       `${observed.length} navire${observed.length > 1 ? 's' : ''} vu${observed.length > 1 ? 's' : ''} à quai le plus souvent${
         average === undefined ? '' : ` (${formatPercent(average)} de leurs positions à quai en moyenne)`

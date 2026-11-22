@@ -495,13 +495,28 @@ function VesselBadges({ vessel }: { vessel: PortVessel }) {
   const isFromPortVisits = vessel.homePortSource === 'GFW'
   const isFromRegistration = vessel.homePortSource === 'REGISTER'
   const isCorrected = vessel.homePortSource === 'MANUAL'
-  if (!isIndustrial && !vessel.owner && !isFromPortVisits && !isFromRegistration && !isCorrected) {
+  const isFromPortReturns = vessel.homePortSource === 'RETURNS'
+  if (
+    !isIndustrial &&
+    !vessel.owner &&
+    !isFromPortVisits &&
+    !isFromRegistration &&
+    !isCorrected &&
+    !isFromPortReturns
+  ) {
     return null
   }
 
   return (
     <Badges>
       {isIndustrial && <FactPill title="Navire de 24 m ou plus">Pêche industrielle</FactPill>}
+      {isFromPortReturns && (
+        <PortVisitsNote
+          title={`Port de ${vessel.observationsAtPort} de ses ${vessel.observationsTotal} retours au port relevés`}
+        >
+          Port de ses retours
+        </PortVisitsNote>
+      )}
       {isFromPortVisits && (
         <PortVisitsNote
           title={`Port de ${vessel.observationsAtPort} de ses ${vessel.observationsTotal} escales en un an, d’après ses positions AIS (Global Fishing Watch)`}

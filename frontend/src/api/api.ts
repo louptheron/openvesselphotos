@@ -13,6 +13,7 @@ import type {
   HomePortsFromPortVisitsStatus,
   HomePortsFromRegistrationResult,
   HomePortImportResult,
+  PortReturnsImportResult,
   KeyType,
   PhotoImportStatus,
   PhotoNotesResult,
@@ -173,6 +174,10 @@ export const api = createApi({
       invalidatesTags: ['Ports'],
       query: form => ({ body: form, method: 'POST', url: '/admin/ports/home-ports/import' })
     }),
+    importHomePortsFromPortReturns: builder.mutation<PortReturnsImportResult, FormData>({
+      invalidatesTags: ['Ports'],
+      query: form => ({ body: form, method: 'POST', url: '/admin/ports/home-ports/port-returns/import' })
+    }),
     importPortPositions: builder.mutation<PortPositionImportResult, FormData>({
       invalidatesTags: ['Ports'],
       query: form => ({ body: form, method: 'POST', url: '/admin/ports/positions/import' })
@@ -275,6 +280,7 @@ export const {
   useGetVesselsPageQuery,
   useGetWikidataImportQuery,
   useImportAuctionSalesMutation,
+  useImportHomePortsFromPortReturnsMutation,
   useImportHomePortsMutation,
   useImportPhotosMutation,
   useImportPortPositionsMutation,

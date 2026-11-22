@@ -542,7 +542,8 @@ class PortsPagesController(
         }
 
         /**
-         * How the home ports of a port's vessels were found, e.g. "12 navires y ont été vus à quai le plus souvent
+         * How the home ports of a port's vessels were found, e.g. "20 navires y sont rentrés le plus souvent (85 % de
+         * leurs retours au port en moyenne), 12 navires y ont été vus à quai le plus souvent
          * (81 % de leurs positions au port en moyenne), 3 y ont fait le plus d’escales en un an (Global Fishing Watch)."
          */
         fun reliability(homePorts: List<HomePort>): String? {
@@ -551,6 +552,14 @@ class PortsPagesController(
             val fromVisits = homePorts.filter { it.source == HomePortSource.GFW }
             val fromRegistration = homePorts.filter { it.source == HomePortSource.REGISTER }
             val corrected = homePorts.filter { it.source == HomePortSource.MANUAL }
+            val fromPortReturns = homePorts.filter { it.source == HomePortSource.RETURNS }
+            val returnShare =
+                fromPortReturns
+                    .filter { it.observationsTotal > 0 }
+                    .map { it.observationsAtPort.toDouble() / it.observationsTotal }
+                    .takeIf { it.isNotEmpty() }
+                    ?.average()
+                    ?.let { " (${PortsSeo.percent(it)} de leurs retours au port en moyenne)" } ?: ""
             val shares =
                 observed
                     .filter { it.observationsTotal > 0 }
@@ -559,6 +568,11 @@ class PortsPagesController(
             val sharePart = average?.let { " (${PortsSeo.percent(it)} de leurs positions à quai en moyenne)" } ?: ""
 
             return listOfNotNull(
+                fromPortReturns.takeIf { it.isNotEmpty() }?.let {
+                    "${vessels(
+                        it.size,
+                    )} ${if (it.size > 1) "y sont" else "y est"} rentré${if (it.size > 1) "s" else ""} le plus souvent$returnShare"
+                },
                 observed.takeIf { it.isNotEmpty() }?.let {
                     val plural = it.size > 1
                     "${vessels(it.size)} ${if (plural) "y ont" else "y a"} été vu${if (plural) "s" else ""} à quai " +

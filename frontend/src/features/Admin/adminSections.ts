@@ -10,6 +10,7 @@ export type AdminSectionId =
   | 'photos'
   | 'photoNotes'
   | 'homePorts'
+  | 'homePortsFromPortReturns'
   | 'portPositions'
   | 'homePortsFromVisits'
   | 'homePortsFromRegistration'
@@ -84,6 +85,14 @@ export const ADMIN_SECTIONS: AdminSectionMeta[] = [
     uses: []
   },
   {
+    effect: 'replacesAll',
+    group: 'ports',
+    id: 'homePortsFromPortReturns',
+    isJob: false,
+    shownOn: ['portsMap', 'portPages'],
+    uses: []
+  },
+  {
     effect: 'updatesListed',
     group: 'ports',
     id: 'portPositions',
@@ -121,7 +130,7 @@ export const ADMIN_SECTIONS: AdminSectionMeta[] = [
     id: 'fishingGrounds',
     isJob: true,
     shownOn: ['portPages'],
-    uses: ['vessels', 'homePorts', 'homePortsFromVisits', 'homePortsFromRegistration']
+    uses: ['vessels', 'homePorts', 'homePortsFromPortReturns', 'homePortsFromVisits', 'homePortsFromRegistration']
   },
   {
     effect: 'replacesAll',

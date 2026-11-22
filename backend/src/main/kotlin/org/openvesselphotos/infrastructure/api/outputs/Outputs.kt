@@ -296,7 +296,7 @@ data class VesselDataOutput(
 data class VesselHomePortDataOutput(
     val locode: String,
     val name: String,
-    /** IMPORT, GFW, REGISTER or MANUAL */
+    /** IMPORT, GFW, REGISTER, MANUAL or RETURNS */
     val source: String,
     /** Its page on the ports site */
     val pageUrl: String,

@@ -22,6 +22,7 @@ import org.openvesselphotos.domain.use_cases.admin.HomePortsFromPortVisitsStatus
 import org.openvesselphotos.domain.use_cases.admin.HomePortsFromRegistrationResult
 import org.openvesselphotos.domain.use_cases.admin.ImportAuctionSales
 import org.openvesselphotos.domain.use_cases.admin.ImportHomePorts
+import org.openvesselphotos.domain.use_cases.admin.ImportHomePortsFromPortReturns
 import org.openvesselphotos.domain.use_cases.admin.ImportPhotos
 import org.openvesselphotos.domain.use_cases.admin.ImportPortPositions
 import org.openvesselphotos.domain.use_cases.admin.ImportVesselOwners
@@ -30,6 +31,7 @@ import org.openvesselphotos.domain.use_cases.admin.ImportWikidata
 import org.openvesselphotos.domain.use_cases.admin.PhotoImportStatus
 import org.openvesselphotos.domain.use_cases.admin.PhotoNotesResult
 import org.openvesselphotos.domain.use_cases.admin.PortPositionImportResult
+import org.openvesselphotos.domain.use_cases.admin.PortReturnsImportResult
 import org.openvesselphotos.domain.use_cases.admin.RejectApiKeyRequest
 import org.openvesselphotos.domain.use_cases.admin.RejectPhoto
 import org.openvesselphotos.domain.use_cases.admin.ResolveReport
@@ -85,6 +87,7 @@ class AdminController(
     private val setPhotoNotes: SetPhotoNotes,
     private val getUsageStatistics: GetUsageStatistics,
     private val importHomePorts: ImportHomePorts,
+    private val importHomePortsFromPortReturns: ImportHomePortsFromPortReturns,
     private val importPortPositions: ImportPortPositions,
     private val importVesselOwners: ImportVesselOwners,
     private val importAuctionSales: ImportAuctionSales,
@@ -236,6 +239,16 @@ class AdminController(
     fun importHomePortsFromCsv(
         @RequestPart file: MultipartFile,
     ): HomePortImportResult = importHomePorts.execute(PortsCsvParser.parseHomePorts(String(file.bytes, Charsets.UTF_8)))
+
+    /**
+     * Gives the vessels of a CSV file (cfr, port_locode, returns) the port they returned to most, kept over every other
+     * source but the corrections
+     */
+    @PostMapping("/ports/home-ports/port-returns/import", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun importHomePortsFromPortReturns(
+        @RequestPart file: MultipartFile,
+    ): PortReturnsImportResult =
+        importHomePortsFromPortReturns.execute(PortsCsvParser.parsePortReturns(String(file.bytes, Charsets.UTF_8)))
 
     /** Sets the positions of the ports on the map of the ports site, from a CSV file (locode, latitude, longitude). */
     @PostMapping("/ports/positions/import", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])

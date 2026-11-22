@@ -90,7 +90,17 @@ object PortsSeo {
     fun coverageSentence(coverage: HomePortCoverage): String? =
         coverage.share?.let {
             "Port d’attache connu pour ${percent(it)} des ${PortsPagesController.number(coverage.registerVessels)} " +
-                "navires français du $FLEET_REGISTER : ${PortsPagesController.number(coverage.fromObservations)} " +
+                "navires français du $FLEET_REGISTER : " +
+                (
+                    if (coverage.fromPortReturns > 0) {
+                        "${PortsPagesController.number(
+                            coverage.fromPortReturns,
+                        )} d’après le port de la plupart de leurs " +
+                            "retours au port, "
+                    } else {
+                        ""
+                    }
+                ) + "${PortsPagesController.number(coverage.fromObservations)} " +
                 "d’après leurs positions à quai, ${PortsPagesController.number(coverage.fromPortVisits)} d’après " +
                 "leurs escales (Global Fishing Watch)" +
                 (

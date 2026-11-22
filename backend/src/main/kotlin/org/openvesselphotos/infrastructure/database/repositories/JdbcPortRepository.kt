@@ -33,7 +33,8 @@ class JdbcPortRepository(
             """.trimIndent(),
             ports.map { arrayOf<Any>(it.locode, it.name, it.country) },
         )
-        // The home ports found on Global Fishing Watch are kept, unless the import gives one; the corrected ones always are
+        // The home ports found on Global Fishing Watch are kept, unless the import gives one; the corrected ones and the
+        // ones from returns to port always are
         jdbcTemplate.update("DELETE FROM vessel_home_ports WHERE source = 'IMPORT'")
         jdbcTemplate.batchUpdate(
             """
@@ -49,7 +50,7 @@ class JdbcPortRepository(
                 mean_distance_km = excluded.mean_distance_km,
                 imported_on = excluded.imported_on,
                 source = 'IMPORT'
-            WHERE vessel_home_ports.source <> 'MANUAL'
+            WHERE vessel_home_ports.source NOT IN ('MANUAL', 'RETURNS')
             """.trimIndent(),
             homePorts.map {
                 arrayOf<Any?>(
@@ -117,6 +118,47 @@ class JdbcPortRepository(
         )
     }
 
+    override fun replaceHomePortsFromPortReturns(
+        ports: List<Port>,
+        homePorts: List<HomePort>,
+        importedOn: LocalDate,
+    ) {
+        // Only the unknown ports are created: the known ones keep their name and position
+        jdbcTemplate.batchUpdate(
+            "INSERT INTO ports (locode, name, country) VALUES (?, ?, ?) ON CONFLICT (locode) DO NOTHING",
+            ports.map { arrayOf<Any>(it.locode, it.name, it.country) },
+        )
+        jdbcTemplate.update("DELETE FROM vessel_home_ports WHERE source = 'RETURNS'")
+        jdbcTemplate.batchUpdate(
+            """
+            INSERT INTO vessel_home_ports
+                (cfr, vessel_name, port_locode, observations_total, observations_at_port, mean_distance_km, imported_on,
+                 source)
+            VALUES (?, coalesce(?, (SELECT max(name) FROM vessels WHERE cfr = ?)), ?, ?, ?, NULL, ?, 'RETURNS')
+            ON CONFLICT (cfr) DO UPDATE SET
+                vessel_name = coalesce(excluded.vessel_name, vessel_home_ports.vessel_name),
+                port_locode = excluded.port_locode,
+                observations_total = excluded.observations_total,
+                observations_at_port = excluded.observations_at_port,
+                mean_distance_km = NULL,
+                imported_on = excluded.imported_on,
+                source = 'RETURNS'
+            WHERE vessel_home_ports.source <> 'MANUAL'
+            """.trimIndent(),
+            homePorts.map {
+                arrayOf<Any?>(
+                    it.cfr,
+                    it.vesselName,
+                    it.cfr,
+                    it.portLocode,
+                    it.observationsTotal,
+                    it.observationsAtPort,
+                    Date.valueOf(importedOn),
+                )
+            },
+        )
+    }
+
     override fun countHomePortsByPlaceOfRegistration(): Map<String, Map<String, Int>> =
         jdbcTemplate
             .queryForList(
@@ -151,6 +193,7 @@ class JdbcPortRepository(
                 fromObservations = bySource[HomePortSource.IMPORT.name] ?: 0,
                 fromPortVisits = bySource[HomePortSource.GFW.name] ?: 0,
                 fromRegistration = bySource[HomePortSource.REGISTER.name] ?: 0,
+                fromPortReturns = bySource[HomePortSource.RETURNS.name] ?: 0,
             )
         }!!
     }

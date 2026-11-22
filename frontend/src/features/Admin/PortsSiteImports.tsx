@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import {
   getErrorMessage,
   useImportAuctionSalesMutation,
+  useImportHomePortsFromPortReturnsMutation,
   useImportHomePortsMutation,
   useImportPortPositionsMutation,
   useImportVesselOwnersMutation
@@ -30,6 +31,35 @@ export function HomePortsImport() {
         <SuccessMessage>
           {t.admin.homePortsResult(homePorts.data)}
           <Errors messages={homePorts.data.errors} />
+        </SuccessMessage>
+      )}
+    </Section>
+  )
+}
+
+/** The port each vessel returned to most, from a CSV file of returns to port: kept over the other sources */
+export function HomePortsFromPortReturnsImport() {
+  const { t } = useTranslation()
+  const [importPortReturns, portReturns] = useImportHomePortsFromPortReturnsMutation()
+
+  return (
+    <Section>
+      <FileForm
+        id="port-returns-file"
+        isLoading={portReturns.isLoading}
+        label={t.admin.csvFile}
+        onSubmit={importPortReturns}
+      />
+      {portReturns.error && <ErrorMessage>{getErrorMessage(portReturns.error, t)}</ErrorMessage>}
+      {portReturns.data && (
+        <SuccessMessage>
+          {t.admin.portReturnsResult(portReturns.data)}
+          {portReturns.data.ties.length > 0 && (
+            <p>
+              {t.admin.portReturnsTies} {portReturns.data.ties.join(', ')}
+            </p>
+          )}
+          <Errors messages={portReturns.data.errors} />
         </SuccessMessage>
       )}
     </Section>
