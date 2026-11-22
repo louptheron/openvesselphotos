@@ -15,7 +15,7 @@ import { AuctionSales } from './AuctionSales'
 import { ContentPage } from './ContentPage'
 import { GearFilter } from './GearFilter'
 import { type GearFamily, getGearFamily } from './gears'
-import { MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH, SHEET_HEIGHT } from './layout'
+import { MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH, PORT_SHEET_HEIGHT, SHEET_HEIGHT, SHEET_TOP_OFFSET } from './layout'
 import { PortPanel } from './PortPanel'
 import { type MapPadding, PortsMap, type PortsMapHandle } from './PortsMap'
 import type { Extent } from './regions'
@@ -117,10 +117,10 @@ function MapPage() {
     () =>
       // The gear filter covers the top of the map
       isMobile
-        ? [64, 0, Math.round(window.innerHeight * SHEET_HEIGHT), 0]
+        ? [SHEET_TOP_OFFSET, 0, Math.round(window.innerHeight * (locode ? PORT_SHEET_HEIGHT : SHEET_HEIGHT)), 0]
         : // The cards on the right of the map hide its right side
           [76, auction || gear ? RIGHT_COLUMN_WIDTH : 0, 0, PANEL_WIDTH + PANEL_MARGIN * 2],
-    [auction, gear, isMobile]
+    [auction, gear, isMobile, locode]
   )
 
   return (
