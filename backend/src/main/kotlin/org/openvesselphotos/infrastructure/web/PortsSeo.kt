@@ -13,6 +13,7 @@ object PortsSeo {
     const val TAGLINE = "chiffres et données de la pêche professionnelle"
     const val FRANCE_AGRIMER = "FranceAgriMer, ventes déclarées en halles à marée"
     const val FRANCE_AGRIMER_URL = "https://www.franceagrimer.fr"
+    const val IFREMER = "Ifremer, bilan du statut des ressources halieutiques débarquées"
     const val FLEET_REGISTER = "registre de la flotte de pêche de l’Union européenne"
     const val FLEET_REGISTER_URL = "https://webgate.ec.europa.eu/fleet-europa/search_en"
     const val GFW_URL = "https://globalfishingwatch.org"

@@ -4,21 +4,30 @@ import org.openvesselphotos.config.UseCase
 import org.openvesselphotos.domain.entities.AuctionSpeciesSales
 import org.openvesselphotos.domain.entities.SpeciesMonthlySales
 import org.openvesselphotos.domain.entities.SpeciesSales
+import org.openvesselphotos.domain.entities.StockAssessment
 import org.openvesselphotos.domain.entities.slugOf
 import org.openvesselphotos.domain.repositories.AuctionSalesRepository
+import org.openvesselphotos.domain.repositories.StockAssessmentRepository
 import org.openvesselphotos.domain.use_cases.admin.ImportAuctionSales
 
-/** The species sold in the French auctions in the last year (FranceAgriMer), the most valuable first. */
+/**
+ * The species sold in the French auctions in the last year (FranceAgriMer), the most valuable first, with the status
+ * of the stocks they are landed from (Ifremer).
+ */
 @UseCase
 class GetSpecies(
     private val auctionSalesRepository: AuctionSalesRepository,
+    private val stockAssessmentRepository: StockAssessmentRepository,
 ) {
     fun execute(): List<SpeciesSales> {
         val sales = auctionSalesRepository.findSpeciesSales()
         val year = sales.maxOfOrNull { it.year } ?: return emptyList()
 
-        return summarize(sales, auctionSalesRepository.findMonthlySales(year))
+        return summarize(sales, auctionSalesRepository.findMonthlySales(year), stockAssessmentRepository.find())
     }
+
+    /** Ifremer's assessment of the stocks, for its edition and URL: to credit it */
+    fun stockAssessment(): StockAssessment = stockAssessmentRepository.find()
 
     companion object {
         /**
@@ -29,6 +38,7 @@ class GetSpecies(
         fun summarize(
             sales: List<AuctionSpeciesSales>,
             monthlySales: List<SpeciesMonthlySales>,
+            stockAssessment: StockAssessment = StockAssessment.NONE,
         ): List<SpeciesSales> {
             val year = sales.maxOfOrNull { it.year } ?: return emptyList()
             val monthlyByName = monthlySales.groupBy { ImportAuctionSales.normalize(it.species) }
@@ -53,6 +63,7 @@ class GetSpecies(
                             previous.takeIf { it.isNotEmpty() }?.sumOf { it.valueThousandEuros },
                         auctions = ofYear,
                         monthlySales = monthlyByName[key].orEmpty().filter { it.year == year }.sortedBy { it.month },
+                        stocks = stockAssessment.bySpecies[key],
                     )
                 }.distinctBy { it.slug }
                 .sortedByDescending { it.valueThousandEuros }

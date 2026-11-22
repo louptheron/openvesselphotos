@@ -4,6 +4,7 @@ import { COLORS } from '../theme'
 import { glass, MOBILE_QUERY, PANEL_MARGIN } from './layout'
 import { MapBackdrop } from './MapBackdrop'
 import { SiteMark } from './SiteMark'
+import { STOCK_PILL_CSS, STOCK_STATUS_RULES } from './stockStatus'
 import { SITE_NAME, SITE_TAGLINE } from './texts'
 
 type Props = {
@@ -262,6 +263,19 @@ const Content = styled.div`
     font-size: 12.5px;
     font-weight: 500;
   }
+
+  /* The status of the stocks of each species (see stockStatus) */
+  th.stock,
+  td.stock {
+    text-align: left;
+  }
+
+  .stock-status {
+    ${STOCK_PILL_CSS}
+    font-size: 12.5px;
+  }
+
+  ${STOCK_STATUS_RULES}
 
   /* Key figures (see ContentCharts.tiles) */
   .stat-tiles {

@@ -3,7 +3,12 @@ package org.openvesselphotos.domain.use_cases.public_api
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.openvesselphotos.domain.entities.AuctionSpeciesSales
+import org.openvesselphotos.domain.entities.FishStock
+import org.openvesselphotos.domain.entities.FishingRegion
 import org.openvesselphotos.domain.entities.SpeciesMonthlySales
+import org.openvesselphotos.domain.entities.SpeciesStocks
+import org.openvesselphotos.domain.entities.StockAssessment
+import org.openvesselphotos.domain.entities.StockStatus
 
 class GetSpeciesUTests {
     @Test
@@ -43,5 +48,24 @@ class GetSpeciesUTests {
     @Test
     fun `summarize Should return no species without sales`() {
         assertThat(GetSpecies.summarize(emptyList(), emptyList())).isEmpty()
+    }
+
+    @Test
+    fun `summarize Should give each species the stocks it is landed from, by its normalized name`() {
+        val mulletStocks =
+            SpeciesStocks(listOf(FishStock("Rouget de roche", FishingRegion.MNMEST, StockStatus.SURPECHE, 674.0)))
+        val species =
+            GetSpecies.summarize(
+                listOf(
+                    AuctionSpeciesSales("Erquy", 2025, "Rouget-Barbet", 6.0, 50.0, "FRQUY"),
+                    AuctionSpeciesSales("Erquy", 2025, "Maigre", 1.0, 20.0, "FRQUY"),
+                ),
+                emptyList(),
+                StockAssessment(2025, "https://example.org", mapOf("rougetbarbet" to mulletStocks)),
+            )
+
+        assertThat(species.first { it.slug == "rouget-barbet" }.stocks).isEqualTo(mulletStocks)
+        // Not assessed
+        assertThat(species.first { it.slug == "maigre" }.stocks).isNull()
     }
 }

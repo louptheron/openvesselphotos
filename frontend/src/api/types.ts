@@ -423,8 +423,38 @@ export type PortAuction = {
   quantityTonnes: number
   /** The main species sold, by value */
   species: AuctionSpecies[]
+  /** Ifremer's assessment, the source of the stock statuses of the species; null when none has one */
+  stockAssessment: StockAssessment | null
   valueThousandEuros: number
   year: number
+}
+
+export type StockAssessment = {
+  /** e.g. 2025 for the "Bilan 2025", of the landings of 2024 */
+  edition: number
+  url: string
+}
+
+/** A stock status from Ifremer, or VARIABLE when the main stocks of a species differ */
+export type StockStatusCode =
+  'BON_ETAT' | 'EFFONDRE' | 'NON_CLASSIFIE' | 'RECONSTITUABLE' | 'SURPECHE' | 'SURPECHE_DEGRADE' | 'VARIABLE'
+
+/** The status of the stocks a species is landed from in the waters of a port */
+export type StockStatus = {
+  /** e.g. "en bon état", "variable selon le stock" */
+  label: string
+  status: StockStatusCode
+  stocks: FishStock[]
+}
+
+export type FishStock = {
+  label: string
+  /** As Ifremer names it, e.g. "Sole commune (Solea solea), Division VIId" */
+  name: string
+  region: string
+  status: StockStatusCode
+  /** French landings from the stock in the region */
+  tonnes: number
 }
 
 export type AuctionSpecies = {
@@ -434,6 +464,8 @@ export type AuctionSpecies = {
   previousQuantityTonnes: number | null
   priceEurosPerKg: number | null
   quantityTonnes: number
+  /** The status of the stocks it is landed from in the waters of the port (Ifremer); null when not assessed */
+  stockStatus: StockStatus | null
   valueThousandEuros: number
 }
 

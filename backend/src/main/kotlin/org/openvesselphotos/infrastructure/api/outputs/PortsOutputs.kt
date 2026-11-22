@@ -6,6 +6,8 @@ import org.openvesselphotos.domain.entities.PortAuction
 import org.openvesselphotos.domain.entities.PortDetails
 import org.openvesselphotos.domain.entities.PortVessel
 import org.openvesselphotos.domain.entities.PortWithVesselCount
+import org.openvesselphotos.domain.entities.SpeciesStocks
+import org.openvesselphotos.domain.entities.StockAssessment
 import org.openvesselphotos.infrastructure.web.PagesController
 
 data class PortDataOutput(
@@ -151,6 +153,8 @@ data class AuctionDataOutput(
     val previousQuantityTonnes: Double?,
     /** The main species sold, by value */
     val species: List<AuctionSpeciesDataOutput>,
+    /** Ifremer's assessment, the source of the stock statuses of the species; null when none has one */
+    val stockAssessment: StockAssessmentOutput?,
 ) {
     companion object {
         private const val MAX_SPECIES = 12
@@ -184,8 +188,13 @@ data class AuctionDataOutput(
                                         ?.takeIf { it.size == 12 }
                                         ?.sortedBy { it.month }
                                         ?.map { it.quantityTonnes },
+                                stockStatus = auction.stocks[sale.species]?.let { StockStatusOutput.from(it) },
                             )
                         },
+                stockAssessment =
+                    auction.stockAssessment
+                        .takeIf { auction.stocks.isNotEmpty() }
+                        ?.let { StockAssessmentOutput.from(it) },
             )
         }
     }
@@ -199,4 +208,48 @@ data class AuctionSpeciesDataOutput(
     val previousQuantityTonnes: Double?,
     /** Its sales in all French auctions by month, from January: its season; null for the less sold species */
     val monthlyQuantitiesTonnes: List<Double>?,
+    /** The status of the stocks it is landed from in the waters of the port (Ifremer); null when not assessed */
+    val stockStatus: StockStatusOutput?,
 )
+
+data class StockStatusOutput(
+    /** A StockStatus (e.g. BON_ETAT), or VARIABLE when the main stocks differ */
+    val status: String,
+    /** e.g. "en bon état", "variable selon le stock" */
+    val label: String,
+    val stocks: List<FishStockOutput>,
+) {
+    companion object {
+        const val VARIABLE = "VARIABLE"
+
+        fun from(stocks: SpeciesStocks): StockStatusOutput =
+            StockStatusOutput(
+                status = stocks.status?.name ?: VARIABLE,
+                label = stocks.status?.label ?: "variable selon le stock",
+                stocks =
+                    stocks.stocks.map {
+                        FishStockOutput(it.name, it.region.label, it.status.name, it.status.label, it.tonnes)
+                    },
+            )
+    }
+}
+
+data class FishStockOutput(
+    /** As Ifremer names it, e.g. "Sole commune (Solea solea), Division VIId" */
+    val name: String,
+    val region: String,
+    val status: String,
+    val label: String,
+    /** French landings from the stock in the region */
+    val tonnes: Double,
+)
+
+data class StockAssessmentOutput(
+    /** e.g. 2025 for the "Bilan 2025", of the landings of 2024 */
+    val edition: Int,
+    val url: String,
+) {
+    companion object {
+        fun from(assessment: StockAssessment) = StockAssessmentOutput(assessment.edition, assessment.url)
+    }
+}
