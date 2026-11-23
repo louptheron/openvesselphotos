@@ -26,7 +26,8 @@ export const en = {
     allVessels: 'All vessels',
     dataset: 'Download the dataset',
     apiKey: 'API key',
-    review: 'Review'
+    review: 'Review',
+    legal: 'Legal notice'
   },
   common: {
     loading: 'Loading…',
@@ -464,6 +465,26 @@ export const en = {
     title: 'Page not found',
     text: "This page doesn't exist.",
     link: 'Search vessel photos'
+  },
+  legal: {
+    pageTitle: 'Legal notice',
+    title: 'Legal notice',
+    publisher: 'Publisher',
+    publisherText: 'Open Vessel Photos is published by Loup Theron, as a private individual. Contact:',
+    director: 'Director of publication',
+    host: 'Host',
+    hostText:
+      'Scalingo SAS, 13 rue Jacques Peirotes, 67000 Strasbourg, France (SIRET 808 665 483 00034). Servers and data are in Paris, France, at 3DS Outscale.',
+    content: 'Photos and code',
+    contentText:
+      'Each photo belongs to its author and is published under the open licence they chose, shown with its credit. The site’s code is free software, under the AGPL-3.0 licence:',
+    sourceCode: 'source code',
+    personalData: 'Personal data',
+    personalDataText: [
+      'The site sets no cookie for its visitors and does not track them: it only counts page views, without IP address or identifier. Your choice of language is kept in your browser only.',
+      'The e-mail address given with a photo or an API key request is used only to answer it, and is never published. The credit of a photo, and the name given with a suggested home port, are published.'
+    ],
+    rightsText: 'To access, correct or delete your data (GDPR), write to'
   },
   admin: {
     adminTitle: 'Administration',

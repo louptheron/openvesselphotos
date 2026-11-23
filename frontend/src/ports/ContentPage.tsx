@@ -66,7 +66,7 @@ export function ContentPage({ html }: Props) {
           <a href="https://openvesselphotos.org/fr" rel="noopener" target="_blank">
             Open Vessel Photos
           </a>{' '}
-          · Fond de carte © OpenStreetMap
+          · Fond de carte © OpenStreetMap · <a href="/mentions-legales">Mentions légales</a>
         </Footer>
       </Panel>
     </Page>

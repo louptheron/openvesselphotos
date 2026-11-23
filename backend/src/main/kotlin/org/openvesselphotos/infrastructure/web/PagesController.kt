@@ -434,6 +434,39 @@ class PagesController(
         )
     }
 
+    /** The legal notice (mentions légales), mandatory in France; its full text is in the React app (LegalPage) */
+    @GetMapping("/legal", "/fr/legal")
+    fun legal(request: HttpServletRequest): ResponseEntity<String> {
+        val language = Language.of(request)
+        val isFrench = language == Language.FR
+        val title = if (isFrench) "Mentions légales" else "Legal notice"
+        val contact = """<a href="mailto:${LegalNotice.CONTACT_EMAIL}">${LegalNotice.CONTACT_EMAIL}</a>"""
+
+        return htmlPageRenderer.render(
+            HtmlPage(
+                title = "$title | $SITE_NAME",
+                description =
+                    if (isFrench) {
+                        "L’éditeur, l’hébergeur et les données personnelles de $SITE_NAME."
+                    } else {
+                        "The publisher, the host and the personal data of $SITE_NAME."
+                    },
+                canonicalPath = language.path("/legal"),
+                language = language,
+                pathInEveryLanguage = "/legal",
+                body =
+                    "<main><h1>$title</h1><p>" +
+                        if (isFrench) {
+                            "Éditeur et directeur de la publication : ${LegalNotice.PUBLISHER}, à titre personnel. " +
+                                "Contact : $contact.</p><p>Hébergeur : ${LegalNotice.HOST_FR}"
+                        } else {
+                            "Publisher and director of publication: ${LegalNotice.PUBLISHER}, as a private " +
+                                "individual. Contact: $contact.</p><p>Host: ${LegalNotice.HOST_EN}"
+                        } + "</p></main>",
+            ),
+        )
+    }
+
     @GetMapping("/admin", "/admin/stats", "/fr/admin", "/fr/admin/stats")
     fun admin(request: HttpServletRequest): ResponseEntity<String> =
         htmlPageRenderer.render(

@@ -51,7 +51,7 @@ export function Layout() {
           <span>
             <Link to="/vessels">{t.layout.allVessels}</Link> · <a href="/v1/export.json">{t.layout.dataset}</a> ·{' '}
             <Link to="/docs">{t.layout.api}</Link> · <Link to="/api-key">{t.layout.apiKey}</Link> ·{' '}
-            <Link to="/admin">{t.layout.review}</Link>
+            <Link to="/legal">{t.layout.legal}</Link> · <Link to="/admin">{t.layout.review}</Link>
           </span>
         </FooterInner>
       </Footer>

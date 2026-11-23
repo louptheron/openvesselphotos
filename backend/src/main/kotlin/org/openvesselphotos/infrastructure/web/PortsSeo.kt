@@ -23,6 +23,7 @@ object PortsSeo {
     const val SALES_CSV_PATH = "/donnees/criees.csv"
     const val CHANGELOG_PATH = "/mises-a-jour"
     const val SMALL_SCALE_PATH = "/petite-peche-cotiere"
+    const val LEGAL_PATH = "/mentions-legales"
     const val SHARE_IMAGES_PATH = "/images/partage"
 
     fun portPath(slug: String) = "/ports/$slug"

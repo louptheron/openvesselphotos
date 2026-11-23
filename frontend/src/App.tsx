@@ -8,6 +8,7 @@ import { ApiKeyPage } from './features/ApiKey/ApiKeyPage'
 import { ContributePage } from './features/Contribute/ContributePage'
 import { DocsPage } from './features/Docs/DocsPage'
 import { HomePage } from './features/Home/HomePage'
+import { LegalPage } from './features/Legal/LegalPage'
 import { NotFoundPage } from './features/NotFound/NotFoundPage'
 import { VesselPage } from './features/Vessel/VesselPage'
 import { VesselsPage } from './features/Vessels/VesselsPage'
@@ -33,6 +34,7 @@ export function App() {
         <Route element={<ContributePage />} path="contribute" />
         <Route element={<DocsPage />} path="docs" />
         <Route element={<ApiKeyPage />} path="api-key" />
+        <Route element={<LegalPage />} path="legal" />
         <Route element={<AdminPage />} path="admin" />
         <Route element={<StatsPage />} path="admin/stats" />
         <Route element={<NotFoundPage />} path="*" />
