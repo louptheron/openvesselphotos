@@ -6,7 +6,7 @@ import { useTranslation } from '../../i18n'
 import { COLORS } from '../../theme'
 
 /** Forwarded to the publisher (see LegalNotice on the server, which has the same texts for search engines) */
-const CONTACT_EMAIL = 'contact@openvesselphotos.org'
+const CONTACT_EMAIL = 'contact@lapechefrancaise.com'
 const SOURCE_CODE_URL = 'https://github.com/louptheron/openvesselphotos'
 
 /** The legal notice (mentions légales), mandatory for a website published in France */

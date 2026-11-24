@@ -8,7 +8,7 @@ object LegalNotice {
     const val PUBLISHER = "Loup Theron"
 
     /** Forwarded to the publisher by Cloudflare Email Routing */
-    const val CONTACT_EMAIL = "contact@openvesselphotos.org"
+    const val CONTACT_EMAIL = "contact@lapechefrancaise.com"
     const val OPEN_VESSEL_PHOTOS_URL = "https://openvesselphotos.org"
     const val SOURCE_CODE_URL = "https://github.com/louptheron/openvesselphotos"
 
