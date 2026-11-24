@@ -2,11 +2,14 @@
 # waters (Annex IA), copied by hand from the Council's consolidated text (16872/25 ADD 1, 19 December 2025): the TACs
 # of the species Ifremer assesses (ifremer/stock-status.csv), with France's initial quota, before exchanges.
 # As amended by Regulation (EU) 2026/786 of 30 March 2026 (Spanish OJ copy: boe.es/doue/2026/786/L00001-00026.pdf):
-# mackerel for the whole of 2026 (249 only set the first half), albacore and bluefin tuna (ICCAT, Annex ID).
+# mackerel for the whole of 2026 (249 only set the first half), albacore and bluefin tuna (ICCAT, Annex ID); and by
+# Regulation (EU) 2026/1547 of 1 July 2026 (OJ PDF from the Publications Office's Cellar): bluefin tuna again. Its other
+# tables, and its corrigendum of 9 July 2026, change none of the TACs below.
 # species, region: as in ifremer/stock-status.csv; a TAC whose zone spans two regions is in both. tac_tonnes is empty
 # when the TAC is not set by the Union (e.g. "Not relevant" in Norwegian waters).
 # year: 2026
 # url: https://eur-lex.europa.eu/eli/reg/2026/249/oj
+# checked: 32026R0249 32026R0786 32026R1547 32026R1547R(01)
 species;region;tac_code;area;tac_tonnes;france_tonnes
 Sole;MNMEST;SOL/07D.;Manche Est (7d);1275;669
 Sole;MNMEST;SOL/24-C.;Mer du Nord (4, eaux de l'Union de 2a);12454;180
@@ -101,5 +104,5 @@ Anchois;GASCOGNE;ANE/08.;Golfe de Gascogne (8);33000;3300
 thon germon;MOMCOE;ALB/ICAN05NXM;Atlantique nord (CICTA, nord de 5°N);47251;8791.67
 thon germon;GASCOGNE;ALB/ICAN05NXM;Atlantique nord (CICTA, nord de 5°N);47251;8791.67
 thon germon;MED;ALB/MED;Méditerranée (CICTA);2500;14.45
-Thon rouge;GASCOGNE;BFT/ICAE45W;Atlantique est et Méditerranée (CICTA, est de 45°W);48403;8080.19
-Thon rouge;MED;BFT/ICAE45W;Atlantique est et Méditerranée (CICTA, est de 45°W);48403;8080.19
+Thon rouge;GASCOGNE;BFT/ICAE45W;Atlantique est et Méditerranée (CICTA, est de 45°W);48403;8067.21
+Thon rouge;MED;BFT/ICAE45W;Atlantique est et Méditerranée (CICTA, est de 45°W);48403;8067.21

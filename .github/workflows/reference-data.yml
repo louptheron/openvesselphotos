@@ -1,0 +1,45 @@
+name: Reference data
+
+# The EU TACs, the Ifremer stock statuses and FranceAgriMer's auction sales are copied or imported by hand once a year,
+# and the TACs are amended during the year: open an issue when a new edition is published.
+on:
+  schedule:
+    # Every Monday
+    - cron: "41 6 * * 1"
+  workflow_dispatch:
+  # Check the script and the files it reads, without opening issues
+  pull_request:
+    paths:
+      - .github/scripts/check_reference_data.py
+      - .github/workflows/reference-data.yml
+      - backend/src/main/resources/eu/fishing-opportunities.csv
+      - backend/src/main/resources/ifremer/stock-status.csv
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+
+jobs:
+  watch:
+    name: Look for new editions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      # Only the scheduled and manual runs open issues: a pull request only lists what it finds
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Look for new editions
+        if: github.event_name == 'pull_request'
+        run: python3 .github/scripts/check_reference_data.py
+
+      - name: Look for new editions and open issues
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/check_reference_data.py --open-issues

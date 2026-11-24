@@ -190,6 +190,15 @@ criée": it replaces all the sales (`AuctionSalesWorkbookParser`, which finds it
 its macros). Each auction is matched to a port by its name; auctions named after their town or island are listed in
 `ImportAuctionSales.ALIASES`, and the import reports the auctions left without a port.
 
+Each species shows the status of its stocks, from Ifremer's yearly "Bilan … du statut des ressources halieutiques"
+(`backend/src/main/resources/ifremer/stock-status.csv`), and the EU TACs with France's quotas, from the Council's
+regulation fixing the fishing opportunities and its amendments (`backend/src/main/resources/eu/fishing-opportunities.csv`).
+Both are copied by hand: their headers say where from. Every Monday, the "Reference data" workflow
+(`.github/scripts/check_reference_data.py`) looks for a new edition of the three sources (EU Publications Office,
+Ifremer's Archimer, FranceAgriMer's files) and opens an issue labelled `reference-data` with the steps to follow; close
+it once the data is updated. An act of the EU that was reviewed, even when it changes none of the TACs shown, goes in the
+`# checked:` line of the CSV. `ReferenceDataFreshnessUTests` fails the build once a file is a year behind.
+
 With a [Global Fishing Watch](https://globalfishingwatch.org/our-apis/tokens) token (`OPENVESSELPHOTOS_GFW_TOKEN`,
 non-commercial use, CC BY-NC 4.0), the map shows where the vessels fished over the last 12 months, for the trawls only:
 the other French fishing vessels are mostly too small to carry AIS, and their maps would be nearly empty
