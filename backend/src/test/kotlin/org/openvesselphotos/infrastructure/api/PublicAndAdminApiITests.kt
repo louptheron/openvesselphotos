@@ -387,6 +387,10 @@ class PublicAndAdminApiITests {
         ).contains("""<a href="/vessels/cfr/FRA000999888">""")
             .doesNotContain("noindex")
         mockMvc.perform(get("/docs")).andExpect(status().isOk)
+        mockMvc
+            .perform(get("/fr/legal"))
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("<h1>Mentions légales</h1>")))
         assertThat(html)
             .contains("""rel="nofollow">Add a photo</a>""")
             .contains("""<a href="/vessels">All vessels</a>""")
@@ -1689,6 +1693,12 @@ class PublicAndAdminApiITests {
             .andExpect(content().string(containsString("<h2>Les limites et les contreparties</h2>")))
             .andExpect(content().string(containsString("financé par la Fondation 2050 et par l’association BLOOM")))
             .andExpect(content().string(containsString("\"@type\":\"FAQPage\"")))
+
+        pages
+            .perform(onPortsHost("/_ports/mentions-legales"))
+            .andExpect(status().isOk)
+            .andExpect(content().string(containsString("<h2>Directeur de la publication</h2><p>Loup Theron.</p>")))
+            .andExpect(content().string(containsString("Scalingo SAS, 13 rue Jacques Peirotes")))
 
         // The data, as CSV
         pages

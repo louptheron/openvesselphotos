@@ -32,7 +32,8 @@ export const fr: Messages = {
     allVessels: 'Tous les navires',
     dataset: 'Télécharger les données',
     apiKey: 'Clé d’API',
-    review: 'Modération'
+    review: 'Modération',
+    legal: 'Mentions légales'
   },
   common: {
     loading: 'Chargement…',
@@ -453,6 +454,25 @@ export const fr: Messages = {
     title: 'Page introuvable',
     text: 'Cette page n’existe pas.',
     link: 'Rechercher des photos de navires'
+  },
+  legal: {
+    pageTitle: 'Mentions légales',
+    title: 'Mentions légales',
+    publisher: 'Éditeur',
+    publisherText: `Open Vessel Photos est édité à titre personnel par Loup Theron. Contact${_}:`,
+    director: 'Directeur de la publication',
+    host: 'Hébergeur',
+    hostText:
+      'Scalingo SAS, 13 rue Jacques Peirotes, 67000 Strasbourg, France (SIRET 808 665 483 00034). Les serveurs et les données sont en France, à Paris, chez 3DS Outscale.',
+    content: 'Photos et code',
+    contentText: `Chaque photo appartient à son auteur, et est publiée sous la licence libre qu’il a choisie, avec son crédit. Le code du site est libre, sous licence AGPL-3.0${_}:`,
+    sourceCode: 'code source',
+    personalData: 'Données personnelles',
+    personalDataText: [
+      `Le site ne dépose aucun cookie chez ses visiteurs et ne les suit pas${_}: il compte seulement les pages vues, sans adresse IP ni identifiant. Le choix de la langue est gardé dans votre navigateur seulement.`,
+      'L’adresse e-mail donnée avec une photo ou une demande de clé d’API sert seulement à y répondre, et n’est jamais publiée. Le crédit d’une photo et le nom donné avec un port d’attache proposé sont publiés.'
+    ],
+    rightsText: 'Pour accéder à vos données, les corriger ou les effacer (RGPD), écrivez à'
   },
   admin: {
     adminTitle: 'Administration',

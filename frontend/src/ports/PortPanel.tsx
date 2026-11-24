@@ -102,7 +102,7 @@ export function PortPanel({ gear, isError, isLoading, locode, onFitExtent, onHig
         <a href={OPEN_VESSEL_PHOTOS_URL} rel="noopener" target="_blank">
           Open Vessel Photos
         </a>{' '}
-        · Fond de carte © OpenStreetMap
+        · Fond de carte © OpenStreetMap · <a href="/mentions-legales">Mentions légales</a>
       </Footer>
     </Panel>
   )

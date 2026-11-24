@@ -369,6 +369,40 @@ class PortsContentController(
         )
     }
 
+    /** The legal notice, mandatory for any French website (loi pour la confiance dans l’économie numérique, art. 6) */
+    @GetMapping("$PORTS_PREFIX${PortsSeo.LEGAL_PATH}")
+    fun legalNotice(): ResponseEntity<String> {
+        val siteName = Site.PORTS.siteName
+        val contact = """<a href="mailto:${LegalNotice.CONTACT_EMAIL}">${LegalNotice.CONTACT_EMAIL}</a>"""
+
+        return render(
+            HtmlPage(
+                title = "Mentions légales | $siteName",
+                description = "L’éditeur, l’hébergeur et les données personnelles de $siteName.",
+                canonicalPath = PortsSeo.LEGAL_PATH,
+                structuredData = listOf(PortsSeo.breadcrumb(baseUrl(), "Mentions légales" to PortsSeo.LEGAL_PATH)),
+                body =
+                    "<main>" + PortsSeo.nav("Mentions légales" to null) + "<h1>Mentions légales</h1>" +
+                        "<h2>Éditeur</h2><p>$siteName est édité à titre personnel par ${LegalNotice.PUBLISHER}. " +
+                        "Contact : $contact.</p>" +
+                        "<h2>Directeur de la publication</h2><p>${LegalNotice.PUBLISHER}.</p>" +
+                        "<h2>Hébergeur</h2><p>${LegalNotice.HOST_FR}</p>" +
+                        "<h2>Données et contenus</h2><p>Les chiffres viennent de sources publiques, citées avec leur " +
+                        """année dans la <a href="${PortsSeo.METHODOLOGY_PATH}">méthodologie</a>. Les photos des """ +
+                        """navires viennent d’<a href="${LegalNotice.OPEN_VESSEL_PHOTOS_URL}/fr">Open Vessel """ +
+                        "Photos</a>, chacune sous sa licence libre et avec le nom de son auteur. Fond de carte © les " +
+                        """contributeurs d’<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>. """ +
+                        """Le <a href="${LegalNotice.SOURCE_CODE_URL}">code du site</a> est libre, sous licence """ +
+                        "AGPL-3.0.</p>" +
+                        "<h2>Données personnelles</h2><p>Le site ne dépose aucun cookie et ne mesure pas l’audience " +
+                        "de ses visiteurs : il compte seulement les pages vues, sans adresse IP ni identifiant. Un " +
+                        "port d’attache proposé est conservé avec le nom que son auteur choisit d’indiquer, le cas " +
+                        "échéant. Pour exercer vos droits d’accès, de rectification et d’effacement (RGPD), " +
+                        "écrivez à $contact.</p>" + links() + "</main>",
+            ),
+        )
+    }
+
     /** Each port with its fleet by family of gears and its auction's sales in its last year */
     @GetMapping("$PORTS_PREFIX${PortsSeo.PORTS_CSV_PATH}")
     fun portsCsv(): ResponseEntity<String> {
