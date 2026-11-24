@@ -1,0 +1,105 @@
+# Council Regulation (EU) 2026/249 of 26 January 2026 fixing for 2026, 2027 and 2028 the fishing opportunities in Union
+# waters (Annex IA), copied by hand from the Council's consolidated text (16872/25 ADD 1, 19 December 2025): the TACs
+# of the species Ifremer assesses (ifremer/stock-status.csv), with France's initial quota, before exchanges.
+# As amended by Regulation (EU) 2026/786 of 30 March 2026 (Spanish OJ copy: boe.es/doue/2026/786/L00001-00026.pdf):
+# mackerel for the whole of 2026 (249 only set the first half), albacore and bluefin tuna (ICCAT, Annex ID).
+# species, region: as in ifremer/stock-status.csv; a TAC whose zone spans two regions is in both. tac_tonnes is empty
+# when the TAC is not set by the Union (e.g. "Not relevant" in Norwegian waters).
+# year: 2026
+# url: https://eur-lex.europa.eu/eli/reg/2026/249/oj
+species;region;tac_code;area;tac_tonnes;france_tonnes
+Sole;MNMEST;SOL/07D.;Manche Est (7d);1275;669
+Sole;MNMEST;SOL/24-C.;Mer du Nord (4, eaux de l'Union de 2a);12454;180
+Sole;MOMCOE;SOL/07E.;Manche Ouest (7e);1213;411
+Sole;MOMCOE;SOL/7FG.;Canal de Bristol, mer Celtique sud (7f, 7g);989;57
+Sole;MOMCOE;SOL/7HJK.;Sud-ouest Irlande (7h, 7j, 7k);170;28
+Sole;MOMCOE;SOL/07A.;Mer d'Irlande (7a);545;4
+Sole;GASCOGNE;SOL/8AB.;Golfe de Gascogne nord et centre (8a, 8b);2482;2195
+Merlu;MNMEST;HKE/2AC4-C;Mer du Nord (3a, 4, eaux de l'Union de 2a);1904;138
+Merlu;MOMCOE;HKE/571214;Ouest Écosse, mer Celtique, Manche (6, 7, 5b, 12, 14);30607;13453
+Merlu;GASCOGNE;HKE/8ABDE.;Golfe de Gascogne (8a, 8b, 8d, 8e);20756;14120
+Baudroies;MNMEST;ANF/2AC4-C;Mer du Nord (4, eaux de l'Union de 2a);19387;79
+Baudroies;MNMEST;ANF/07.;Manche, mer Celtique (7);46122;25550
+Baudroies;MOMCOE;ANF/07.;Manche, mer Celtique (7);46122;25550
+Baudroies;MOMCOE;ANF/56-14;Ouest Écosse (6, 5b, 12, 14);10971;3890
+Baudroies;GASCOGNE;ANF/8ABDE.;Golfe de Gascogne (8a, 8b, 8d, 8e);12358;9978
+Cardine franche;MNMEST;LEZ/2AC4-C;Mer du Nord (4, eaux de l'Union de 2a);3065;50
+Cardine franche;MNMEST;LEZ/07.;Manche, mer Celtique (7);16024;5346
+Cardine franche;MOMCOE;LEZ/07.;Manche, mer Celtique (7);16024;5346
+Cardine franche;MOMCOE;LEZ/56-14;Ouest Écosse (6, 5b, 12, 14);6190;2225
+Cardine franche;GASCOGNE;LEZ/8ABDE.;Golfe de Gascogne (8a, 8b, 8d, 8e);1585;673
+Langoustine;MOMCOE;NEP/07.;Manche, mer Celtique (7);13167;2764
+Langoustine;MOMCOE;NEP/5BC6.;Ouest Écosse (6, 5b);16367;132
+Langoustine;GASCOGNE;NEP/8ABDE.;Golfe de Gascogne (8a, 8b, 8d, 8e);4014;3098
+Lieu jaune;MNMEST;POL/07.;Manche, mer Celtique (7);2224;1447
+Lieu jaune;MOMCOE;POL/07.;Manche, mer Celtique (7);2224;1447
+Lieu jaune;MOMCOE;POL/56-14;Ouest Écosse (6, 5b, 12, 14);93;45
+Lieu jaune;GASCOGNE;POL/8ABDE.;Golfe de Gascogne (8a, 8b, 8d, 8e);834;692
+Lieu noir;MNMEST;POK/2C3A4;Mer du Nord (3a, 4, eaux de l'Union de 2a);54053;10913
+Lieu noir;MOMCOE;POK/56-14;Ouest Écosse (6, 5b, 12, 14);5608;2423
+Lieu noir;MOMCOE;POK/7/3411;Manche, golfe de Gascogne (7, 8, 9, 10);146;83
+Lieu noir;GASCOGNE;POK/7/3411;Manche, golfe de Gascogne (7, 8, 9, 10);146;83
+Lieu noir;BARENTS;POK/1N2AB.;Eaux norvégiennes (1, 2);;55
+Églefin;MNMEST;HAD/2AC4.;Mer du Nord (4, eaux de l'Union de 2a);92337;4196
+Églefin;MOMCOE;HAD/7X7A34;Manche, mer Celtique (7b-k, 8, 9, 10);1824;989
+Églefin;MOMCOE;HAD/5BC6A.;Ouest Écosse (6a, 5b);10289;1132
+Églefin;MOMCOE;HAD/6B1214;Rockall (6b, 12, 14);14060;1198
+Églefin;BARENTS;HAD/1N2AB.;Eaux norvégiennes (1, 2);;188
+Merlan;MNMEST;WHG/2AC4.;Mer du Nord (4, eaux de l'Union de 2a);159344;15963
+Merlan;MNMEST;WHG/7X7A-C;Manche, mer Celtique (7b-k);41575;24234
+Merlan;MOMCOE;WHG/7X7A-C;Manche, mer Celtique (7b-k);41575;24234
+Merlan;MOMCOE;WHG/56-14;Ouest Écosse (6, 5b, 12, 14);5364;523
+Merlan;GASCOGNE;WHG/08.;Golfe de Gascogne (8);990;594
+Plie;MNMEST;PLE/2A3AX4;Mer du Nord (4, eaux de l'Union de 2a);144605;1130
+Plie;MNMEST;PLE/7DE.;Manche (7d, 7e);2203;973
+Plie;MOMCOE;PLE/7DE.;Manche (7d, 7e);2203;973
+Plie;MOMCOE;PLE/7FG.;Canal de Bristol, mer Celtique sud (7f, 7g);114;48
+Plie;MOMCOE;PLE/7HJK.;Sud-ouest Irlande (7h, 7j, 7k);130;15
+Plie;GASCOGNE;PLE/8/3411;Golfe de Gascogne (8, 9, 10);99;65
+Barbue;MNMEST;TUR/2AC4-C;Mer du Nord, turbot et barbue (4, eaux de l'Union de 2a);5240;94
+Barbue;MNMEST;BLL/07DE.;Manche (7d, 7e);913;384
+Barbue;MOMCOE;BLL/07DE.;Manche (7d, 7e);913;384
+Raie bouclée;MNMEST;SRX/07D.;Manche Est, toutes raies (7d);3353;2509
+Raie bouclée;MNMEST;SRX/2AC4-C;Mer du Nord, toutes raies (4, eaux de l'Union de 2a);3952;92
+Raie bouclée;MOMCOE;SRX/67AKXD;Ouest Écosse, mer Celtique, Manche Ouest, toutes raies (6, 7a-c, 7e-k);9320;3516
+Raie bouclée;GASCOGNE;SRX/89-C.;Golfe de Gascogne, toutes raies (8, 9);5821;2207
+Raie fleurie;MNMEST;SRX/07D.;Manche Est, toutes raies (7d);3353;2509
+Raie fleurie;MNMEST;SRX/2AC4-C;Mer du Nord, toutes raies (4, eaux de l'Union de 2a);3952;92
+Raie fleurie;MOMCOE;SRX/67AKXD;Ouest Écosse, mer Celtique, Manche Ouest, toutes raies (6, 7a-c, 7e-k);9320;3516
+Raie fleurie;GASCOGNE;SRX/89-C.;Golfe de Gascogne, toutes raies (8, 9);5821;2207
+Raie lisse (blonde);MNMEST;SRX/07D.;Manche Est, toutes raies (7d);3353;2509
+Raie lisse (blonde);MNMEST;SRX/2AC4-C;Mer du Nord, toutes raies (4, eaux de l'Union de 2a);3952;92
+Raie lisse (blonde);MOMCOE;SRX/67AKXD;Ouest Écosse, mer Celtique, Manche Ouest, toutes raies (6, 7a-c, 7e-k);9320;3516
+Raie mêlée;MNMEST;SRX/07D.;Manche Est, toutes raies (7d);3353;2509
+Raie mêlée;MNMEST;SRX/2AC4-C;Mer du Nord, toutes raies (4, eaux de l'Union de 2a);3952;92
+Raie mêlée;MOMCOE;SRX/67AKXD;Ouest Écosse, mer Celtique, Manche Ouest, toutes raies (6, 7a-c, 7e-k);9320;3516
+Aiguillat;MNMEST;DGS/2AC4-C;Mer du Nord (4, eaux de l'Union de 2a);2417;75
+Aiguillat;MOMCOE;DGS/15X14;Ouest Écosse, mer Celtique, Manche, golfe de Gascogne (6, 7, 8);7663;2017
+Aiguillat;GASCOGNE;DGS/15X14;Ouest Écosse, mer Celtique, Manche, golfe de Gascogne (6, 7, 8);7663;2017
+Chinchard;MNMEST;JAX/4BC7D;Mer du Nord sud, Manche Est (4b, 4c, 7d);970;22
+Chinchard;MOMCOE;JAX/2A-14;Ouest Écosse, mer Celtique, Manche Ouest, golfe de Gascogne (6, 7a-c, 7e-k, 8a, 8b, 8d, 8e);64072;2490
+Chinchard;GASCOGNE;JAX/2A-14;Ouest Écosse, mer Celtique, Manche Ouest, golfe de Gascogne (6, 7a-c, 7e-k, 8a, 8b, 8d, 8e);64072;2490
+Chinchard;GASCOGNE;JAX/08C.;Golfe de Gascogne sud (8c);10142;150
+Hareng;MNMEST;HER/4CXB7D;Mer du Nord sud, Manche Est (4c, 7d), TAC de tout le hareng de mer du Nord;328566;7569
+Hareng;MNMEST;HER/4AB.;Mer du Nord centre et nord (4 au nord de 53°30'N), TAC de tout le hareng de mer du Nord;328566;15874
+Hareng;MOMCOE;HER/7EF.;Manche Ouest, canal de Bristol (7e, 7f);154;77
+Hareng;MOMCOE;HER/7G-K.;Mer Celtique (7g, 7h, 7j, 7k);869;54
+Hareng;MOMCOE;HER/5B6ANB;Ouest Écosse (6b, 6aN, 5b);1501;27
+Lingue bleue;MNMEST;BLI/24-;Mer du Nord, mer de Norvège (2, 4);22;8
+Lingue bleue;MOMCOE;BLI/5B67-;Ouest Écosse, mer Celtique (5b, 6, 7);11132;7811
+Lingue bleue;BARENTS;BLI/24-;Mer du Nord, mer de Norvège (2, 4);22;8
+Lingue franche;MNMEST;LIN/04-C.;Mer du Nord (4);1586;74
+Lingue franche;MOMCOE;LIN/6X14.;Ouest Écosse, mer Celtique, Manche, golfe de Gascogne (6, 7, 8, 9, 10, 12, 14);7635;2101
+Lingue franche;GASCOGNE;LIN/6X14.;Ouest Écosse, mer Celtique, Manche, golfe de Gascogne (6, 7, 8, 9, 10, 12, 14);7635;2101
+Lingue franche;BARENTS;LIN/1/2.;Mer de Barents, mer de Norvège (1, 2);25;5
+Maquereau;MNMEST;MAC/2A34-N.;Mer du Nord (3a, 4, eaux de l'Union de 2a);299010;685
+Maquereau;MNMEST;MAC/2CX14-;Ouest Écosse, mer Celtique, Manche, golfe de Gascogne (6, 7, 8a, 8b, 8d, 8e);299010;3742
+Maquereau;MOMCOE;MAC/2CX14-;Ouest Écosse, mer Celtique, Manche, golfe de Gascogne (6, 7, 8a, 8b, 8d, 8e);299010;3742
+Maquereau;GASCOGNE;MAC/2CX14-;Ouest Écosse, mer Celtique, Manche, golfe de Gascogne (6, 7, 8a, 8b, 8d, 8e);299010;3742
+Maquereau;GASCOGNE;MAC/8C3411;Golfe de Gascogne sud (8c);299010;75
+Anchois;GASCOGNE;ANE/08.;Golfe de Gascogne (8);33000;3300
+thon germon;MOMCOE;ALB/ICAN05NXM;Atlantique nord (CICTA, nord de 5°N);47251;8791.67
+thon germon;GASCOGNE;ALB/ICAN05NXM;Atlantique nord (CICTA, nord de 5°N);47251;8791.67
+thon germon;MED;ALB/MED;Méditerranée (CICTA);2500;14.45
+Thon rouge;GASCOGNE;BFT/ICAE45W;Atlantique est et Méditerranée (CICTA, est de 45°W);48403;8080.19
+Thon rouge;MED;BFT/ICAE45W;Atlantique est et Méditerranée (CICTA, est de 45°W);48403;8080.19

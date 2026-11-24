@@ -1460,8 +1460,8 @@ class PublicAndAdminApiITests {
             .andExpect(jsonPath("$.skipped").value(1))
         import(
             "/v1/admin/ports/positions/import",
-            "locode,latitude,longitude\nFRQUY,48.633,-2.467\nFRZZZ,1,1\nFRCBT,x,1",
-        ).andExpect(jsonPath("$.updated").value(1))
+            "locode,latitude,longitude\nFRQUY,48.633,-2.467\nFRLRH-0015,46.15,-1.15\nFRZZZ,1,1\nFRCBT,x,1",
+        ).andExpect(jsonPath("$.updated").value(2))
             .andExpect(jsonPath("$.unknown").value(1))
             .andExpect(jsonPath("$.skipped").value(1))
 
@@ -1565,6 +1565,15 @@ class PublicAndAdminApiITests {
                     "Manche Ouest – mer Celtique – Ouest Écosse",
                 ),
             ).andExpect(jsonPath("$.auction.stockAssessment.edition").value(2025))
+            // Bass has no TAC
+            .andExpect(jsonPath("$.auction.species[0].quotas").doesNotExist())
+            .andExpect(jsonPath("$.auction.fishingOpportunities").doesNotExist())
+        // La Rochelle is in the Bay of Biscay: the TAC of sole there, with the quota of France (Council regulation)
+        mockMvc
+            .perform(get("/v1/ports/FRLRH-0015"))
+            .andExpect(jsonPath("$.auction.species[?(@.name == 'Sole')].quotas[0].tacCode").value("SOL/8AB."))
+            .andExpect(jsonPath("$.auction.species[?(@.name == 'Sole')].quotas[0].franceTonnes").value(2195.0))
+            .andExpect(jsonPath("$.auction.fishingOpportunities.year").value(2026))
 
         // Owners, each with its source; a row without source is skipped
         import(
@@ -1668,6 +1677,7 @@ class PublicAndAdminApiITests {
             .andExpect(content().string(containsString("<th scope=\"col\" class=\"stock\">État des stocks</th>")))
             .andExpect(content().string(containsString("""data-stock="BON_ETAT"""")))
             .andExpect(content().string(containsString("Ifremer, bilan du statut des ressources halieutiques")))
+            .andExpect(content().string(containsString("<th scope=\"col\">Quota France 2026</th>")))
         val speciesPage =
             pages
                 .perform(onPortsHost("/_ports/especes/bar"))
@@ -1686,6 +1696,7 @@ class PublicAndAdminApiITests {
             .andExpect(status().isOk)
             .andExpect(content().string(containsString("<h1>Méthodologie et sources</h1>")))
             .andExpect(content().string(containsString("""<h2 id="stocks">L’état des stocks</h2>""")))
+            .andExpect(content().string(containsString("""<h2 id="quotas">Les TAC et les quotas</h2>""")))
         pages
             .perform(onPortsHost("/_ports/petite-peche-cotiere"))
             .andExpect(status().isOk)
