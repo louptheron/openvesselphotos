@@ -11,6 +11,8 @@ export const MOBILE_QUERY = '(max-width: 760px)'
 export const SHEET_HEIGHT = 0.6
 /** Taller when it shows a port, which has more to read: the map above still shows the port */
 export const PORT_SHEET_HEIGHT = 0.72
+/** Folded, the sheet shows only its top strip, the handle and the site name, and leaves the map */
+export const SHEET_FOLDED_HEIGHT = 80
 /** On phones, the gear filter bar covers the top of the map: the expanded sheet stops below it */
 export const SHEET_TOP_OFFSET = 64
 

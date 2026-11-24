@@ -7,7 +7,15 @@ import type { Port, PortVessel } from '../api/types'
 import { fr } from '../i18n/fr'
 import { COLORS, FONTS, SKIES, getSkyAndSea } from '../theme'
 import { getNamedPhotoUrl, getPhotoSlug } from '../utils/vesselKey'
-import { MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH, PORT_SHEET_HEIGHT, SHEET_HEIGHT, SHEET_TOP_OFFSET } from './layout'
+import {
+  MOBILE_QUERY,
+  PANEL_MARGIN,
+  PANEL_WIDTH,
+  PORT_SHEET_HEIGHT,
+  SHEET_FOLDED_HEIGHT,
+  SHEET_HEIGHT,
+  SHEET_TOP_OFFSET
+} from './layout'
 import { PortPortrait } from './PortPortrait'
 import { AuctionList } from './AuctionList'
 import { AuctionSales } from './AuctionSales'
@@ -48,27 +56,38 @@ type Props = {
   ports: Port[]
 }
 
+/** On phones, the heights of the sheet, from the lowest: only its top strip, its own height, the whole screen */
+const SHEET_STATES = ['folded', 'normal', 'expanded'] as const
+type SheetState = (typeof SHEET_STATES)[number]
+
 /** Floating over the map on wide screens, a sheet at the bottom on phones */
 export function PortPanel({ gear, isError, isLoading, locode, onFitExtent, onHighlight, onSelect, ports }: Props) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [sheetState, setSheetState] = useState<SheetState>('normal')
   const { search } = useLocation()
   const panelRef = useRef<HTMLElement>(null)
-  const dragHandlers = useSheetDrag(panelRef, setIsExpanded)
+  const dragHandlers = useSheetDrag(panelRef, !!locode, sheetState, setSheetState)
 
   // A port chosen on the map or in the list opens at its own height, with the map around it
   const [shownLocode, setShownLocode] = useState(locode)
   if (locode !== shownLocode) {
     setShownLocode(locode)
-    setIsExpanded(false)
+    setSheetState('normal')
   }
 
   return (
-    <Panel $hasPort={!!locode} $isExpanded={isExpanded} aria-label="Ports et navires" ref={panelRef}>
+    <Panel $hasPort={!!locode} $sheetState={sheetState} aria-label="Ports et navires" ref={panelRef}>
       <SheetTop {...dragHandlers}>
         <SheetHandle
-          aria-expanded={isExpanded}
-          aria-label={isExpanded ? 'Réduire le panneau' : 'Agrandir le panneau'}
-          onClick={() => setIsExpanded(!isExpanded)}
+          aria-expanded={sheetState !== 'folded'}
+          aria-label={
+            sheetState === 'folded'
+              ? 'Afficher le panneau'
+              : sheetState === 'normal'
+                ? 'Agrandir le panneau'
+                : 'Réduire le panneau'
+          }
+          // A tap goes up a step, and from the top back to the sheet's own height
+          onClick={() => setSheetState(sheetState === 'normal' ? 'expanded' : 'normal')}
           type="button"
         />
         <Brand>
@@ -110,22 +129,35 @@ export function PortPanel({ gear, isError, isLoading, locode, onFitExtent, onHig
 
 /** Past this many pixels, a touch on the top of the sheet is a drag, not a tap */
 const DRAG_THRESHOLD = 8
-/** A drag longer than this expands or folds the sheet, a shorter one puts it back */
+/** A drag longer than this moves the sheet at least a step up or down, a shorter one puts it back */
 const SNAP_DISTANCE = 40
-/** The sheet never gets lower than its top strip */
-const MIN_SHEET_HEIGHT = 96
 
-/**
- * On phones, dragging the top of the sheet (its handle and the site name) resizes it,
- * then lets it go expanded or folded. A tap still toggles the handle, or follows the link.
- */
+/** On phones, the height of the sheet in each of its states, in pixels */
+function getSheetHeights(hasPort: boolean): Record<SheetState, number> {
+  return {
+    expanded: window.innerHeight - SHEET_TOP_OFFSET,
+    folded: SHEET_FOLDED_HEIGHT,
+    normal: window.innerHeight * (hasPort ? PORT_SHEET_HEIGHT : SHEET_HEIGHT)
+  }
+}
+
 /** A drag ends with a click on what is under the finger: it neither toggles the sheet nor follows a link */
 function swallowClick(event: Event) {
   event.preventDefault()
   event.stopPropagation()
 }
 
-function useSheetDrag(panelRef: RefObject<HTMLElement | null>, setIsExpanded: (isExpanded: boolean) => void) {
+/**
+ * On phones, dragging the top of the sheet (its handle and the site name) resizes it, then lets it go
+ * to the nearest of its heights: folded down to its top strip, its own height or expanded.
+ * A tap still toggles the handle, or follows the link.
+ */
+function useSheetDrag(
+  panelRef: RefObject<HTMLElement | null>,
+  hasPort: boolean,
+  sheetState: SheetState,
+  setSheetState: (sheetState: SheetState) => void
+) {
   /** Ends the drag under way, if any */
   const stopDrag = useRef<(() => void) | undefined>(undefined)
 
@@ -156,8 +188,8 @@ function useSheetDrag(panelRef: RefObject<HTMLElement | null>, setIsExpanded: (i
           hasMoved = true
           panel.style.transition = 'none'
         }
-        const maxHeight = window.innerHeight - SHEET_TOP_OFFSET
-        panel.style.height = `${Math.min(maxHeight, Math.max(MIN_SHEET_HEIGHT, startHeight - deltaY))}px`
+        const heights = getSheetHeights(hasPort)
+        panel.style.height = `${Math.min(heights.expanded, Math.max(heights.folded, startHeight - deltaY))}px`
       }
       const onEnd = (endEvent: globalThis.PointerEvent) => {
         if (endEvent.pointerId !== pointerId) {
@@ -170,11 +202,16 @@ function useSheetDrag(panelRef: RefObject<HTMLElement | null>, setIsExpanded: (i
         window.addEventListener('click', swallowClick, { capture: true, once: true })
         setTimeout(() => window.removeEventListener('click', swallowClick, { capture: true }), 0)
         const deltaY = endEvent.clientY - startY
-        if (deltaY < -SNAP_DISTANCE) {
-          setIsExpanded(true)
-        } else if (deltaY > SNAP_DISTANCE) {
-          setIsExpanded(false)
-        }
+        const heights = getSheetHeights(hasPort)
+        const endHeight = startHeight - deltaY
+        const nearest = SHEET_STATES.reduce((best, state) =>
+          Math.abs(heights[state] - endHeight) < Math.abs(heights[best] - endHeight) ? state : best
+        )
+        // A short flick still moves it a step
+        const step = Math.abs(deltaY) < SNAP_DISTANCE ? 0 : Math.sign(-deltaY)
+        const index = SHEET_STATES.indexOf(sheetState)
+        const stepped = SHEET_STATES[Math.min(SHEET_STATES.length - 1, Math.max(0, index + step))] ?? sheetState
+        setSheetState(nearest === sheetState ? stepped : nearest)
       }
       const stop = () => {
         window.removeEventListener('pointermove', onMove)
@@ -844,7 +881,7 @@ function BoatIcon() {
 
 /* Layout */
 
-const Panel = styled.aside<{ $hasPort: boolean; $isExpanded: boolean }>`
+const Panel = styled.aside<{ $hasPort: boolean; $sheetState: SheetState }>`
   position: absolute;
   top: ${PANEL_MARGIN}px;
   bottom: ${PANEL_MARGIN}px;
@@ -865,10 +902,12 @@ const Panel = styled.aside<{ $hasPort: boolean; $isExpanded: boolean }>`
     bottom: 0;
     left: 0;
     width: auto;
-    height: ${({ $hasPort, $isExpanded }) =>
-      $isExpanded
-        ? `calc(100dvh - ${SHEET_TOP_OFFSET}px)`
-        : `${($hasPort ? PORT_SHEET_HEIGHT : SHEET_HEIGHT) * 100}dvh`};
+    height: ${({ $hasPort, $sheetState }) =>
+      ({
+        expanded: `calc(100dvh - ${SHEET_TOP_OFFSET}px)`,
+        folded: `${SHEET_FOLDED_HEIGHT}px`,
+        normal: `${($hasPort ? PORT_SHEET_HEIGHT : SHEET_HEIGHT) * 100}dvh`
+      })[$sheetState]};
     border-radius: 6px 22px 0 0;
     transition: height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
