@@ -11,7 +11,8 @@ import org.springframework.web.filter.OncePerRequestFilter
  * Serves the ports site on its own host: its pages are forwarded to [PORTS_PREFIX] (e.g. "/FRQUY" to "/_ports/FRQUY",
  * see [PortsPagesController]), while the shared API, assets and favicons are served as they are. So no page is served
  * on both hosts, which search engines would see as duplicate content: the ports pages are not found on the Open Vessel
- * Photos host, nor its pages on the ports host.
+ * Photos host, nor its pages on the ports host. The icons browsers and search engines fetch at the root, without
+ * reading the page (/favicon.ico, /apple-touch-icon.png), are the ports site's own on its host.
  */
 @Component
 @Order(1)
@@ -36,6 +37,11 @@ class SiteHostFilter(
                     filterChain.doFilter(request, response)
                 }
             isPortsPath -> response.sendError(HttpServletResponse.SC_NOT_FOUND)
+            path in ROOT_ICONS ->
+                request
+                    .getRequestDispatcher(
+                        "/ports-${path.removePrefix("/")}",
+                    ).forward(request, response)
             SHARED_PATHS.any { path.startsWith(it) } || path in SHARED_FILES -> filterChain.doFilter(request, response)
             else -> request.getRequestDispatcher(PORTS_PREFIX + path).forward(request, response)
         }
@@ -47,6 +53,10 @@ class SiteHostFilter(
         /** The raw template of the ports pages, see [Site.PORTS] */
         private const val PORTS_TEMPLATE_PATH = "/ports.html"
         private val SHARED_PATHS = listOf("/v1/", "/assets/")
-        private val SHARED_FILES = setOf("/favicon.svg", "/ports-favicon.svg")
+        private val ICONS = listOf("favicon.ico", "favicon.svg", "favicon-96.png", "apple-touch-icon.png")
+        private val SHARED_FILES = ICONS.flatMap { listOf("/$it", "/ports-$it") }.toSet()
+
+        /** Fetched at the root by browsers and search engines: on the ports host, its own icons */
+        private val ROOT_ICONS = setOf("/favicon.ico", "/apple-touch-icon.png")
     }
 }

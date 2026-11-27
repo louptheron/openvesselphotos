@@ -45,12 +45,26 @@ class SiteHostFilterUTests {
 
     @Test
     fun `The API, assets and favicon Should be served on both hosts`() {
-        listOf("/v1/ports", "/assets/index-abc.js", "/favicon.svg").forEach {
+        listOf(
+            "/v1/ports",
+            "/assets/index-abc.js",
+            "/favicon.svg",
+            "/ports-favicon.ico",
+            "/ports-favicon-96.png",
+        ).forEach {
             val response = send("ports-de-peche.fr", it)
 
             assertThat(response.forwardedUrl).isNull()
             assertThat(response.status).isEqualTo(200)
         }
+    }
+
+    @Test
+    fun `The root icons Should be the ports site's own on its host`() {
+        assertThat(send("ports-de-peche.fr", "/favicon.ico").forwardedUrl).isEqualTo("/ports-favicon.ico")
+        assertThat(send("ports-de-peche.fr", "/apple-touch-icon.png").forwardedUrl)
+            .isEqualTo("/ports-apple-touch-icon.png")
+        assertThat(send("openvesselphotos.org", "/favicon.ico").forwardedUrl).isNull()
     }
 
     @Test
