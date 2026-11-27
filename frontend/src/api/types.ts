@@ -423,6 +423,8 @@ export type PortAuction = {
   quantityTonnes: number
   /** The main species sold, by value */
   species: AuctionSpecies[]
+  /** The Council regulation, the source of the TACs of the species; null when none has one */
+  fishingOpportunities: FishingOpportunities | null
   /** Ifremer's assessment, the source of the stock statuses of the species; null when none has one */
   stockAssessment: StockAssessment | null
   valueThousandEuros: number
@@ -433,6 +435,23 @@ export type StockAssessment = {
   /** e.g. 2025 for the "Bilan 2025", of the landings of 2024 */
   edition: number
   url: string
+}
+
+export type FishingOpportunities = {
+  url: string
+  /** The year of the TACs, e.g. 2026 */
+  year: number
+}
+
+/** A TAC the Union fixes for a stock, with the initial quota of France (before exchanges) */
+export type FishingOpportunity = {
+  /** e.g. "Manche Est (7d)" */
+  area: string
+  franceTonnes: number
+  /** e.g. "SOL/07D." */
+  tacCode: string
+  /** null when the Union does not set it, e.g. in Norwegian waters */
+  tacTonnes: number | null
 }
 
 /** A stock status from Ifremer, or VARIABLE when the main stocks of a species differ */
@@ -464,6 +483,8 @@ export type AuctionSpecies = {
   previousQuantityTonnes: number | null
   priceEurosPerKg: number | null
   quantityTonnes: number
+  /** The TACs it is fished under in the waters of the port, France's largest quota first; null when it has none */
+  quotas: FishingOpportunity[] | null
   /** The status of the stocks it is landed from in the waters of the port (Ifremer); null when not assessed */
   stockStatus: StockStatus | null
   valueThousandEuros: number

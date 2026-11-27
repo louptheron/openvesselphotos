@@ -12,7 +12,7 @@ class AuctionSalesWorkbookParserUTests {
     fun `parse Should read the sales of each auction by species, for both years`() {
         val data = AuctionSalesWorkbookParser.parse(TestWorkbooks.auctionSales())
 
-        assertThat(data.sales).hasSize(10)
+        assertThat(data.sales).hasSize(12)
         assertThat(data.sales).contains(
             AuctionSpeciesSales("Erquy", 2025, null, 120.0, 400.0),
             AuctionSpeciesSales("Erquy", 2024, "Bar", 10.0, 150.0),

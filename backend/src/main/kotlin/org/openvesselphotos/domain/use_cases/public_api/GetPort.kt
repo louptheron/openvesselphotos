@@ -9,6 +9,7 @@ import org.openvesselphotos.domain.entities.PortVessel
 import org.openvesselphotos.domain.exceptions.BackendUsageErrorCode
 import org.openvesselphotos.domain.exceptions.BackendUsageException
 import org.openvesselphotos.domain.repositories.AuctionSalesRepository
+import org.openvesselphotos.domain.repositories.FishingOpportunityRepository
 import org.openvesselphotos.domain.repositories.PortRepository
 import org.openvesselphotos.domain.repositories.StockAssessmentRepository
 import org.openvesselphotos.domain.repositories.VesselRepository
@@ -22,6 +23,7 @@ class GetPort(
     private val vesselPhotosLoader: VesselPhotosLoader,
     private val auctionSalesRepository: AuctionSalesRepository,
     private val stockAssessmentRepository: StockAssessmentRepository,
+    private val fishingOpportunityRepository: FishingOpportunityRepository,
 ) {
     fun execute(locode: String): PortDetails {
         val port =
@@ -46,7 +48,7 @@ class GetPort(
 
     /**
      * The auction of the port, with the seasons of the species sold there in its last year, and the status of the
-     * stocks they are landed from in the waters of the port
+     * stocks they are landed from and the TACs they are fished under in the waters of the port
      */
     private fun findAuction(port: Port): PortAuction? {
         val sales = auctionSalesRepository.findByPort(port.locode)
@@ -65,21 +67,38 @@ class GetPort(
                 }.toMap()
 
         val stockAssessment = stockAssessmentRepository.find()
+        val fishingOpportunities = fishingOpportunityRepository.find()
         val region = FishingRegion.ofPort(port.latitude, port.longitude)
+        val species = auctionSales.filter { it.year == year }.mapNotNull { it.species }
         val stocks =
-            if (region == null) {
-                emptyMap()
-            } else {
-                auctionSales
-                    .filter { it.year == year }
-                    .mapNotNull { it.species }
-                    .mapNotNull { species ->
-                        stockAssessment.bySpecies[ImportAuctionSales.normalize(species)]
-                            ?.inRegion(region)
-                            ?.let { species to it }
+            region?.let {
+                species
+                    .mapNotNull { name ->
+                        stockAssessment.bySpecies[ImportAuctionSales.normalize(name)]?.inRegion(region)?.let {
+                            name to
+                                it
+                        }
                     }.toMap()
-            }
+            } ?: emptyMap()
+        val quotas =
+            region?.let {
+                species
+                    .mapNotNull { name ->
+                        fishingOpportunities.bySpecies[ImportAuctionSales.normalize(name)]
+                            ?.inRegion(region)
+                            ?.let { name to it }
+                    }.toMap()
+            } ?: emptyMap()
 
-        return PortAuction(auction, year, auctionSales, monthlySales, stocks, stockAssessment)
+        return PortAuction(
+            auction,
+            year,
+            auctionSales,
+            monthlySales,
+            stocks,
+            stockAssessment,
+            quotas,
+            fishingOpportunities,
+        )
     }
 }

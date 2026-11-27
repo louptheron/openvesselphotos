@@ -28,6 +28,7 @@ object TestWorkbooks {
                 23 to mapOf("A" to "Nom de l'espèce"),
                 24 to mapOf("A" to "Total", "B" to "50", "C" to "100", "F" to "60", "G" to "130"),
                 25 to mapOf("A" to "Rouget-Barbet", "B" to "5", "C" to "40", "F" to "6", "G" to "50"),
+                26 to mapOf("A" to "Sole", "B" to "2", "C" to "30", "F" to "3", "G" to "45"),
             )
         val bar =
             mapOf(

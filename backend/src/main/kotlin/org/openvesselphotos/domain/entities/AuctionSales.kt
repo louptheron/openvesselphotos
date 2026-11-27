@@ -41,6 +41,10 @@ data class PortAuction(
     val stocks: Map<String, SpeciesStocks> = emptyMap(),
     /** Ifremer's assessment, to credit it */
     val stockAssessment: StockAssessment = StockAssessment.NONE,
+    /** The TACs each species is fished under in the waters of the port, by name as sold, when the Union fixes them */
+    val quotas: Map<String, SpeciesQuotas> = emptyMap(),
+    /** The Council regulation, to credit it */
+    val fishingOpportunities: FishingOpportunities = FishingOpportunities.NONE,
 )
 
 /** The sales of all species at the auction of a port, in its last year */
@@ -69,6 +73,8 @@ data class SpeciesSales(
     val monthlySales: List<SpeciesMonthlySales>,
     /** The stocks it is landed from, when Ifremer assesses them */
     val stocks: SpeciesStocks? = null,
+    /** The TACs it is fished under, with France's quotas, when the Union fixes them */
+    val quotas: SpeciesQuotas? = null,
 ) {
     val priceEurosPerKg: Double? get() = if (quantityTonnes > 0) valueThousandEuros / quantityTonnes else null
 }

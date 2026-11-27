@@ -4,8 +4,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.openvesselphotos.domain.entities.AuctionSpeciesSales
 import org.openvesselphotos.domain.entities.FishStock
+import org.openvesselphotos.domain.entities.FishingOpportunities
+import org.openvesselphotos.domain.entities.FishingOpportunity
 import org.openvesselphotos.domain.entities.FishingRegion
 import org.openvesselphotos.domain.entities.SpeciesMonthlySales
+import org.openvesselphotos.domain.entities.SpeciesQuotas
 import org.openvesselphotos.domain.entities.SpeciesStocks
 import org.openvesselphotos.domain.entities.StockAssessment
 import org.openvesselphotos.domain.entities.StockStatus
@@ -67,5 +70,26 @@ class GetSpeciesUTests {
         assertThat(species.first { it.slug == "rouget-barbet" }.stocks).isEqualTo(mulletStocks)
         // Not assessed
         assertThat(species.first { it.slug == "maigre" }.stocks).isNull()
+    }
+
+    @Test
+    fun `summarize Should give each species the TACs it is fished under, by its normalized name`() {
+        val soleQuotas =
+            SpeciesQuotas(
+                listOf(FishingOpportunity("SOL/07D.", "Manche Est (7d)", FishingRegion.MNMEST, 1275.0, 669.0)),
+            )
+        val species =
+            GetSpecies.summarize(
+                listOf(
+                    AuctionSpeciesSales("Erquy", 2025, "Sole", 6.0, 50.0, "FRQUY"),
+                    AuctionSpeciesSales("Erquy", 2025, "Bar", 1.0, 20.0, "FRQUY"),
+                ),
+                emptyList(),
+                fishingOpportunities = FishingOpportunities(2026, "https://example.org", mapOf("sole" to soleQuotas)),
+            )
+
+        assertThat(species.first { it.slug == "sole" }.quotas).isEqualTo(soleQuotas)
+        // No TAC
+        assertThat(species.first { it.slug == "bar" }.quotas).isNull()
     }
 }

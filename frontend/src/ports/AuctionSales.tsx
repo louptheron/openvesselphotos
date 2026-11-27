@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import styled from 'styled-components'
 
-import type { AuctionSpecies, PortAuction, StockStatus } from '../api/types'
+import type { AuctionSpecies, FishingOpportunity, PortAuction, StockStatus } from '../api/types'
 import { of } from '../i18n/fr'
 import { COLORS, FONTS } from '../theme'
 import { STOCK_STYLES } from './stockStatus'
@@ -87,7 +87,12 @@ export function AuctionSales({ auction, isFloating = false }: { auction: PortAuc
           </Subtitle>
           <SpeciesList>
             {auction.species.map(species => (
-              <SpeciesRow key={species.name} maxQuantity={maxQuantity} species={species} />
+              <SpeciesRow
+                key={species.name}
+                maxQuantity={maxQuantity}
+                quotaYear={auction.fishingOpportunities?.year}
+                species={species}
+              />
             ))}
           </SpeciesList>
         </>
@@ -110,34 +115,51 @@ export function AuctionSales({ auction, isFloating = false }: { auction: PortAuc
               (<a href="/methodologie#stocks">ce que veut dire chaque état</a>).
             </>
           )}
+          {auction.fishingOpportunities && (
+            <>
+              {' '}
+              Quotas :{' '}
+              <a href={auction.fishingOpportunities.url} rel="noopener" target="_blank">
+                TAC {auction.fishingOpportunities.year} du Conseil de l’UE
+              </a>
+              , part initiale de la France (<a href="/methodologie#quotas">les quotas par navire ne sont pas publics</a>
+              ).
+            </>
+          )}
         </Note>
       )}
     </Card>
   )
 }
 
-function SpeciesRow({ maxQuantity, species }: { maxQuantity: number; species: AuctionSpecies }) {
+function SpeciesRow({
+  maxQuantity,
+  quotaYear,
+  species
+}: {
+  maxQuantity: number
+  quotaYear: number | undefined
+  species: AuctionSpecies
+}) {
   const months = species.monthlyQuantitiesTonnes
   const maxMonth = months ? Math.max(...months) : 0
   const averageMonth = months ? months.reduce((sum, value) => sum + value, 0) / 12 : 0
   const isInSeason = months !== null && maxMonth > 0 && (months[CURRENT_MONTH] ?? 0) >= averageMonth
 
   return (
-    <li>
-      <SpeciesMain>
-        <SpeciesName>
-          {capitalize(species.name)}
-          {isInSeason && <InSeason title="Plus vendue que la moyenne ce mois-ci">de saison</InSeason>}
-          {species.stockStatus && <StockBadge stockStatus={species.stockStatus} />}
-        </SpeciesName>
-        <Quantity>
-          <span>
-            <span style={{ width: `${(species.quantityTonnes / maxQuantity) * 100}%` }} />
-          </span>
-          <b>{formatNumber(Math.round(species.quantityTonnes))} t</b>
-          {species.priceEurosPerKg !== null && <small>{formatPrice(species.priceEurosPerKg)}</small>}
-        </Quantity>
-      </SpeciesMain>
+    <SpeciesItem>
+      <SpeciesName>
+        {capitalize(species.name)}
+        {isInSeason && <InSeason title="Plus vendue que la moyenne ce mois-ci">de saison</InSeason>}
+      </SpeciesName>
+      <StockCell>{species.stockStatus && <StockBadge stockStatus={species.stockStatus} />}</StockCell>
+      <Quantity>
+        <span>
+          <span style={{ width: `${(species.quantityTonnes / maxQuantity) * 100}%` }} />
+        </span>
+        <b>{formatNumber(Math.round(species.quantityTonnes))} t</b>
+        {species.priceEurosPerKg !== null && <small>{formatPrice(species.priceEurosPerKg)}</small>}
+      </Quantity>
       {months ? (
         <Season aria-label={`Saison : ventes de ${species.name} par mois en France`}>
           {months.map((value, index) => (
@@ -152,7 +174,32 @@ function SpeciesRow({ maxQuantity, species }: { maxQuantity: number; species: Au
       ) : (
         <NoSeason />
       )}
-    </li>
+      {species.quotas && <QuotaLine quotas={species.quotas} year={quotaYear} />}
+    </SpeciesItem>
+  )
+}
+
+/**
+ * France's quota of the TACs a species is fished under in the waters of the port, on a line of its own: a national
+ * figure, not the port's, with each TAC in the title
+ */
+function QuotaLine({ quotas, year }: { quotas: FishingOpportunity[]; year: number | undefined }) {
+  const franceTonnes = quotas.reduce((sum, quota) => sum + quota.franceTonnes, 0)
+  const title = [
+    'Part initiale de la France, avant échanges (TAC du Conseil de l’UE) :',
+    ...quotas.map(
+      quota =>
+        `${quota.area} : ${formatNumber(Math.round(quota.franceTonnes))} t` +
+        (quota.tacTonnes !== null ? ` sur un TAC de ${formatNumber(Math.round(quota.tacTonnes))} t` : '') +
+        ` (${quota.tacCode})`
+    )
+  ].join('\n')
+
+  return (
+    <QuotaText title={title}>
+      Quota France{year ? ` ${year}` : ''}
+      {quotas.length > 1 ? ` (${quotas.length} zones)` : ''} : <b>{formatNumber(Math.round(franceTonnes))} t</b>
+    </QuotaText>
   )
 }
 
@@ -309,43 +356,65 @@ const Months = styled.span`
 `
 
 const SpeciesList = styled.ul`
-  display: grid;
-  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
+`
 
-  li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+/**
+ * A grid, so that every row has the same columns whatever its content: the name and the stock status, the sales and
+ * the season, then the quota across
+ */
+const SpeciesItem = styled.li`
+  display: grid;
+  /* The status pill can be wider than the season strip: both end on the right, under the months */
+  grid-template-columns: minmax(0, 1fr) minmax(${SEASON_WIDTH}px, auto);
+  align-items: center;
+  gap: 4px 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid ${COLORS.divider};
+
+  &:last-child {
+    border-bottom: none;
   }
 `
 
-const SpeciesMain = styled.div`
-  flex: 1;
+const SpeciesName = styled.div`
   min-width: 0;
+  color: ${COLORS.ink};
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.3;
 `
 
-const SpeciesName = styled.div`
+const StockCell = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 6px;
-  color: ${COLORS.ink};
-  font-size: 13px;
-  font-weight: 600;
+  justify-content: flex-end;
 `
 
 const InSeason = styled.span`
-  color: #1d6b3d;
+  margin-left: 6px;
+  color: ${COLORS.approve};
   font-size: 11px;
   font-weight: 500;
+  white-space: nowrap;
+`
+
+const QuotaText = styled.span`
+  grid-column: 1 / -1;
+  color: ${COLORS.muted};
+  font-size: 11.5px;
+  cursor: help;
+
+  b {
+    color: ${COLORS.text};
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
 `
 
 /** Right-aligned on the name line, so that the statuses make a column */
 const Stock = styled.span<{ $background: string; $color: string }>`
-  margin-left: auto;
   padding: 1px 6px;
   border-radius: 999px;
   background: ${({ $background }) => $background};
@@ -361,7 +430,7 @@ const Quantity = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 3px;
+  min-width: 0;
   color: ${COLORS.muted};
   font-size: 11.5px;
 
@@ -395,7 +464,7 @@ const Quantity = styled.div`
 /** A strip of 12 months, darker when more is sold */
 const Season = styled.span`
   display: grid;
-  flex: none;
+  justify-self: end;
   grid-template-columns: repeat(12, 1fr);
   gap: 1px;
   width: ${SEASON_WIDTH}px;
@@ -413,7 +482,7 @@ const Season = styled.span`
 `
 
 const NoSeason = styled.span`
-  flex: none;
+  justify-self: end;
   width: ${SEASON_WIDTH}px;
 `
 

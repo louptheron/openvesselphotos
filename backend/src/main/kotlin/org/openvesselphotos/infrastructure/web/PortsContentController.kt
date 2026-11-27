@@ -1,5 +1,6 @@
 package org.openvesselphotos.infrastructure.web
 
+import org.openvesselphotos.domain.entities.SpeciesQuotas
 import org.openvesselphotos.domain.entities.SpeciesSales
 import org.openvesselphotos.domain.entities.SpeciesStocks
 import org.openvesselphotos.domain.entities.StockStatus
@@ -47,6 +48,8 @@ class PortsContentController(
         val updatedOn = getPorts.lastUpdate()
         val stockAssessment = getSpecies.stockAssessment()
         val hasStocks = species.any { it.stocks != null }
+        val fishingOpportunities = getSpecies.fishingOpportunities()
+        val hasQuotas = species.any { it.quotas != null }
         val description =
             if (year == null) {
                 "Les espèces de poissons, coquillages et crustacés vendues dans les criées françaises."
@@ -91,7 +94,8 @@ class PortsContentController(
                 """<tr><th scope="row"><a href="${PortsSeo.speciesPath(it.slug)}">${escapeHtml(it.name)}</a></th>""" +
                     "<td>${number(it.quantityTonnes)} t</td><td>${millions(it.valueThousandEuros)}</td>" +
                     "<td>${it.priceEurosPerKg?.let { p -> price(p) } ?: ""}</td>" +
-                    (if (hasStocks) """<td class="stock">${stockCell(it.stocks)}</td>""" else "") + "</tr>"
+                    (if (hasStocks) """<td class="stock">${stockCell(it.stocks)}</td>""" else "") +
+                    (if (hasQuotas) "<td>${quotaCell(it.quotas)}</td>" else "") + "</tr>"
             }
 
         return render(
@@ -118,6 +122,13 @@ class PortsContentController(
                                     "<table><thead><tr><th scope=\"col\">Espèce</th><th scope=\"col\">Quantité</th>" +
                                     "<th scope=\"col\">Valeur</th><th scope=\"col\">Prix moyen</th>" +
                                     (if (hasStocks) "<th scope=\"col\" class=\"stock\">État des stocks</th>" else "") +
+                                    (
+                                        if (hasQuotas) {
+                                            "<th scope=\"col\">Quota France ${fishingOpportunities.year}</th>"
+                                        } else {
+                                            ""
+                                        }
+                                    ) +
                                     "</tr></thead><tbody>$rows</tbody></table>" +
                                     "<p>Sources : ${PortsSeo.FRANCE_AGRIMER}, $year" +
                                     (
@@ -127,6 +138,16 @@ class PortsContentController(
                                                 "Un stock est une population d’une espèce dans une zone de pêche ; " +
                                                 """<a href="${PortsSeo.METHODOLOGY_PATH}#stocks">ce que veut dire """ +
                                                 "chaque état</a>"
+                                        } else {
+                                            ""
+                                        }
+                                    ) +
+                                    (
+                                        if (hasQuotas) {
+                                            """ ; <a href="${escapeHtml(fishingOpportunities.url)}">TAC et """ +
+                                                "quotas ${fishingOpportunities.year}</a> du Conseil de l’UE, " +
+                                                """<a href="${PortsSeo.METHODOLOGY_PATH}#quotas">avant les """ +
+                                                "échanges entre États membres</a>"
                                         } else {
                                             ""
                                         }
@@ -250,6 +271,7 @@ class PortsContentController(
         val updatedOn = getPorts.lastUpdate()
         val auctionYear = getPorts.execute().mapNotNull { it.auction?.year }.maxOrNull()
         val stockAssessment = getSpecies.stockAssessment()
+        val fishingOpportunities = getSpecies.fishingOpportunities()
         val gearItems =
             GEAR_FAMILIES.joinToString(
                 "",
@@ -321,6 +343,19 @@ class PortsContentController(
                         "(Manche Est et mer du Nord, Manche Ouest et mer Celtique, golfe de Gascogne, Méditerranée). " +
                         "Beaucoup d’espèces ne sont pas évaluées (maigre, dorade royale, congre, saint-pierre, " +
                         "etc.) : elles n’ont pas d’état affiché.</p>" +
+                        """<h2 id="quotas">Les TAC et les quotas</h2>""" +
+                        "<p>Chaque année, le Conseil de l’Union européenne fixe pour les principaux stocks un total " +
+                        "admissible de captures (TAC), qu’il partage entre les États membres. Les chiffres affichés " +
+                        "sont le TAC et le quota initial de la France du " +
+                        """<a href="${escapeHtml(fishingOpportunities.url)}">règlement """ +
+                        "${fishingOpportunities.year}</a>, avant les échanges de quotas entre États membres en cours " +
+                        "d’année. Le thon rouge et le germon relèvent de la CICTA (ICCAT).</p>" +
+                        "<p>La France répartit ensuite son quota entre les organisations de producteurs (OP), qui le " +
+                        "partagent entre leurs navires d’après leurs antériorités de pêche. Ces quotas par navire ne " +
+                        "sont pas publics, et aucun registre ouvert ne dit à quelle OP appartient un navire : ils ne " +
+                        "sont donc pas affichés. Beaucoup d’espèces n’ont pas de TAC (bar, coquille Saint-Jacques, " +
+                        "seiche, sardine de l’Atlantique, etc.). Les raies d’une même zone partagent un seul TAC, et " +
+                        "le TAC du maquereau et du hareng de la mer du Nord est celui de tout le stock.</p>" +
                         "<h2>Les photos des navires</h2>" +
                         """<p>Elles viennent d’<a href="${publicUrl.get()}/fr">Open Vessel Photos</a>. """ +
                         "Chaque photo est créditée à son auteur et publiée sous sa licence.</p>" +
@@ -553,6 +588,18 @@ class PortsContentController(
 
         return """<span class="stock-status" data-stock="${status?.name ?: "VARIABLE"}" """ +
             """title="${escapeHtml(title)}">${STOCK_LABELS[status]}</span>"""
+    }
+
+    /** France's quota for a species, with each TAC in its title */
+    private fun quotaCell(quotas: SpeciesQuotas?): String {
+        if (quotas == null) return ""
+        val title =
+            quotas.quotas.distinctBy { it.tacCode }.joinToString(" ; ") {
+                "${it.area} : ${number(it.franceTonnes)} t" +
+                    (it.tacTonnes?.let { tac -> " sur ${number(tac)} t" } ?: "")
+            }
+
+        return """<span title="${escapeHtml(title)}">${number(quotas.franceTonnes)} t</span>"""
     }
 
     private fun render(page: HtmlPage) = htmlPageRenderer.render(page.copy(language = Language.FR, site = Site.PORTS))

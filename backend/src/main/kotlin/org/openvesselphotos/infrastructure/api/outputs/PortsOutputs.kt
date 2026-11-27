@@ -1,11 +1,13 @@
 package org.openvesselphotos.infrastructure.api.outputs
 
 import org.openvesselphotos.domain.entities.AuctionTotal
+import org.openvesselphotos.domain.entities.FishingOpportunities
 import org.openvesselphotos.domain.entities.Port
 import org.openvesselphotos.domain.entities.PortAuction
 import org.openvesselphotos.domain.entities.PortDetails
 import org.openvesselphotos.domain.entities.PortVessel
 import org.openvesselphotos.domain.entities.PortWithVesselCount
+import org.openvesselphotos.domain.entities.SpeciesQuotas
 import org.openvesselphotos.domain.entities.SpeciesStocks
 import org.openvesselphotos.domain.entities.StockAssessment
 import org.openvesselphotos.infrastructure.web.PagesController
@@ -155,6 +157,8 @@ data class AuctionDataOutput(
     val species: List<AuctionSpeciesDataOutput>,
     /** Ifremer's assessment, the source of the stock statuses of the species; null when none has one */
     val stockAssessment: StockAssessmentOutput?,
+    /** The Council regulation, the source of the TACs of the species; null when none has one */
+    val fishingOpportunities: FishingOpportunitiesOutput?,
 ) {
     companion object {
         private const val MAX_SPECIES = 12
@@ -189,12 +193,17 @@ data class AuctionDataOutput(
                                         ?.sortedBy { it.month }
                                         ?.map { it.quantityTonnes },
                                 stockStatus = auction.stocks[sale.species]?.let { StockStatusOutput.from(it) },
+                                quotas = auction.quotas[sale.species]?.let { FishingOpportunityOutput.from(it) },
                             )
                         },
                 stockAssessment =
                     auction.stockAssessment
                         .takeIf { auction.stocks.isNotEmpty() }
                         ?.let { StockAssessmentOutput.from(it) },
+                fishingOpportunities =
+                    auction.fishingOpportunities
+                        .takeIf { auction.quotas.isNotEmpty() }
+                        ?.let { FishingOpportunitiesOutput.from(it) },
             )
         }
     }
@@ -210,6 +219,8 @@ data class AuctionSpeciesDataOutput(
     val monthlyQuantitiesTonnes: List<Double>?,
     /** The status of the stocks it is landed from in the waters of the port (Ifremer); null when not assessed */
     val stockStatus: StockStatusOutput?,
+    /** The TACs it is fished under in the waters of the port, France's largest quota first; null when it has none */
+    val quotas: List<FishingOpportunityOutput>?,
 )
 
 data class StockStatusOutput(
@@ -251,5 +262,32 @@ data class StockAssessmentOutput(
 ) {
     companion object {
         fun from(assessment: StockAssessment) = StockAssessmentOutput(assessment.edition, assessment.url)
+    }
+}
+
+data class FishingOpportunityOutput(
+    /** e.g. "SOL/07D." */
+    val tacCode: String,
+    /** e.g. "Manche Est (7d)" */
+    val area: String,
+    /** null when the Union does not set it */
+    val tacTonnes: Double?,
+    /** The initial quota of France, before exchanges */
+    val franceTonnes: Double,
+) {
+    companion object {
+        fun from(quotas: SpeciesQuotas): List<FishingOpportunityOutput> =
+            quotas.quotas.map { FishingOpportunityOutput(it.tacCode, it.area, it.tacTonnes, it.franceTonnes) }
+    }
+}
+
+data class FishingOpportunitiesOutput(
+    /** The year of the TACs, e.g. 2026 */
+    val year: Int,
+    val url: String,
+) {
+    companion object {
+        fun from(opportunities: FishingOpportunities) =
+            FishingOpportunitiesOutput(opportunities.year, opportunities.url)
     }
 }
