@@ -39,6 +39,10 @@ run-back:
 load-dummy-fleet-register:
 	docker compose exec -T db psql -U ovp -d ovp -v ON_ERROR_STOP=1 < ./backend/local/dummy-fleet-register.sql
 
+.PHONY: load-dummy-ports ##LOCAL ⚓ Fill the local database with dummy ports, vessels, auctions, fishing zones and photos
+load-dummy-ports:
+	python3 ./backend/local/dummy_ports.py | docker compose exec -T db psql -q -U ovp -d ovp -v ON_ERROR_STOP=1
+
 .PHONY: run-front ##LOCAL ▶️  Run frontend for development, on http://localhost:3000
 run-front:
 	cd ./frontend && npm run dev
