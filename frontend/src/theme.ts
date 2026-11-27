@@ -17,6 +17,10 @@ export const COLORS = {
   link: '#0E4A6E',
   linkHover: '#08304A',
   muted: '#55697A',
+  /** Panels floating over the map */
+  panel: '#FBFAF6',
+  /** Their edge: the ink, faded, so that it reads on the map and on the page alike */
+  panelBorder: 'rgba(11, 34, 51, 0.22)',
   reject: '#A3361A',
   text: '#3D5363',
   white: '#FFFFFF'
@@ -46,3 +50,23 @@ export const FONTS = {
 
 /** Pastel backgrounds for photo placeholders. */
 export const SKIES = ['#CFE0EA', '#E6D9C6', '#D5E3DA', '#DCD8E8']
+
+/**
+ * The one corner radius of the site: square corners, as on a printed chart or report. Rounded pills and cards read as
+ * buttons or as a generic dashboard; the few round things (port dots, the sheet handle) are drawn round on purpose.
+ */
+export const RADIUS = '2px'
+
+/** The type scale: few steps, far enough apart that a heading never looks like a label. */
+export const TYPE = {
+  /** Hairline notes, sources, credits */
+  note: '11.5px',
+  /** Labels, table cells, secondary text */
+  small: '13px',
+  /** Body text */
+  body: '14.5px',
+  /** Key figures */
+  figure: '20px',
+  /** The page title */
+  title: '28px'
+}

@@ -2,7 +2,7 @@ import { type ReactNode, useMemo, useState } from 'react'
 import styled, { css } from 'styled-components'
 
 import type { Port } from '../api/types'
-import { COLORS, FONTS } from '../theme'
+import { COLORS, FONTS, RADIUS } from '../theme'
 import { GEAR_FAMILIES, type GearFamily, GearIcon, IMPACT_LABELS, countVessels } from './gears'
 import {
   type CarbonGroup,
@@ -89,7 +89,7 @@ export function GearFilter({ children, onChange, ports, selected }: Props) {
               aria-pressed={isSelected}
               key={family.id}
               onClick={() => onChange(isSelected ? undefined : family)}
-              title={family.description}
+              title={`${family.description}\nImpact : ${IMPACT_LABELS[family.impact]}`}
               type="button"
             >
               <Icon $isSelected={isSelected}>
@@ -199,7 +199,6 @@ const Bar = styled.div`
   gap: 2px;
   max-width: 100%;
   padding: 4px;
-  border-radius: 6px;
 
   @media ${MOBILE_QUERY} {
     flex-wrap: nowrap;
@@ -220,7 +219,7 @@ const Option = styled.button<{ $isSelected: boolean }>`
   gap: 8px;
   padding: 4px 12px 4px 4px;
   border: none;
-  border-radius: 4px;
+  border-radius: ${RADIUS};
   background: transparent;
   color: ${COLORS.ink};
   font: inherit;
@@ -252,10 +251,8 @@ const Icon = styled.span<{ $isSelected: boolean }>`
   place-items: center;
   width: 34px;
   height: 34px;
-  border-radius: 4px;
-  background: ${({ $isSelected }) => ($isSelected ? 'rgba(255, 255, 255, 0.12)' : COLORS.info)};
-  color: ${({ $isSelected }) => ($isSelected ? COLORS.white : COLORS.link)};
-  transition: background 0.15s;
+  /* The drawing alone, no tinted square behind it */
+  color: ${({ $isSelected }) => ($isSelected ? COLORS.white : COLORS.ink)};
 `
 
 const Text = styled.span`
@@ -271,18 +268,20 @@ const Label = styled.span`
 `
 
 const Count = styled.span`
-  font-size: 11px;
-  opacity: 0.7;
+  font-family: ${FONTS.mono};
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
 `
 
-/** The gear's impact level, on the corner of its drawing */
+/** The gear's impact level, on the corner of its drawing: explained by the button's title and the gear's card */
 const ImpactDot = styled.span<{ $impact: keyof typeof IMPACT_COLORS }>`
   position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 10px;
-  height: 10px;
-  border: 2px solid ${COLORS.white};
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid ${COLORS.panel};
   border-radius: 50%;
   background: ${({ $impact }) => IMPACT_COLORS[$impact].dot};
 `
@@ -314,7 +313,6 @@ const RightColumn = styled.div`
   max-width: 100%;
   max-height: calc(100vh - 110px);
   overflow-y: auto;
-  border-radius: 6px;
   scrollbar-width: none;
 
   @media ${MOBILE_QUERY} {
@@ -326,7 +324,6 @@ const Explanation = styled.div`
   ${glass}
   flex: none;
   padding: 12px 14px 14px;
-  border-radius: 6px;
 
   p {
     margin: 8px 0 0;
@@ -352,9 +349,7 @@ const ExplanationIcon = styled.span`
   place-items: center;
   width: 42px;
   height: 42px;
-  border-radius: 4px;
-  background: ${COLORS.info};
-  color: ${COLORS.link};
+  color: ${COLORS.ink};
 `
 
 const ExplanationTitle = styled.div`
@@ -382,7 +377,7 @@ const HeaderButton = styled.button`
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   background: transparent;
   color: ${COLORS.muted};
   cursor: pointer;
@@ -435,10 +430,9 @@ function CarbonFacts({ carbonGroup, hasSeabedCarbon }: { carbonGroup: CarbonGrou
 }
 
 const Carbon = styled.div`
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 4px;
-  background: ${COLORS.white};
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid ${COLORS.ink};
 `
 
 const CarbonHeader = styled.div`
@@ -476,14 +470,10 @@ const ComparisonRow = styled.div<{ $isGear: boolean }>`
 
 const ComparisonBar = styled.span`
   height: 6px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: ${COLORS.divider};
 
   span {
     display: block;
     height: 100%;
-    border-radius: 3px;
     background: var(--bar, ${COLORS.inkSoft});
   }
 `

@@ -1,6 +1,6 @@
-import styled, { css, keyframes } from 'styled-components'
+import styled, { css } from 'styled-components'
 
-import { COLORS, FONTS } from '../theme'
+import { COLORS, FONTS, RADIUS } from '../theme'
 
 export const Container = styled.div`
   max-width: 1240px;
@@ -38,14 +38,14 @@ export const Muted = styled.span`
 export const Card = styled.div`
   background: ${COLORS.white};
   border: 1px solid ${COLORS.cardBorder};
-  border-radius: 8px;
+  border-radius: ${RADIUS};
 `
 
 export const Chip = styled.span`
   align-self: flex-start;
   font-size: 13px;
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   background: ${COLORS.white};
   border: 1px solid ${COLORS.border};
 `
@@ -61,7 +61,7 @@ const buttonBase = css`
   gap: 8px;
   min-height: 44px;
   padding: 0 18px;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   font: inherit;
   font-size: 15px;
   font-weight: 600;
@@ -120,7 +120,7 @@ export const TextButton = styled.button`
 export const Pill = styled.button<{ $active: boolean }>`
   min-height: 44px;
   padding: 0 16px;
-  border-radius: 22px;
+  border-radius: ${RADIUS};
   border: 1px solid ${p => (p.$active ? COLORS.ink : COLORS.inputBorder)};
   background: ${p => (p.$active ? COLORS.ink : COLORS.white)};
   color: ${p => (p.$active ? COLORS.white : COLORS.ink)};
@@ -152,7 +152,7 @@ const inputBase = css`
   min-height: 48px;
   padding: 0 12px;
   border: 1px solid ${COLORS.inputBorder};
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   font: inherit;
   /* 16 px at least: iOS Safari zooms into smaller fields when they get the focus */
   font-size: 16px;
@@ -180,7 +180,7 @@ export const CodeBlock = styled.pre`
   margin: 0;
   background: ${COLORS.ink};
   color: ${COLORS.codeText};
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   padding: 14px 16px;
   font-family: ${FONTS.mono};
   font-size: 13px;
@@ -191,7 +191,7 @@ export const CodeBlock = styled.pre`
 export const ErrorMessage = styled.p`
   margin: 0;
   padding: 10px 12px;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   background: ${COLORS.accentSoft};
   color: ${COLORS.reject};
   font-size: 14px;
@@ -199,27 +199,15 @@ export const ErrorMessage = styled.p`
 
 export const SuccessMessage = styled.div`
   padding: 14px 16px;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   background: ${COLORS.info};
   font-size: 15px;
   line-height: 1.5;
 `
 
-const shimmer = keyframes`
-  from { background-position: 100% 0; }
-  to { background-position: -100% 0; }
-`
-
-/** A grey block standing for content being loaded. */
+/** A grey block standing for content being loaded: a static tone, no shimmer. */
 export const Skeleton = styled.div<{ $height?: string; $width?: string }>`
   width: ${p => p.$width ?? '100%'};
   height: ${p => p.$height ?? '14px'};
-  border-radius: 6px;
-  background: linear-gradient(90deg, ${COLORS.divider} 25%, ${COLORS.ground} 50%, ${COLORS.divider} 75%);
-  background-size: 200% 100%;
-  animation: ${shimmer} 1.4s linear infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
+  background: ${COLORS.divider};
 `

@@ -83,14 +83,14 @@ export const IMPACT_COLORS: Record<Impact, { background: string; dot: string; te
   mixed: { background: '#FDF3DC', dot: '#C68A0C', text: '#6B4A06' }
 }
 
-/** A coloured dot before a short label, e.g. "● Fort impact" */
+/**
+ * A colored square before a short label, e.g. "■ Fort impact", as the stock statuses: the label carries the meaning,
+ * the color repeats it, and no filled pill that would read as a button
+ */
 export const ImpactPill = styled.span<{ $impact: Impact }>`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 1px 6px;
-  border-radius: 3px;
-  background: ${({ $impact }) => IMPACT_COLORS[$impact].background};
   color: ${({ $impact }) => IMPACT_COLORS[$impact].text};
   font-size: 11px;
   font-weight: 600;
@@ -99,23 +99,19 @@ export const ImpactPill = styled.span<{ $impact: Impact }>`
   &::before {
     content: '';
     flex: none;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
+    width: 8px;
+    height: 8px;
     background: ${({ $impact }) => IMPACT_COLORS[$impact].dot};
   }
 `
 
-/** Neutral, for facts that are not a rating: industrial fishing, owner */
+/** Neutral, for facts that are not a rating: industrial fishing, owner. Plain text, not an outlined tag. */
 export const FactPill = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 1px 6px;
-  border: 1px solid ${COLORS.ink};
-  border-radius: 3px;
   color: ${COLORS.ink};
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.35;
 `

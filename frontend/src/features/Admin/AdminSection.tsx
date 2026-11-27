@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import styled from 'styled-components'
 
 import { useTranslation } from '../../i18n'
-import { COLORS, FONTS } from '../../theme'
+import { COLORS, FONTS, RADIUS } from '../../theme'
 import { type AdminEffect, type AdminSectionId, getDependents, getSection, sectionAnchor } from './adminSections'
 
 /** The colour of each kind of effect: the destructive ones stand out */
@@ -138,7 +138,7 @@ const Step = styled.span`
 
 const Effect = styled.span`
   padding: 1px 7px;
-  border-radius: 3px;
+  border-radius: ${RADIUS};
   font-size: 12px;
   font-weight: 600;
 `

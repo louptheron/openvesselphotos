@@ -8,7 +8,7 @@ import { VesselCard, VesselGrid, VesselGridSkeleton } from '../../components/Ves
 import { CodeBlock, Container, Muted, PrimaryButton, SectionTitle } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
-import { CHART_COLORS, COLORS, FONTS } from '../../theme'
+import { CHART_COLORS, COLORS, FONTS, RADIUS } from '../../theme'
 import { detectKey } from '../../utils/vesselKey'
 import { ChartCredits } from './ChartCredits'
 import { ChartVessels } from './ChartVessels'
@@ -245,7 +245,7 @@ const SearchForm = styled.form`
     height: 56px;
     padding: 0 18px;
     border: 2px solid ${COLORS.ink};
-    border-radius: 6px;
+    border-radius: ${RADIUS};
     font: inherit;
     font-size: 16px;
     background: ${COLORS.white};

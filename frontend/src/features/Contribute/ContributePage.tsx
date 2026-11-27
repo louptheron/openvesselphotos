@@ -19,7 +19,7 @@ import {
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
 import { ChartCard, ChartSection } from '../../components/Chart'
-import { CHART_COLORS, COLORS, FONTS } from '../../theme'
+import { CHART_COLORS, COLORS, FONTS, RADIUS } from '../../theme'
 import { getVesselPath, isValidKey, normalizeKey } from '../../utils/vesselKey'
 
 const KEY_TYPES: KeyType[] = ['cfr', 'mmsi']
@@ -413,7 +413,7 @@ const IntroCard = styled(ChartCard)`
   max-width: 700px;
   padding: 26px 28px;
   gap: 10px;
-  border-radius: 8px;
+  border-radius: ${RADIUS};
 
   p {
     color: ${CHART_COLORS.text};
@@ -449,7 +449,7 @@ const Step = styled.fieldset`
   margin: 0;
   padding: 20px;
   border: 1px solid ${COLORS.cardBorder};
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   background: ${COLORS.white};
   display: flex;
   flex-direction: column;
@@ -487,7 +487,7 @@ const Match = styled.div`
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   background: ${COLORS.info};
   font-size: 14px;
 
@@ -504,7 +504,7 @@ const DropZone = styled.label`
   gap: 8px;
   min-height: 180px;
   border: 2px dashed ${COLORS.inputBorder};
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   background: #faf8f4;
   cursor: pointer;
   text-align: center;
@@ -513,7 +513,7 @@ const DropZone = styled.label`
   img {
     max-width: 100%;
     max-height: 280px;
-    border-radius: 8px;
+    border-radius: ${RADIUS};
   }
 
   input:focus-visible + & {
@@ -550,7 +550,7 @@ const SmallLicenceOption = styled.label<{ $active: boolean }>`
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: ${RADIUS};
   border: 1px solid ${p => (p.$active ? COLORS.accent : COLORS.cardBorder)};
   background: ${p => (p.$active ? COLORS.accentSoft : COLORS.white)};
   font-size: 13px;
@@ -565,7 +565,7 @@ const SmallLicenceOption = styled.label<{ $active: boolean }>`
 const LicenceOption = styled.label<{ $active: boolean }>`
   position: relative;
   padding: 14px;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   border: 2px solid ${p => (p.$active ? COLORS.accent : COLORS.cardBorder)};
   background: ${p => (p.$active ? COLORS.accentSoft : COLORS.white)};
   display: flex;
@@ -625,7 +625,7 @@ const Aside = styled.aside`
 const NextSteps = styled.div`
   background: ${COLORS.ink};
   color: ${COLORS.inkSoft};
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   padding: 20px;
 
   h2 {
