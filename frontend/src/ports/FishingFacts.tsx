@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-import { COLORS } from '../theme'
+import { COLORS, RADIUS } from '../theme'
 import { SOURCES } from './impacts'
 
 const INSTITUT_AGRO = {
@@ -104,7 +104,7 @@ const Stack = styled.div`
   gap: 2px;
   height: 22px;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
 
   span {
     display: grid;
@@ -141,7 +141,7 @@ const Legend = styled.ul`
   i {
     width: 9px;
     height: 9px;
-    border-radius: 3px;
+    border-radius: ${RADIUS};
   }
 `
 

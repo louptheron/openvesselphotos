@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import type { PortVessel } from '../api/types'
 import { HomePortCorrectionForm } from '../components/HomePortCorrectionForm'
 import { fr } from '../i18n/fr'
-import { COLORS, FONTS } from '../theme'
+import { COLORS, FONTS, RADIUS } from '../theme'
 
 type Props = {
   /** The port the vessel is listed at */
@@ -59,7 +59,7 @@ const Dialog = styled.dialog`
   max-height: calc(100dvh - 32px);
   padding: 0;
   border: 1px solid ${COLORS.cardBorder};
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   background: ${COLORS.white};
   color: ${COLORS.ink};
 

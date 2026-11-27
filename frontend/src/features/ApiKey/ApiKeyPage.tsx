@@ -19,7 +19,7 @@ import {
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
-import { COLORS, FONTS } from '../../theme'
+import { COLORS, FONTS, RADIUS } from '../../theme'
 
 export function ApiKeyPage() {
   const { t } = useTranslation()
@@ -191,7 +191,7 @@ const Aside = styled.aside`
   min-width: 0;
   background: ${COLORS.ink};
   color: ${COLORS.inkSoft};
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   padding: 20px;
   font-size: 14px;
   line-height: 1.5;
@@ -218,7 +218,7 @@ const Aside = styled.aside`
   pre {
     margin: 0 0 10px;
     padding: 12px;
-    border-radius: 8px;
+    border-radius: ${RADIUS};
     background: ${COLORS.codeBackground};
     color: ${COLORS.codeText};
     font-family: ${FONTS.mono};

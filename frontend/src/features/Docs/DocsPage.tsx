@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import { Card, Chip, CodeBlock, Container, Lead, SectionTitle, Title } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
-import { COLORS, FONTS } from '../../theme'
+import { COLORS, FONTS, RADIUS } from '../../theme'
 
 /** In the order of the descriptions in the texts (docs.endpointDescriptions). */
 const ENDPOINTS = [
@@ -200,7 +200,7 @@ const Keys = styled.div`
 
   > div {
     padding: 14px 16px;
-    border-radius: 6px;
+    border-radius: ${RADIUS};
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -233,7 +233,7 @@ const Section = styled.section`
 
 const Endpoint = styled(Card)`
   padding: 12px 14px;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
 
   > div {
     display: flex;
@@ -258,7 +258,7 @@ const Method = styled.span<{ $isPost: boolean }>`
   font-size: 11px;
   font-weight: 500;
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: ${RADIUS};
   background: ${p => (p.$isPost ? '#FBE2D3' : '#DDEEE3')};
   color: ${p => (p.$isPost ? '#8A3410' : '#1D5B34')};
 `

@@ -19,7 +19,7 @@ import {
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
-import { COLORS, FONTS, SKIES, getSkyAndSea } from '../../theme'
+import { COLORS, FONTS, SKIES, getSkyAndSea, RADIUS } from '../../theme'
 import { getNamedPhotoUrl, getPhotoSlug, getPhotoUrl, normalizeKey } from '../../utils/vesselKey'
 import { HomePort } from './HomePort'
 import { KeyLinkForm } from './KeyLinkForm'
@@ -461,7 +461,7 @@ const Gallery = styled.div`
 
 const Figure = styled.figure`
   margin: 0;
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   overflow: hidden;
   /* Letterboxed photos sit on the same dark ground as their caption */
   background: ${COLORS.ink};
@@ -508,7 +508,7 @@ const Registration = styled.p`
 
 const EmptyFigure = styled.div`
   height: 360px;
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   background: ${getSkyAndSea(SKIES[0] ?? COLORS.info, 82)};
   display: flex;
   flex-direction: column;
@@ -528,7 +528,7 @@ const Thumbnail = styled.button<{ $active: boolean }>`
   width: 128px;
   height: 84px;
   padding: 0;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   border: 3px solid ${p => (p.$active ? COLORS.accent : 'transparent')};
   background: ${getSkyAndSea(SKIES[0] ?? COLORS.info, 82)};
   overflow: hidden;
@@ -545,7 +545,7 @@ const Thumbnail = styled.button<{ $active: boolean }>`
 const AddPhoto = styled(Link)`
   width: 128px;
   height: 84px;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   border: 2px dashed ${COLORS.inputBorder};
   display: flex;
   flex-direction: column;
@@ -602,7 +602,7 @@ const Heading = styled.div`
 const FlagChip = styled.span`
   font-size: 12px;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   background: ${COLORS.white};
   border: 1px solid ${COLORS.border};
 `
@@ -615,7 +615,7 @@ const Keys = styled.dl`
 
   > div {
     padding: 12px 14px;
-    border-radius: 6px;
+    border-radius: ${RADIUS};
   }
 
   dt {
@@ -663,7 +663,7 @@ const Attribution = styled.div`
   font-family: ${FONTS.mono};
   font-size: 13px;
   background: ${COLORS.ground};
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   padding: 10px 12px;
 `
 

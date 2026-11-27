@@ -144,8 +144,9 @@ class PortsContentController(
                                     ) +
                                     (
                                         if (hasQuotas) {
-                                            """ ; <a href="${escapeHtml(fishingOpportunities.url)}">TAC et """ +
-                                                "quotas ${fishingOpportunities.year}</a> du Conseil de l’UE, " +
+                                            """ ; <a href="${escapeHtml(fishingOpportunities.url)}">captures """ +
+                                                "autorisées (TAC) et quotas ${fishingOpportunities.year}</a> " +
+                                                "du Conseil de l’UE, " +
                                                 """<a href="${PortsSeo.METHODOLOGY_PATH}#quotas">avant les """ +
                                                 "échanges entre États membres</a>"
                                         } else {

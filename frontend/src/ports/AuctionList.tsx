@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { Port } from '../api/types'
-import { COLORS, FONTS } from '../theme'
+import { COLORS, FONTS, RADIUS } from '../theme'
 import { AUCTION_COLOR } from './PortsMap'
 import { formatNumber, getPortPath } from './texts'
 
@@ -102,7 +102,7 @@ const Row = styled(Link)`
   align-items: center;
   gap: 10px;
   padding: 8px 8px 11px;
-  border-radius: 4px;
+  border-radius: ${RADIUS};
   color: ${COLORS.ink};
   text-decoration: none;
 
@@ -157,7 +157,7 @@ const Bar = styled.span`
   left: 36px;
   max-width: calc(100% - 44px);
   height: 3px;
-  border-radius: 2px;
+  border-radius: ${RADIUS};
   background: ${AUCTION_COLOR};
   opacity: 0.7;
 `

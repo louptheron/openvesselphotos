@@ -20,7 +20,7 @@ import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState }
 import styled from 'styled-components'
 
 import type { FishingEffortPeriod, Port, PortFishingEffort } from '../api/types'
-import { COLORS, FONTS } from '../theme'
+import { COLORS, FONTS, RADIUS as CORNER_RADIUS } from '../theme'
 import { type GearFamily, countVessels } from './gears'
 import { MOBILE_QUERY, PANEL_MARGIN, PANEL_WIDTH } from './layout'
 import { formatNumber, vessels } from './texts'
@@ -569,7 +569,7 @@ const MapElement = styled.div`
     bottom: 16px;
     left: auto;
     padding: 4px 8px;
-    border-radius: 8px;
+    border-radius: ${CORNER_RADIUS};
     background: rgba(255, 255, 255, 0.85);
   }
 
@@ -582,13 +582,13 @@ const MapElement = styled.div`
   .ol-attribution {
     right: 16px;
     bottom: 48px;
-    border-radius: 8px;
+    border-radius: ${CORNER_RADIUS};
     background: rgba(255, 255, 255, 0.85);
     font: 11px ${FONTS.sans};
   }
 
   .ol-attribution button {
-    border-radius: 6px;
+    border-radius: ${CORNER_RADIUS};
     background: transparent;
     color: ${COLORS.muted};
   }
@@ -625,10 +625,9 @@ const ControlGroup = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid ${COLORS.border};
-  border-radius: 4px;
-  background: #fbfaf6;
-  box-shadow: 0 1px 2px rgba(11, 34, 51, 0.1);
+  border: 1px solid ${COLORS.panelBorder};
+  border-radius: ${CORNER_RADIUS};
+  background: ${COLORS.panel};
 `
 
 const ControlButton = styled.button`
@@ -664,10 +663,9 @@ const Legend = styled.div`
   display: flex;
   gap: 14px;
   padding: 7px 12px;
-  border: 1px solid ${COLORS.border};
-  border-radius: 4px;
-  background: #fbfaf6;
-  box-shadow: 0 1px 2px rgba(11, 34, 51, 0.1);
+  border: 1px solid ${COLORS.panelBorder};
+  border-radius: ${CORNER_RADIUS};
+  background: ${COLORS.panel};
   color: ${COLORS.ink};
   font: 500 12px ${FONTS.sans};
 
@@ -697,7 +695,7 @@ const Legend = styled.div`
   b {
     width: 22px;
     height: 10px;
-    border-radius: 3px;
+    border-radius: ${CORNER_RADIUS};
     background: linear-gradient(90deg, ${EFFORT_RAMP.map(([, color]) => color).join(', ')});
   }
 
@@ -715,7 +713,7 @@ const Tooltip = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 7px 12px;
-  border-radius: 4px;
+  border-radius: ${CORNER_RADIUS};
   background: ${COLORS.ink};
   box-shadow: 0 1px 3px rgba(11, 34, 51, 0.25);
   color: ${COLORS.white};

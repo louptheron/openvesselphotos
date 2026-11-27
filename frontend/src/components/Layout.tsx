@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { COLORS, FONTS } from '../theme'
+import { COLORS, FONTS, RADIUS } from '../theme'
 import { LogoMark } from './Logo'
 import { useTranslation } from '../i18n'
 import { Container } from './ui'
@@ -126,7 +126,7 @@ const LanguageButton = styled.button`
   min-height: 44px;
   padding: 0 10px;
   border: 1px solid ${COLORS.inputBorder};
-  border-radius: 22px;
+  border-radius: ${RADIUS};
   background: ${COLORS.white};
   color: ${COLORS.ink};
   font: inherit;

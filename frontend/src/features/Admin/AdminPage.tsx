@@ -22,7 +22,7 @@ import {
 } from '../../components/ui'
 import { usePageMeta } from '../../hooks/usePageMeta'
 import { useTranslation } from '../../i18n'
-import { COLORS, FONTS } from '../../theme'
+import { COLORS, FONTS, RADIUS } from '../../theme'
 import { AdminSection } from './AdminSection'
 import { ADMIN_GROUPS, ADMIN_SECTIONS, type AdminSectionId, sectionAnchor } from './adminSections'
 import { FishingActivitySync } from './FishingActivitySync'
@@ -258,7 +258,7 @@ const Contents = styled.nav`
 const Count = styled.span`
   margin-left: 6px;
   padding: 0 6px;
-  border-radius: 3px;
+  border-radius: ${RADIUS};
   background: ${COLORS.accent};
   color: ${COLORS.white};
   font-size: 11px;

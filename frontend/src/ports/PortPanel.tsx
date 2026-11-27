@@ -5,7 +5,7 @@ import styled, { css } from 'styled-components'
 import { useGetPortQuery, useGetPortsDataQualityQuery, useSearchPortVesselsQuery } from '../api/api'
 import type { Port, PortVessel } from '../api/types'
 import { fr } from '../i18n/fr'
-import { COLORS, FONTS, SKIES, getSkyAndSea } from '../theme'
+import { COLORS, FONTS, RADIUS, SKIES, TYPE, getSkyAndSea } from '../theme'
 import { getNamedPhotoUrl, getPhotoSlug } from '../utils/vesselKey'
 import {
   MOBILE_QUERY,
@@ -371,7 +371,6 @@ function PortsView({ gear, isError, isLoading, onFitExtent, onHighlight, onSelec
                 >
                   <PortName>
                     <span>{port.name}</span>
-                    <Locode>{port.locode}</Locode>
                   </PortName>
                   <PortCount>{formatNumber(count)}</PortCount>
                   <Bar aria-hidden style={{ width: `${(count / maxCount) * 100}%` }} />
@@ -477,10 +476,12 @@ function PortView({ gear, locode }: { gear: GearFamily | undefined; locode: stri
         {data && (
           <>
             <Intro>
-              <Eyebrow>
-                Port d’attache · <Locode>{data.port.locode}</Locode>
-              </Eyebrow>
+              <Eyebrow>Port d’attache</Eyebrow>
               <Title>{data.port.name}</Title>
+              <KeyFigure>
+                <strong>{formatNumber(portVessels.length)}</strong>{' '}
+                {portVessels.length > 1 ? 'navires basés' : 'navire basé'} à ce port
+              </KeyFigure>
               {gear && (
                 <FilterNote>
                   <FilterIcon>
@@ -891,10 +892,10 @@ const Panel = styled.aside<{ $hasPort: boolean; $sheetState: SheetState }>`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid ${COLORS.border};
-  border-radius: 6px;
-  background: #fbfaf6;
-  box-shadow: 0 1px 2px rgba(11, 34, 51, 0.1);
+  /* An edge and square corners, no shadow: a cartouche on a chart (see glass) */
+  border: 1px solid ${COLORS.panelBorder};
+  border-radius: ${RADIUS};
+  background: ${COLORS.panel};
 
   @media (max-width: 760px) {
     top: auto;
@@ -908,7 +909,7 @@ const Panel = styled.aside<{ $hasPort: boolean; $sheetState: SheetState }>`
         folded: `${SHEET_FOLDED_HEIGHT}px`,
         normal: `${($hasPort ? PORT_SHEET_HEIGHT : SHEET_HEIGHT) * 100}dvh`
       })[$sheetState]};
-    border-radius: 6px 22px 0 0;
+    border-radius: ${RADIUS} ${RADIUS} 0 0;
     transition: height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 `
@@ -942,7 +943,7 @@ const SheetHandle = styled.button`
       width: 40px;
       height: 5px;
       margin: auto;
-      border-radius: 3px;
+      border-radius: ${RADIUS};
       background: ${COLORS.border};
     }
   }
@@ -974,7 +975,7 @@ const BrandMark = styled.span`
   place-items: center;
   width: 40px;
   height: 40px;
-  border-radius: 4px;
+  border-radius: ${RADIUS};
   background: ${COLORS.ink};
 `
 
@@ -1007,17 +1008,15 @@ const SearchLabel = styled.label`
   gap: 8px;
   height: 42px;
   padding: 0 14px;
-  border: 1px solid ${COLORS.border};
-  border-radius: 4px;
+  border: 1px solid ${COLORS.inputBorder};
+  border-radius: ${RADIUS};
   background: ${COLORS.white};
   color: ${COLORS.muted};
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
 
+  /* The same focus ring as everywhere else (GlobalStyle), on the field around the input */
   &:focus-within {
-    border-color: ${COLORS.link};
-    box-shadow: 0 0 0 4px rgba(14, 74, 110, 0.12);
+    outline: 3px solid ${COLORS.accent};
+    outline-offset: 2px;
   }
 
   input {
@@ -1037,8 +1036,8 @@ const BackLink = styled(Link)`
   place-items: center;
   width: 42px;
   height: 42px;
-  border: 1px solid ${COLORS.border};
-  border-radius: 4px;
+  border: 1px solid ${COLORS.inputBorder};
+  border-radius: ${RADIUS};
   background: ${COLORS.white};
   color: ${COLORS.ink};
   transition: background 0.15s;
@@ -1076,22 +1075,39 @@ const Intro = styled.div`
   padding: 18px 20px 4px;
 `
 
+/** What the page is about, above its title: a label, not an accent (the orange is kept for the selected port) */
 const Eyebrow = styled.p`
   margin: 0 0 4px;
-  color: ${COLORS.accent};
-  font-size: 12.5px;
+  color: ${COLORS.muted};
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 `
 
+/** The largest text of the panel: the port, then its key figure */
 const Title = styled.h1`
-  margin: 0 0 8px;
+  margin: 0 0 2px;
   color: ${COLORS.ink};
-  font-family: ${FONTS.sans};
-  font-size: 24px;
-  font-weight: 600;
+  font-family: ${FONTS.display};
+  font-size: ${TYPE.title};
+  font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.12;
+  line-height: 1.1;
   text-wrap: balance;
+`
+
+const KeyFigure = styled.p`
+  margin: 0 0 4px;
+  color: ${COLORS.text};
+  font-size: ${TYPE.body};
+
+  strong {
+    color: ${COLORS.ink};
+    font-size: ${TYPE.figure};
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
 `
 
 const Lead = styled.p`
@@ -1119,10 +1135,12 @@ const SectionTitle = styled.h2`
   flex: 1;
   margin: 0;
   padding-bottom: 5px;
-  border-bottom: 1px solid ${COLORS.border};
+  border-bottom: 1px solid ${COLORS.ink};
   color: ${COLORS.ink};
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 `
 
 const Chips = styled.div`
@@ -1136,8 +1154,8 @@ const Chip = styled.button`
   align-items: center;
   gap: 6px;
   padding: 6px 6px 6px 12px;
-  border: 1px solid ${COLORS.border};
-  border-radius: 6px;
+  border: 1px solid ${COLORS.inputBorder};
+  border-radius: ${RADIUS};
   background: ${COLORS.white};
   color: ${COLORS.ink};
   font: 500 13px ${FONTS.sans};
@@ -1154,11 +1172,11 @@ const Chip = styled.button`
 
 const ChipCount = styled.span`
   min-width: 22px;
-  padding: 1px 7px;
-  border-radius: 6px;
-  background: ${COLORS.divider};
+  padding: 1px 4px;
   color: ${COLORS.muted};
-  font-size: 11.5px;
+  font-family: ${FONTS.mono};
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
   text-align: center;
 `
 
@@ -1167,14 +1185,14 @@ const SegmentedGroup = styled.fieldset`
   border: none;
   display: inline-flex;
   padding: 3px;
-  border-radius: 4px;
+  border-radius: ${RADIUS};
   background: ${COLORS.divider};
 `
 
 const SegmentButton = styled.button<{ $isActive: boolean }>`
   padding: 5px 10px;
   border: none;
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   background: transparent;
   color: ${COLORS.muted};
   font: 500 12.5px ${FONTS.sans};
@@ -1203,7 +1221,7 @@ const PortRow = styled(Link)`
   justify-content: space-between;
   gap: 12px;
   padding: 10px 8px 12px;
-  border-radius: 4px;
+  border-radius: ${RADIUS};
   color: ${COLORS.ink};
   text-decoration: none;
   transition: background 0.12s;
@@ -1229,13 +1247,6 @@ const PortName = styled.span`
   }
 `
 
-const Locode = styled.span`
-  color: ${COLORS.muted};
-  font-family: ${FONTS.mono};
-  font-size: 11px;
-  font-weight: 400;
-`
-
 const PortCount = styled.span`
   color: ${COLORS.ink};
   font-size: 14px;
@@ -1249,7 +1260,6 @@ const Bar = styled.span`
   left: 8px;
   max-width: calc(100% - 16px);
   height: 3px;
-  border-radius: 2px;
   background: ${COLORS.link};
   opacity: 0.55;
 `
@@ -1272,21 +1282,19 @@ const Card = styled.div<{ $isLink?: boolean }>`
     outline: 3px solid ${COLORS.accent};
   }
   overflow: hidden;
-  border: 1px solid ${COLORS.cardBorder};
-  border-radius: 6px;
-  background: ${COLORS.white};
   color: inherit;
   text-decoration: none;
-  transition:
-    transform 0.15s,
-    box-shadow 0.15s;
 
+  /* The name is underlined, as a link: no motion that means nothing */
   ${({ $isLink }) =>
     $isLink &&
     css`
       &:hover {
         color: inherit;
-        border-color: ${COLORS.link};
+      }
+
+      &:hover h3 {
+        text-decoration: underline;
       }
     `}
 `
@@ -1338,11 +1346,12 @@ const FilterIcon = styled.span`
   color: ${COLORS.ink};
 `
 
-/** The card, then the button to correct its port under it */
+/** A contact sheet frame: the photo, the vessel, then the button to correct its port, inside the same frame */
 const CardItem = styled.li`
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  border: 1px solid ${COLORS.cardBorder};
+  background: ${COLORS.white};
 
   > ${Card} {
     flex: 1;
@@ -1353,7 +1362,7 @@ const CardItem = styled.li`
 const CorrectButton = styled.button<{ $inRow?: boolean }>`
   align-self: ${({ $inRow }) => ($inRow ? 'flex-end' : 'flex-start')};
   min-height: 32px;
-  margin: ${({ $inRow }) => ($inRow ? '-6px 6px 2px 0' : '0')};
+  margin: ${({ $inRow }) => ($inRow ? '-6px 6px 2px 0' : '-4px 0 2px 5px')};
   padding: 0 6px;
   border: none;
   background: transparent;
@@ -1370,12 +1379,12 @@ const CorrectButton = styled.button<{ $inRow?: boolean }>`
   }
 `
 
+/** How its home port was found: a remark, in italics, not a tag */
 const PortVisitsNote = styled.span`
-  padding: 2px 8px;
-  border: 1px dashed ${COLORS.border};
-  border-radius: 6px;
   color: ${COLORS.muted};
   font-size: 11px;
+  font-style: italic;
+  line-height: 1.35;
 `
 
 const Badges = styled.div`
@@ -1406,7 +1415,7 @@ const FoundVessels = styled.ul`
     align-items: center;
     gap: 10px;
     padding: 8px;
-    border-radius: 4px;
+    border-radius: ${RADIUS};
     color: ${COLORS.ink};
     text-decoration: none;
   }
@@ -1457,13 +1466,12 @@ const Callout = styled.p`
   }
 `
 
+/** A table of the vessels: rules between the rows, no box around them */
 const VesselRows = styled.ul`
   margin: 0;
   padding: 0;
   list-style: none;
-  border: 1px solid ${COLORS.cardBorder};
-  border-radius: 6px;
-  background: ${COLORS.white};
+  border-bottom: 1px solid ${COLORS.divider};
 `
 
 const Row = styled.li`
@@ -1472,14 +1480,6 @@ const Row = styled.li`
 
   & + & {
     border-top: 1px solid ${COLORS.divider};
-  }
-
-  &:first-child > * {
-    border-radius: 6px 14px 0 0;
-  }
-
-  &:last-child > * {
-    border-radius: 0 0 14px 14px;
   }
 `
 
@@ -1546,9 +1546,7 @@ const RowIcon = styled.span`
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 4px;
-  background: ${COLORS.info};
-  color: ${COLORS.link};
+  color: ${COLORS.ink};
 
   svg {
     width: 22px;
@@ -1594,8 +1592,7 @@ const Credit = styled.span`
   max-width: calc(100% - 12px);
   overflow: hidden;
   padding: 2px 6px;
-  border-radius: 6px;
-  background: rgba(11, 34, 51, 0.6);
+  background: rgba(11, 34, 51, 0.7);
   color: ${COLORS.white};
   font-size: 10.5px;
   text-overflow: ellipsis;
@@ -1654,13 +1651,10 @@ const ErrorText = styled.p`
 `
 
 const Empty = styled.p`
-  margin: 8px 0;
-  padding: 20px;
-  border: 1px dashed ${COLORS.border};
-  border-radius: 4px;
+  margin: 12px 0;
   color: ${COLORS.muted};
   font-size: 14px;
-  text-align: center;
+  font-style: italic;
 `
 
 const SkeletonList = styled.div`
@@ -1671,6 +1665,5 @@ const SkeletonList = styled.div`
 `
 
 const Skeleton = styled.div`
-  border-radius: 4px;
   background: ${COLORS.divider};
 `

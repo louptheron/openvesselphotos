@@ -1,10 +1,10 @@
 import styled, { css } from 'styled-components'
 
-import { COLORS } from '../theme'
+import { COLORS, RADIUS } from '../theme'
 import { glass, MOBILE_QUERY, PANEL_MARGIN } from './layout'
 import { MapBackdrop } from './MapBackdrop'
 import { SiteMark } from './SiteMark'
-import { STOCK_PILL_CSS, STOCK_STATUS_RULES } from './stockStatus'
+import { STOCK_MARK_CSS, STOCK_STATUS_RULES } from './stockStatus'
 import { SITE_NAME, SITE_TAGLINE } from './texts'
 
 type Props = {
@@ -99,7 +99,7 @@ const Header = styled.header`
   max-width: 1120px;
   margin: 0 auto;
   padding: 10px 12px 10px 14px;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
 
   @media ${MOBILE_QUERY} {
     position: static;
@@ -119,7 +119,7 @@ const BrandMark = styled.span`
   place-items: center;
   width: 40px;
   height: 40px;
-  border-radius: 4px;
+  border-radius: ${RADIUS};
   background: ${COLORS.ink};
 `
 
@@ -153,7 +153,7 @@ const Nav = styled.nav`
 const NavLink = styled.a<{ $isCurrent: boolean }>`
   flex: none;
   padding: 8px 12px;
-  border-radius: 4px;
+  border-radius: ${RADIUS};
   color: ${COLORS.ink};
   font-size: 13.5px;
   font-weight: 500;
@@ -181,7 +181,7 @@ const Panel = styled.main`
   z-index: 1;
   max-width: 860px;
   margin: ${PANEL_MARGIN}px auto 0;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
 `
 
 const Footer = styled.footer`
@@ -271,7 +271,7 @@ const Content = styled.div`
   }
 
   .stock-status {
-    ${STOCK_PILL_CSS}
+    ${STOCK_MARK_CSS}
     font-size: 12.5px;
   }
 
@@ -291,7 +291,7 @@ const Content = styled.div`
     gap: 4px;
     padding: 14px 16px;
     border: 1px solid ${COLORS.cardBorder};
-    border-radius: 8px;
+    border-radius: ${RADIUS};
     background: ${COLORS.white};
     line-height: 1.35;
   }
@@ -314,7 +314,7 @@ const Content = styled.div`
     margin: 20px 0 28px;
     padding: 16px 18px 12px;
     border: 1px solid ${COLORS.cardBorder};
-    border-radius: 8px;
+    border-radius: ${RADIUS};
     background: ${COLORS.white};
   }
 
@@ -346,7 +346,7 @@ const Content = styled.div`
   .chart-legend i {
     width: 10px;
     height: 10px;
-    border-radius: 2px;
+    border-radius: ${RADIUS};
   }
 
   .chart-row {
@@ -384,7 +384,7 @@ const Content = styled.div`
     align-items: center;
     overflow: hidden;
     padding-left: 6px;
-    border-radius: 4px;
+    border-radius: ${RADIUS};
     font-size: 12.5px;
     font-weight: 500;
     white-space: nowrap;
@@ -393,7 +393,7 @@ const Content = styled.div`
   .chart-track {
     position: relative;
     height: 14px;
-    border-radius: 4px;
+    border-radius: ${RADIUS};
     background: ${COLORS.divider};
   }
 
@@ -403,7 +403,7 @@ const Content = styled.div`
     top: 0;
     bottom: 0;
     min-width: 8px;
-    border-radius: 4px;
+    border-radius: ${RADIUS};
   }
 
   .chart-bar {

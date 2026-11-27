@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 import type { VesselSummary } from '../api/types'
 import { useTranslation } from '../i18n'
-import { COLORS, FONTS, SKIES, getSkyAndSea } from '../theme'
+import { COLORS, FONTS, SKIES, getSkyAndSea, RADIUS } from '../theme'
 import { getNamedPhotoUrl, getPhotoSlug, getVesselPath } from '../utils/vesselKey'
 import { BoatPlaceholder } from './Logo'
 import { Skeleton } from './ui'
@@ -96,38 +96,26 @@ export const VesselGrid = styled.div`
   gap: 18px;
 `
 
+/** The licence, as small caps text: a fact, not a button */
 export const LicenceBadge = styled.span`
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: ${COLORS.info};
-  color: ${COLORS.link};
-  font-weight: 500;
+  color: ${COLORS.muted};
+  font-family: ${FONTS.mono};
+  font-size: 11px;
   white-space: nowrap;
 `
 
 const Article = styled.article`
   position: relative;
   background: ${COLORS.white};
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   overflow: hidden;
   border: 1px solid ${COLORS.cardBorder};
   display: flex;
   flex-direction: column;
-  transition:
-    box-shadow 150ms ease,
-    transform 150ms ease;
 
+  /* The whole card is the link: its edge darkens and the name is underlined (see h3 a:hover), with no motion */
   &:has(a:hover) {
-    box-shadow: 0 6px 18px rgba(11, 34, 51, 0.12);
-    transform: translateY(-2px);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-
-    &:has(a:hover) {
-      transform: none;
-    }
+    border-color: ${COLORS.inputBorder};
   }
 `
 

@@ -1,6 +1,6 @@
 import { css } from 'styled-components'
 
-import { COLORS } from '../theme'
+import { COLORS, RADIUS } from '../theme'
 
 /** The floating panel, on the left of the map on wide screens */
 export const PANEL_WIDTH = 360
@@ -16,9 +16,12 @@ export const SHEET_FOLDED_HEIGHT = 80
 /** On phones, the gear filter bar covers the top of the map: the expanded sheet stops below it */
 export const SHEET_TOP_OFFSET = 64
 
-/** The floating panels over the map, and the pages beyond it: one look for the whole site */
+/**
+ * The floating panels over the map, and the pages beyond it: one look for the whole site. An edge, square corners and
+ * no shadow, like a cartouche on a printed chart: the border alone separates them from the map.
+ */
 export const glass = css`
-  border: 1px solid ${COLORS.border};
-  background: #fbfaf6;
-  box-shadow: 0 1px 2px rgba(11, 34, 51, 0.1);
+  border: 1px solid ${COLORS.panelBorder};
+  border-radius: ${RADIUS};
+  background: ${COLORS.panel};
 `

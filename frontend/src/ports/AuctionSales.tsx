@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 import type { AuctionSpecies, FishingOpportunity, PortAuction, StockStatus } from '../api/types'
 import { of } from '../i18n/fr'
-import { COLORS, FONTS } from '../theme'
+import { COLORS, FONTS, RADIUS, TYPE } from '../theme'
 import { STOCK_STYLES } from './stockStatus'
 import { formatNumber } from './texts'
 
@@ -77,7 +77,8 @@ export function AuctionSales({ auction, isFloating = false }: { auction: PortAuc
         <>
           <Subtitle>
             <span>Principales espèces</span>
-            <Months aria-hidden>
+            {/* The legend of the season strips: a tooltip says what the orange month is (recognition, not recall) */}
+            <Months aria-hidden title="Ventes par mois dans toutes les criées françaises. Encadré : le mois en cours.">
               {MONTH_INITIALS.map((initial, index) => (
                 <i data-current={index === CURRENT_MONTH} key={index}>
                   {initial}
@@ -120,7 +121,7 @@ export function AuctionSales({ auction, isFloating = false }: { auction: PortAuc
               {' '}
               Quotas :{' '}
               <a href={auction.fishingOpportunities.url} rel="noopener" target="_blank">
-                TAC {auction.fishingOpportunities.year} du Conseil de l’UE
+                captures autorisées {auction.fishingOpportunities.year} (TAC) du Conseil de l’UE
               </a>
               , part initiale de la France (<a href="/methodologie#quotas">les quotas par navire ne sont pas publics</a>
               ).
@@ -186,11 +187,11 @@ function SpeciesRow({
 function QuotaLine({ quotas, year }: { quotas: FishingOpportunity[]; year: number | undefined }) {
   const franceTonnes = quotas.reduce((sum, quota) => sum + quota.franceTonnes, 0)
   const title = [
-    'Part initiale de la France, avant échanges (TAC du Conseil de l’UE) :',
+    'Part initiale de la France, avant échanges, des captures autorisées (TAC) par le Conseil de l’UE :',
     ...quotas.map(
       quota =>
         `${quota.area} : ${formatNumber(Math.round(quota.franceTonnes))} t` +
-        (quota.tacTonnes !== null ? ` sur un TAC de ${formatNumber(Math.round(quota.tacTonnes))} t` : '') +
+        (quota.tacTonnes !== null ? ` sur ${formatNumber(Math.round(quota.tacTonnes))} t autorisées` : '') +
         ` (${quota.tacCode})`
     )
   ].join('\n')
@@ -219,7 +220,7 @@ function StockBadge({ stockStatus }: { stockStatus: StockStatus }) {
   ].join('\n')
 
   return (
-    <Stock $background={style.background} $color={style.color} title={title}>
+    <Stock $color={style.color} $mark={style.mark} title={title}>
       <span className="visually-hidden">Stock : </span>
       {style.label}
     </Stock>
@@ -249,10 +250,11 @@ const Card = styled.section<{ $isFloating: boolean }>`
   flex: none;
   margin-top: ${({ $isFloating }) => ($isFloating ? 0 : 14)}px;
   padding: 14px;
-  border: 1px solid ${({ $isFloating }) => ($isFloating ? COLORS.border : COLORS.cardBorder)};
-  border-radius: 6px;
-  background: ${({ $isFloating }) => ($isFloating ? '#FBFAF6' : COLORS.white)};
-  box-shadow: ${({ $isFloating }) => ($isFloating ? '0 1px 2px rgba(11, 34, 51, 0.1)' : 'none')};
+  /* Floating over the map, it needs an edge; in the panel, a rule above it is enough to group it */
+  ${({ $isFloating }) =>
+    $isFloating
+      ? `border: 1px solid ${COLORS.panelBorder}; border-radius: ${RADIUS}; background: ${COLORS.panel};`
+      : `padding: 16px 0 0; border-top: 1px solid ${COLORS.ink};`}
 `
 
 const FoldButton = styled.button`
@@ -262,7 +264,7 @@ const FoldButton = styled.button`
   height: 28px;
   margin-left: 2px;
   border: none;
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   background: transparent;
   color: ${COLORS.muted};
   cursor: pointer;
@@ -285,6 +287,7 @@ const Header = styled.div`
     color: ${COLORS.ink};
     font-family: ${FONTS.sans};
     font-size: 16px;
+    font-weight: 600;
   }
 `
 
@@ -308,7 +311,10 @@ const Figure = styled.div`
   strong {
     color: ${COLORS.ink};
     font-family: ${FONTS.sans};
-    font-size: 17px;
+    font-size: ${TYPE.figure};
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -329,12 +335,14 @@ const Subtitle = styled.div`
   align-items: flex-end;
   justify-content: space-between;
   gap: 8px;
-  margin: 14px 0 6px;
+  margin: 18px 0 4px;
   padding-bottom: 4px;
-  border-bottom: 1px solid ${COLORS.divider};
+  border-bottom: 1px solid ${COLORS.ink};
   color: ${COLORS.ink};
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 `
 
 const Months = styled.span`
@@ -352,6 +360,7 @@ const Months = styled.span`
 
   i[data-current='true'] {
     color: ${COLORS.accent};
+    font-weight: 700;
   }
 `
 
@@ -392,11 +401,13 @@ const StockCell = styled.div`
   justify-content: flex-end;
 `
 
+/** A remark, not a status: plain italic text, so that it doesn't compete with the stock status */
 const InSeason = styled.span`
   margin-left: 6px;
-  color: ${COLORS.approve};
-  font-size: 11px;
-  font-weight: 500;
+  color: ${COLORS.muted};
+  font-size: 11.5px;
+  font-style: italic;
+  font-weight: 400;
   white-space: nowrap;
 `
 
@@ -413,17 +424,25 @@ const QuotaText = styled.span`
   }
 `
 
-/** Right-aligned on the name line, so that the statuses make a column */
-const Stock = styled.span<{ $background: string; $color: string }>`
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: ${({ $background }) => $background};
+/** Right-aligned on the name line, so that the statuses make a column: a colored square, then the label */
+const Stock = styled.span<{ $color: string; $mark: string }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: ${({ $color }) => $color};
   font-size: 11px;
   font-weight: 600;
   line-height: 16px;
   white-space: nowrap;
   cursor: help;
+
+  &::before {
+    content: '';
+    flex: none;
+    width: 8px;
+    height: 8px;
+    background: ${({ $mark }) => $mark};
+  }
 `
 
 const Quantity = styled.div`
@@ -434,30 +453,30 @@ const Quantity = styled.div`
   color: ${COLORS.muted};
   font-size: 11.5px;
 
+  /* Bar, tonnes and price in columns, so that the figures line up down the list */
   > span {
-    flex: 1;
-    max-width: 70px;
+    flex: none;
+    width: 64px;
     height: 5px;
-    overflow: hidden;
-    border-radius: 3px;
-    background: ${COLORS.divider};
   }
 
   > span > span {
     display: block;
     height: 100%;
-    border-radius: 3px;
     background: ${COLORS.link};
   }
 
   b {
+    min-width: 46px;
     color: ${COLORS.ink};
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    text-align: right;
   }
 
   small {
     font-size: 11px;
+    font-variant-numeric: tabular-nums;
   }
 `
 
@@ -471,7 +490,6 @@ const Season = styled.span`
   height: 14px;
 
   i {
-    border-radius: 2px;
     background: ${COLORS.link};
   }
 

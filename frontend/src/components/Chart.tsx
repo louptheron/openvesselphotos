@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import styled from 'styled-components'
 
 import chartUrl from '../assets/chart.svg'
-import { CHART_COLORS, COLORS } from '../theme'
+import { CHART_COLORS, COLORS, RADIUS } from '../theme'
 
 /** A section drawn over a nautical chart (Étel estuary), with its content in a translucent card. */
 export function ChartSection({ children, overlay }: { children: ReactNode; overlay?: ReactNode }) {
@@ -20,7 +20,7 @@ export function ChartSection({ children, overlay }: { children: ReactNode; overl
 export const ChartCard = styled.div`
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid ${CHART_COLORS.cardBorder};
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   display: flex;
   flex-direction: column;
 `

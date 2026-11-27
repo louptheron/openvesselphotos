@@ -115,26 +115,26 @@ function getReliability(vessels: PortVessel[]): string {
   return parts.length > 0 ? `Port d’attache : ${parts.join(', ')}.` : ''
 }
 
+/** Grouped by the space around it and its headings, not by a box: it is already inside the panel */
 const Portrait = styled.section`
-  margin-top: 14px;
-  padding: 14px;
-  border: 1px solid ${COLORS.cardBorder};
-  border-radius: 6px;
-  background: ${COLORS.white};
+  margin-top: 18px;
 `
 
+/** More space above than below, so that each heading goes with what follows it */
 const Subtitle = styled.h3`
-  margin: 14px 0 6px;
+  margin: 20px 0 8px;
 
   &:first-child {
     margin-top: 0;
   }
 
   padding-bottom: 4px;
-  border-bottom: 1px solid ${COLORS.divider};
+  border-bottom: 1px solid ${COLORS.ink};
   color: ${COLORS.ink};
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 `
 
 const SizeBar = styled.div`
@@ -142,7 +142,6 @@ const SizeBar = styled.div`
   gap: 2px;
   height: 10px;
   overflow: hidden;
-  border-radius: 5px;
 
   span {
     min-width: 4px;
@@ -167,7 +166,6 @@ const Legend = styled.ul`
     flex: none;
     width: 10px;
     height: 10px;
-    border-radius: 3px;
   }
 
   span {
@@ -213,14 +211,10 @@ const Gears = styled.ul`
 
 const GearBar = styled.span`
   height: 6px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: ${COLORS.divider};
 
   span {
     display: block;
     height: 100%;
-    border-radius: 3px;
     background: ${COLORS.link};
   }
 `

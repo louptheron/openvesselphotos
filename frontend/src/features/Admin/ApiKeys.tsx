@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { useGetActiveApiKeysQuery } from '../../api/api'
 import type { ApprovedApiKey } from '../../api/types'
 import { Card, Muted, PrimaryButton, SecondaryButton, SectionTitle, TextButton } from '../../components/ui'
-import { COLORS, FONTS } from '../../theme'
+import { COLORS, FONTS, RADIUS } from '../../theme'
 import { useTranslation } from '../../i18n'
 
 /** Shows a key once, right after its approval: only its hash is stored. */
@@ -105,7 +105,7 @@ export function ActiveApiKeys({ isLoading, onRevoke }: { isLoading: boolean; onR
 const Banner = styled.output`
   margin-bottom: 16px;
   padding: 16px 18px;
-  border-radius: 6px;
+  border-radius: ${RADIUS};
   background: ${COLORS.info};
   border: 1px solid #b8d3e3;
   display: flex;
@@ -116,7 +116,7 @@ const Banner = styled.output`
     font-family: ${FONTS.mono};
     font-size: 15px;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: ${RADIUS};
     background: ${COLORS.white};
     overflow-wrap: anywhere;
   }
@@ -167,7 +167,7 @@ const TableBox = styled(Card)`
 const RevokeButton = styled.button`
   min-height: 36px;
   padding: 0 12px;
-  border-radius: 8px;
+  border-radius: ${RADIUS};
   border: 1px solid ${COLORS.reject};
   background: ${COLORS.white};
   color: ${COLORS.reject};
